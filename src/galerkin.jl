@@ -8,7 +8,7 @@ const m = 3;
 
 const a = 0.1;
 const b = 0.1;
-const c = 6;
+const c = 4;
 
 
 function splitC(C)
@@ -27,14 +27,12 @@ function splitC(C)
 	        czr + im*czi)
 end
 
-@debug function f(C)
+function f(C)
 	ω, cx, cy, cz = splitC(C)
 
-	@bp
 	k         = -m:m
-	sumMatrix = reverse(cx) * cz';
+	sumMatrix = reverse(cx) * transpose(cz)
 	s_         = map(d -> sum(diag(sumMatrix, d)), k)
-	@bp
 
 	eq1 = ω .* cx .* im .* k  +  cy + cz						# (1)
 	eq2 = ω .* cy .* im .* k  -  cx - a .* cy;					# (2)
@@ -69,33 +67,17 @@ function four(c, s)
 	return exp(im .* s * k') * c
 end
 
-C0 = rand(12*m+6)
-C  = newton(C0, 0.001)
-ω, cx, cy, cz = splitC(C)
-
-println(ω)
-println(cx)
-println(cy)
-println(cz)
-
-s = 0:ω/100:2*ω
-# plot(s, four(cx, s))
-# plot(s, four(cy, s))
-# plot(s, four(cz, s))
-
-plot3D(four(cx, s), four(cy, s), four(cz, s))
 
 
-
-
-#=
 # Define time vector and interval grid
 const dt = 0.001
-const tf = 100.0
+const tf = 6.0
 t = 0:dt:tf
 
 # Initial position in space
-const r0 = [0.; 0.3; 0.]
+# r0 = [0.; 0.2; 0.]
+# r0 = [-7.707; 0.451; 0.007336]
+r0 = [-6.0; -0.243; 0]
 
 # ode-solution:
 R(t, x) = [-x[2] - x[3] ; x[1] + a*x[2] ; b + x[3]*(x[1]-c)]
@@ -106,4 +88,32 @@ y = map(v -> v[2], pos)
 z = map(v -> v[3], pos)
 
 plot3D(x, y, z)
-=#
+show()
+
+
+# initial guess:
+s = 0:0.1:6.3
+plot3D(four([0;0;0;0;1+10im;0;0],s), four([0;0;0;0;7+5im;0;0],s), four([0;0;0;0;0;0;0],s))
+
+
+C0 = rand(12*m+6)
+#=C0 = [3.1; 
+      0;0;0;0;1;0;
+      0;0;0;0;10;0;0;
+      0;0;0;0;7;0;0;
+      0;0;0;0;5;0;0;
+      0;0;0;0;0;0;0;
+      0;0;0;0;0;0;0]=#
+print("-->")
+C  = newton(C0, 0.00001)
+println("<--")
+ω, cx, cy, cz = splitC(C)
+
+println(ω)
+println(cx)
+println(cy)
+println(cz)
+
+s = 0:ω/10:2*ω
+plot3D(four(cx, s), four(cy, s), four(cz, s))
+
