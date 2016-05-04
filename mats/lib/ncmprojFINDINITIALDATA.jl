@@ -1,3 +1,5 @@
+# TODO dependencies... how to handle?
+
 # procedure usually underestimates length of period
 function findRepresentativeCycle(
 	H::Function, t₀::Float64, y₀::Vector,

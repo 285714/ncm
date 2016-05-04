@@ -1,18 +1,26 @@
 module matsboUTIL
-export mapi, standardize, trim, findPeaks, autocorrelation
+export mapi, standardize, trim, findPeaks, autocorrelation,
+	inputConvert, outputConvert, circconv,
+	vectorize, interpolate,
+	∘, ⊕, ⊗
 
+# map with additional index
+# TODO add broadcasting?
 mapi(f::Function, v...) = map(f, 1:length(v[1]), v...)
-standardize(M::Array) = broadcast((x,y,z)->(x-y)/(z-y), M, minimum(M,[1]), maximum(M,[1]))
 
+# standardize vector
+standardize(V::Array) = broadcast((x,y,z)->(x-y)/(z-y), V, minimum(V,[1]), maximum(V,[1]))
+
+# trim front and/or back of vector V depending on predicates
 function trim(ffront, fback, V)
 	local start, stop
 	start, stop = 1, size(V,1)
 	while ffront(V[start]) start += 1 end
 	while ffront(V[stop]) stop -= 1 end
-	return start, stop
+	return start:stop
 end
 
-
+# find indices of local maxima, for locally maximal areas return only one representative
 function findPeaks(V)
 	local i = 1
 	local N = length(V)
@@ -34,7 +42,8 @@ function findPeaks(V)
 end
 
 
-
+# autorcorrelate a Vector
+# TODO emply rfft?
 function autocorrelation(V)
 	local tmp = fft(V, [1])
 	tmp .*= conj(tmp)
@@ -42,5 +51,48 @@ function autocorrelation(V)
 end
 
 
+
+# split vector at indices defined in idx (sorted!), apply appropriate contructor
+function inputConvert(V::Vector, idx::Vector, constructor::Vector{Function})
+    #idx = sort(idx)
+    return map((f,i,j)->f(V[i:i+j]), constructor, idx[1:end-1], diff(idx)-1)
+end
+
+# deconstruct inputs to vectors and concatenate
+function outputConvert(deconstructor::Vector{Function}, V...)
+    return reduce(vcat, map((f,v) -> f(v), deconstructor, V))
+end
+
+# function composition...
+# TODO more arguments
+∘(f...) = x -> foldr((a,A) -> a(A), x, f)
+
+# parallel composition
+⊕(f...) = x -> map(a->f(x), f)
+
+
+# circular convolution using fft, multiplication in time domain
+# TODO employ rfft?
+circconv(x,y) = fft(ifft(x) .* ifft(y))
+⊗ = circconv
+
+# vectorize a function
+vectorize(f) = x -> map(f,x)
+
+# simple periodic (!) Lanczos interpolation
+# TODO fix weird modulo thing
+function interpolate(V,a::Integer)
+	return vectorize() do y
+		local sum = zero(V[1])
+		local N = length(V)
+		for i in floor(y)+(-a+1:a)
+			local tmp = y-i
+			sum += sinc(tmp)*sinc(tmp/a)*V[((i-1)%N+N)%N + 1]
+		end
+		return sum
+	end
+end
+
+interpolate(V, a::Integer, x) = interpolate(V,a)(x)
 
 end
