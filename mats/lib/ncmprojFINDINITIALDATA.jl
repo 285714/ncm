@@ -27,7 +27,6 @@ function findRepresentativeCycle(
 	# find peaks in AC, take second highest (not interested in 0-shift)
 	peaks = matsboUTIL.findPeaks(ac)[2:end-1]
 	P = peaks[findmax(ac[peaks])[2]]
-	cyc = data[end-P+1:end,:]
 
-	return data, cyc
+	return data, P
 end

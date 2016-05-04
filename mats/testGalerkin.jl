@@ -61,7 +61,7 @@ function callbackPlot(V, H, J)
 	push!(distance, sumabs(H))
 	sca(ax2); hold(false); plot(distance)
 
-	draw(); sleep(.2)
+	draw(); sleep(.05)
 end
 
 
@@ -73,24 +73,28 @@ end
 
 # choose c...
 #		4.0, 6.0, 8.5, 12.0 working
-#		8.7, 12.6 (period doubling) need work
+#		8.7, 12.6 (period doubling) working only if period is doubled...
 c = 12.6
 
 # find representative cycle
 TransientIterations, TransientStepSize = 5000, .1
 SteadyStateIterations, SteadyStateStepSize = 25000, .01
-data, cyc = findRepresentativeCycle(roessler, .0, rand(3), TransientIterations, TransientStepSize, SteadyStateIterations, SteadyStateStepSize)
-ω = 2pi / (size(cyc,1) * SteadyStateStepSize)
+data, P = findRepresentativeCycle(roessler, .0, rand(3), TransientIterations, TransientStepSize, SteadyStateIterations, SteadyStateStepSize)
 
-# resample to appropriate length, rotate till x component≈0
-y = mapslices(V->matsboUTIL.interpolate(V, 3, linspace(1.0, size(cyc,1), 512)), cyc, [1])
+# cut out singe period
+ω = 2pi / (P * SteadyStateStepSize)
+cyc = data[end-P:end,:]
 
 # double period test
 # 	this appears to work =D
 #		TODO think about how to automate
-y = mapslices(V->matsboUTIL.interpolate(V, 3, linspace(1.0, 2*size(cyc,1), 512)), cyc, [1])
-ω /= 2
+ω = 2pi / (2P * SteadyStateStepSize)
+cyc = data[end-2P:end,:]
 
+# resample
+y = mapslices(V->matsboUTIL.interpolate(V, 3, linspace(1.0, size(cyc,1), 512)), cyc, [1])
+
+# rotate s.t. x(0)≈0
 # this (↓) is ultimately important! optimization is super sensitive to it...
 # TODO maybe scale last equation in target somehow?
 y = circshift(y,[-findmin(abs(y[:,1]))[2]+1])
@@ -102,7 +106,7 @@ plot(cyc[:,1], cyc[:,2], cyc[:,3], color="r")
 plot(y[:,1], y[:,2], y[:,3], color="g")
 show()
 
-# optimize, use fac parameter in Jroessler def for speed-control, higher=>slower
+# optimize
 Y = rfft(y,[1])
 V₀ = cToR(Y[:,1], Y[:,2], Y[:,3], ω)
 V = matsboNWTN.newton(Hroessler, Jroessler, V₀, matsboPRED.predCount(16); init=initPlot, callback=callbackPlot)
