@@ -12,8 +12,10 @@ function newton(H::Function, J::Function, v₀::Vector{Float64}, pred::Function;
 	init()
 	callback(v, tmpH, tmpJ)
 
-	local optv, optH, tmpH²
-	optH = Inf
+	if useOpt
+		local optv, optH, tmpH2
+		optv, optH = v, norm(tmpH)
+	end
 
 	while pred(tmpH)
 	  v -= tmpJ \ tmpH
@@ -21,8 +23,8 @@ function newton(H::Function, J::Function, v₀::Vector{Float64}, pred::Function;
 
 	  callback(v, tmpH, tmpJ)
 
-		if useOpt && (tmpH² = sumabs2(tmpH)) < optH
-			optv, optH = deepcopy(v), tmpH²
+		if useOpt && (tmpH2 = norm(tmpH)) < optH
+			optv, optH = v, tmpH2
 		end
 	end
 
@@ -54,16 +56,19 @@ function forwardDifference(H::Function, v::Vector{Float64}; ϵ::Float64=1e-4)
 end
 
 
-# TODO careful: inefficient, H is evaluated which is not necessary (in Newton context).
-#		however, this allows to construct a Jacobian with the usual one parameter signature,
-#		instead of requiring to adapt other functions.
+# WARNING inefficient, H is evaluated which is not necessary (at least in Newton context...
+#		asymptotic behavior is unchanged though) however, this allows to construct a pseudo-
+#		Jacobian with the usual one-parameter-signature, instead of requiring to adapt any functions.
+# WARNING mind that this function has an internal state depending on the preceding
+#		evaluations. the 'Jacobian' at a point is thus not well defined.
 # TODO sequence of evaluation not optimal
 function broyden(H, J)
 	local H₀,J₀,v₀							# closure
-	H₀ = Void										# initialization indicator
+	local init = true
 
 	return function (v₁)
-		if H₀ == Void
+		if init
+			init = false
 			H₀,J₀,v₀ = H(v₁),J(v₁),v₁
 			return J₀
 		end

@@ -1,6 +1,6 @@
 # WARNING wip!
 
-function Hgeneric(f::Function, dims::Integer)
+function generateFunctions(f::Function, dims::Integer, ϵ::Float64)
 	function rToC(V)
 		local N = (length(V)-1)÷dims
 		local c(x) = [ x[1]+0im; complex(x[2:end÷2+1], x[end÷2+2:end]) ]
@@ -13,7 +13,7 @@ function Hgeneric(f::Function, dims::Integer)
 		return matsboUTIL.outputConvert([collect(repeated(d,dims)); identity], V)
 	end
 
-	return function H(V)
+	function H(V)
 		local N,C,ω
 		N = (length(V)-1)÷dims
 		C, ω = rToC(V)
@@ -23,4 +23,8 @@ function Hgeneric(f::Function, dims::Integer)
 
 		return cToR([ matsboUTIL.columns(tmp); reduce((X,x)->X+real(x), .0, C[:,1]) ])
 	end
+
+	J(V) = matsboNWTN.forwardDifference(H, V, ϵ=1e-4)
+
+	return H, J, rToC, cToR
 end

@@ -1,7 +1,7 @@
 # TODO dependencies... how to handle?
 
 # procedure usually underestimates length of period
-function findRepresentativeCycle(
+function findCycle(
 	H::Function, t₀::Float64, y₀::Vector,
 	TransientIterations::Integer, TransientStepSize::Float64,
 	SteadyStateIterations::Integer, SteadyStateStepSize::Float64
