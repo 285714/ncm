@@ -5,18 +5,19 @@ include("lib/matsboRK.jl")
 include("lib/matsboPRED.jl")
 
 include("lib/ncmprojFINDINITIALDATA.jl")
+include("lib/ncmprojHGENERIC.jl")
 
 include("systems.jl")
 
 #	convert input/output vector
 function rToC(V)
   local N = (length(V)-1)÷3
-  local c(x) = complex(x[1:end÷2], x[end÷2+1:end])
+  local c(x) = [ x[1]+0im; complex(x[2:end÷2+1], x[end÷2+2:end]) ]
   return matsboUTIL.inputConvert(V, [1;N+1;2N+1;3N+1;3N+2], [c,c,c,identity])
 end
 
 function cToR(V...)
-  local d(x) = [real(x); imag(x)]
+  local d(x) = [real(x[1]); real(x[2:end]); imag(x[2:end])]
   return matsboUTIL.outputConvert([d,d,d,identity], V...)
 end
 
@@ -27,18 +28,39 @@ function Hroessler(V::Vector{Float64})
   X,Y,Z,ω = rToC(V)
   local N = (length(X)-1)*2
 
-  local D = im*ω.*(0:N÷2) #deriv
   local A,B,C
+	local D = im*ω.*(0:N÷2) #deriv
   A = -Y - Z - D.*X
   B = X + a*Y - D.*Y
-  C = [b; zeros(N÷2)] - c*Z + rfft(irfft(Z,N).*irfft(X,N)) - D.*Z #Z⊗X
+  C = [N*b; zeros(N÷2)] - c*Z + rfft(irfft(Z,N).*irfft(X,N)) - D.*Z
 
-  return cToR(A,B,C,sum(real(X)))
+  return cToR(A,B,C,reduce((X,x)->X+real(x), .0, X))
 end
 
 # derivative
 Jroessler(v) = matsboNWTN.forwardDifference(Hroessler, v, ϵ=1e-4)
 
+
+# generic objective function idea...
+# function Htest(V)
+# 	local X,Y,Z,ω
+# 	X,Y,Z,ω = rToC(V)
+# 	local N = (length(X)-1)*2
+#
+# 	local tmp = mapslices(roessler, irfft([X Y Z], N, [1]), [2])
+# 	local tmp2 = tmp[1,1] # not working?! why???
+# 	tmp = rfft(tmp, [1])
+#
+# 	local A,B,C
+# 	local D = im*ω.*(0:N÷2)
+# 	A = tmp[:,1]-D.*X
+# 	B = tmp[:,2]-D.*Y
+# 	C = tmp[:,3]-D.*Z
+#
+# 	return cToR(A,B,C,tmp2)
+# end
+#
+# Jtest(v) = matsboNWTN.forwardDifference(Htest, v, ϵ=1e-4)
 
 
 # callback for interactive plotting
@@ -85,14 +107,19 @@ data, P = findRepresentativeCycle(roessler, .0, rand(3), TransientIterations, Tr
 ω = 2pi / (P * SteadyStateStepSize)
 cyc = data[end-P:end,:]
 
-# double period test
+# good double period
 # 	this appears to work =D
 #		TODO think about how to automate
-ω = 2pi / (2P * SteadyStateStepSize)
-cyc = data[end-2P:end,:]
+#ω = 2pi / (2P * SteadyStateStepSize)
+#cyc = data[end-2P:end,:]
+
+# simple doubling
+# ω /= 2
+# cyc = [cyc; cyc]
 
 # resample
 y = mapslices(V->matsboUTIL.interpolate(V, 3, linspace(1.0, size(cyc,1), 512)), cyc, [1])
+
 
 # rotate s.t. x(0)≈0
 # this (↓) is ultimately important! optimization is super sensitive to it...
@@ -100,13 +127,30 @@ y = mapslices(V->matsboUTIL.interpolate(V, 3, linspace(1.0, size(cyc,1), 512)), 
 y = circshift(y,[-findmin(abs(y[:,1]))[2]+1])
 
 # plots of approx steady-state trajectory, extracted cycle, resampled/shifted version
-ioff(); figure(); subplot(111,projection="3d"); hold(true)
-plot(data[:,1], data[:,2], data[:,3], color="b")
-plot(cyc[:,1], cyc[:,2], cyc[:,3], color="r")
-plot(y[:,1], y[:,2], y[:,3], color="g")
-show()
+#ioff(); figure(); subplot(111,projection="3d"); hold(true)
+#plot(data[:,1], data[:,2], data[:,3], color="b")
+#plot(cyc[:,1], cyc[:,2], cyc[:,3], color="r")
+#plot(y[:,1], y[:,2], y[:,3], color="g")
+#show()
 
-# optimize
+# generate starting vector
 Y = rfft(y,[1])
 V₀ = cToR(Y[:,1], Y[:,2], Y[:,3], ω)
-V = matsboNWTN.newton(Hroessler, Jroessler, V₀, matsboPRED.predCount(16); init=initPlot, callback=callbackPlot)
+
+# test
+include("lib/matsboUTIL.jl")
+include("lib/ncmprojHGENERIC.jl")
+Htest = Hgeneric(roessler, 3)
+Jtest(v) = matsboNWTN.forwardDifference(Htest, v, ϵ=1e-4)
+
+# optimize
+#@time V₁ = matsboNWTN.newton(Hroessler, Jroessler, V₀, matsboPRED.predCount(16); init=initPlot, callback=callbackPlot)
+@time V₂ = matsboNWTN.newton(Hroessler, matsboNWTN.broyden(Hroessler, Jroessler), V₀, matsboPRED.predCount(32); init=initPlot, callback=callbackPlot)
+#@time V₃ = matsboNWTN.newton(Htest, Jtest, V₀, matsboPRED.predCount(16); init=initPlot, callback=callbackPlot)
+@time V₄ = matsboNWTN.newton(Htest, matsboNWTN.broyden(Htest, Jtest), V₀, matsboPRED.predCount(32); init=initPlot, callback=callbackPlot)
+
+sumabs(Hroessler(V₀))
+sumabs(Hroessler(V₁))
+sumabs(Hroessler(V₂))
+sumabs(Hroessler(V₃))
+sumabs(Hroessler(V₄))

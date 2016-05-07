@@ -2,6 +2,7 @@ module matsboUTIL
 export mapi, standardize, trim, findPeaks, autocorrelation,
 	inputConvert, outputConvert, circconv,
 	vectorize, interpolate,
+	rows, columns,
 	∘, ⊕, ⊗
 
 # map with additional index
@@ -53,15 +54,19 @@ end
 
 
 # split vector at indices defined in idx (sorted!), apply appropriate contructor
-function inputConvert(V::Vector, idx::Vector, constructor::Vector{Function})
+function inputConvert(V, idx, constructor)
     #idx = sort(idx)
     return map((f,i,j)->f(V[i:i+j]), constructor, idx[1:end-1], diff(idx)-1)
 end
 
 # deconstruct inputs to vectors and concatenate
-function outputConvert(deconstructor::Vector{Function}, V...)
+function outputConvert(deconstructor, V)
     return reduce(vcat, map((f,v) -> f(v), deconstructor, V))
 end
+outputConvert(deconstructor, V...) = outputConvert(deconstructor, V)
+
+rows(V) = [ V[i,:] for i in 1:size(V,1) ]
+columns(V) = [ V[:,i] for i in 1:size(V,2) ]
 
 # function composition...
 # TODO more arguments
