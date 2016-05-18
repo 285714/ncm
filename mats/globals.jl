@@ -1,16 +1,18 @@
-# general
-global System, Dimensions
-System, Dimensions = lorenz, 3
+begin
+	# general
+	global System, Dimensions
+	System, Dimensions = roessler, 3
 
-# derivative
-global Epsilon
-Epsilon = 1e-8
+	# derivative
+	global Epsilon
+	Epsilon = 1e-2
 
-# cycle finding
-global TransientIterations, TransientStepSize, SteadyStateIterations, SteadyStateStepSize
-TransientIterations, TransientStepSize = 5000, .01
-SteadyStateIterations, SteadyStateStepSize = 25000, .005
+	# cycle finding
+	global TransientIterations, TransientStepSize, SteadyStateIterations, SteadyStateStepSize
+	TransientIterations, TransientStepSize = 5000, .1
+	SteadyStateIterations, SteadyStateStepSize = 25000, .01
 
-# initial cycle
-global Samples
-Samples = 512
+	# initial cycle
+	global Samples, InterpPrec
+	Samples, InterpPrec = 128, 3
+end

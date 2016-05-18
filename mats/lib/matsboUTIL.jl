@@ -2,6 +2,7 @@ module matsboUTIL
 export mapi, standardize, trim, findPeaks, autocorrelation,
 	inputConvert, outputConvert, circconv,
 	vectorize, interpolate,
+	circulantMatrix,
 	rows, columns,
 	∘, ⊕, ⊗
 
@@ -97,7 +98,13 @@ function interpolate(V,a::Integer)
 		return sum
 	end
 end
-
 interpolate(V, a::Integer, x) = interpolate(V,a)(x)
+
+
+function circulantMatrix(U)
+	local V = reverse(U)
+	return reduce(vcat, [ circshift(V,[i])' for i in 1:length(V) ])
+end
+
 
 end
