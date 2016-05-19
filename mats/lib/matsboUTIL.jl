@@ -1,7 +1,7 @@
 module matsboUTIL
 export mapi, standardize, trim, findPeaks, autocorrelation,
 	inputConvert, outputConvert, circconv,
-	vectorize, interpolate,
+	vectorize, interpolate, interpolateTrigonometric,
 	circulantMatrix,
 	rows, columns,
 	∘, ⊕, ⊗
@@ -104,6 +104,16 @@ interpolate(V, a::Integer, x) = interpolate(V,a)(x)
 function circulantMatrix(U)
 	local V = reverse(U)
 	return reduce(vcat, [ circshift(V,[i])' for i in 1:length(V) ])
+end
+
+
+# returns trigonometric polynomial.
+# use with 2a,-2b and divide by 2m+1 to use with rfft coefficients.
+function interpolateTrigonometric(a₀, a, b)
+	local m = length(a)
+	return vectorize() do x
+		a₀ + sum(a.*cos(x*(1:m)) + b.*sin(x*(1:m)))
+	end
 end
 
 

@@ -1,18 +1,18 @@
-begin
-	# general
-	global System, Dimensions
-	System, Dimensions = roessler, 3
+# parameter for continuation -- do not set
+# ℵ current, ℶ target
+global ℵ
 
-	# derivative
-	global Epsilon
-	Epsilon = 1e-2
+# functions
+global Dimensions, System, H, J, toTraj, fromTraj
 
-	# cycle finding
-	global TransientIterations, TransientStepSize, SteadyStateIterations, SteadyStateStepSize
-	TransientIterations, TransientStepSize = 5000, .1
-	SteadyStateIterations, SteadyStateStepSize = 25000, .01
+# derivative
+global Epsilon
 
-	# initial cycle
-	global Samples, InterpPrec
-	Samples, InterpPrec = 128, 3
-end
+# cycle finding
+global TransientIterations, TransientStepSize, SteadyStateIterations, SteadyStateStepSize
+
+# initial cycle
+global InternSamples, ExternSamples, InterpPrec
+
+# optimization
+global OptPred
