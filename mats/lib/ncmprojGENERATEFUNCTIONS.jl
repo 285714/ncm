@@ -24,7 +24,8 @@ function generateFunctions(f::Function, dims::Integer, ϵ::Float64)
 		return cToR([ matsboUTIL.columns(tmp); reduce((X,x)->X+real(x), .0, C[:,1]) ])
 	end
 
-	J(V) = matsboNWTN.forwardDifference(H, V, ϵ=1e-4)
+	J(V) = matsboNWTN.forwardDifference(H, V, ϵ=ϵ)
+	# J(V) = matsboNWTN.centralDifference(H, V, ϵ=ϵ)
 
 	return H, J, rToC, cToR
 end
