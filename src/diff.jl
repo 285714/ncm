@@ -46,7 +46,7 @@ end
 
 
 
-
+#=
 using PyPlot
 
 n = 10
@@ -76,5 +76,5 @@ plot(log(Y[:,1]), label="forwardDiff")
 plot(log(Y[:,2]), label="interpolDiff")
 legend(loc="upper right",fancybox="true")
 xlabel("1/10^i")
-
+=#
 
