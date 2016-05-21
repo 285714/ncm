@@ -29,10 +29,10 @@ function predCount(max::Integer)
 end
 
 
-function predEps(ϵ, i=1)
+function predEps(ϵ,i=1)
 	return function pred(v...; init::Bool=false)
 		if init return true end
-		return v[i] >= ϵ
+		return norm(v[i]) ≥ ϵ
 	end
 end
 

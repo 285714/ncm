@@ -13,6 +13,3 @@ global TransientIterations, TransientStepSize, SteadyStateIterations, SteadyStat
 
 # initial cycle
 global InternSamples, ExternSamples, InterpPrec
-
-# optimization
-global OptPred

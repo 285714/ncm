@@ -11,16 +11,14 @@ end
 function callbackPlot3D(V, H, J)
 	global ax1, ax2, distance
 
-	local C,ω,N
-	C,ω = rToC(V)
-	N = 2*(size(C,1)-1)
+	local y = toTraj(V[1:end-1])
 
-	sca(ax1); ax1["lines"][end]["set_color"]("gray"); hold(true); plot(irfft(C[:,1],N), irfft(C[:,2],N), irfft(C[:,3],N), color="r")
+	sca(ax1); ax1["lines"][end]["set_color"]("gray"); hold(true); plot(y[:,1], y[:,2], y[:,3], color="r")
 
 	push!(distance, sumabs(H))
 	sca(ax2); hold(false); plot(distance)
 
-	draw(); sleep(.05)
+	draw(); waitforbuttonpress()
 end
 
 function plotLast(V)
@@ -54,4 +52,13 @@ function callbackPlotResidual(V, H, J)
 
 	draw()
 	waitforbuttonpress()
+end
+
+
+
+
+initIncLoad() = begin ion(); subplot(111,projection="3d"); show(); sleep(.01) end
+callbackIncLoad(::Any,::Any,w) = if w!=Void
+	plot(w[:,1], w[:,2], w[:,3])
+	draw(); sleep(.01)
 end

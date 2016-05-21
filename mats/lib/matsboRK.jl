@@ -14,8 +14,8 @@ BTVoid = ButcherTableau(Array{Float64}(0,0), Array{Float64}(0), Array{Float64}(0
 
 length(BT::ButcherTableau) = length(BT.b)
 
-function rk(f::Function, t₀::Float64, y₀::Vector{Float64}, h::Float64, pred::Function;
-	BT::ButcherTableau = BTVoid,	init::Function = ()->Void, callback::Function = (v...)->Void)
+function rk(f::Function, t₀::Float64, y₀::Vector{Float64}, h::Float64, pred::Function, BT::ButcherTableau;
+	init=Void, callback=Void)
 
 	local A,b,c,s,t,y,K
 	A,b,c = BT.A, BT.b, BT.c
@@ -25,7 +25,7 @@ function rk(f::Function, t₀::Float64, y₀::Vector{Float64}, h::Float64, pred:
 	t,y = deepcopy(t₀), deepcopy(y₀)
 	K[1] = f(t,y)
 
-	init()
+	init≠Void && init()
 
 	while pred(t,y,K[1])
 		for i in 2:s
@@ -36,7 +36,7 @@ function rk(f::Function, t₀::Float64, y₀::Vector{Float64}, h::Float64, pred:
 		y += h*sum(map(*, K, b))
 		K[1] = f(t,y)
 
-		callback(t,y,K)
+		callback≠Void && callback(t,y,K)
 	end
 
 	return Void
@@ -55,7 +55,7 @@ BTrk4 = ButcherTableau(
 	[.0; .5; .5; 1.0]
 )
 
-rk4(v...; init=()->Void, callback=(v...)->Void) = rk(v...; BT=BTrk4, init=init, callback=callback)
+rk4(v...; init=Void, callback=Void) = rk(v..., BTrk4, init=init, callback=callback)
 
 
 

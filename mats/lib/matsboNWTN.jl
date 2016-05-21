@@ -3,14 +3,14 @@ export newton, centralDifference, forwardDifference, broyden
 
 # base function
 function newton(H::Function, J::Function, v₀::Vector{Float64}, pred::Function;
-	init::Function=()->Void, callback::Function=(v...)->Void, useOpt::Bool=true)
+	init=Void, callback=Void, useOpt::Bool=true)
 
 	local v = deepcopy(v₀)
 	local tmpH, tmpJ
 	tmpH, tmpJ = H(v), J(v)
 
-	init()
-	callback(v, tmpH, tmpJ)
+	init≠Void && init()
+	callback≠Void && callback(v, tmpH, tmpJ)
 
 	if useOpt
 		local optv, optH, tmpH2
@@ -18,10 +18,10 @@ function newton(H::Function, J::Function, v₀::Vector{Float64}, pred::Function;
 	end
 
 	while pred(tmpH)
-	  v -= tmpJ \ tmpH
-	  tmpH, tmpJ = H(v), J(v)
+		v -= tmpJ \ tmpH
+		tmpH, tmpJ = H(v), J(v)
 
-	  callback(v, tmpH, tmpJ)
+		callback≠Void && callback(v, tmpH, tmpJ)
 
 		if useOpt && (tmpH2 = norm(tmpH)) < optH
 			optv, optH = v, tmpH2

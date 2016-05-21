@@ -4,6 +4,7 @@ export mapi, standardize, trim, findPeaks, autocorrelation,
 	vectorize, interpolate, interpolateTrigonometric,
 	circulantMatrix,
 	rows, columns,
+	tangent,
 	∘, ⊕, ⊗
 
 # map with additional index
@@ -114,6 +115,12 @@ function interpolateTrigonometric(a₀, a, b)
 	return vectorize() do x
 		a₀ + sum(a.*cos(x*(1:m)) + b.*sin(x*(1:m)))
 	end
+end
+
+
+function tangent(A)
+	local t = [A;ones(1,size(A,2))] \ [zeros(size(A,1)), 1.0]
+	return flipsign(t / norm(t), det([A;t']))
 end
 
 
