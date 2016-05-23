@@ -11,7 +11,7 @@ end
 function callbackPlot3D(V, H, J)
 	global ax1, ax2, distance
 
-	local y = toTraj(V[1:end-1])
+	local y = toTraj(V[1:end-2])
 
 	sca(ax1); ax1["lines"][end]["set_color"]("gray"); hold(true); plot(y[:,1], y[:,2], y[:,3], color="r")
 

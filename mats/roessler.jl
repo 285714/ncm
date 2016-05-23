@@ -1,13 +1,13 @@
 a,b = .1,.1
-roessler(v::Vector) = [-v[2] - v[3]; v[1] + a*v[2]; b + v[3]*(v[1]-ℵ)]
+roessler(v) = [-v[2] - v[3]; v[1] + a*v[2]; b + v[3]*(v[1]-v[4])]
 roessler(t,v) = roessler(v)
 
 function Hroessler(V::Vector{Float64})
-	local m = length(V-4)÷6
-	local ω,X₀,Xᵣ,Xᵢ,Y₀,Yᵣ,Yᵢ,Z₀,Zᵣ,Zᵢ
+	local m = length(V-5)÷6
+	local X₀,Xᵣ,Xᵢ,Y₀,Yᵣ,Yᵢ,Z₀,Zᵣ,Zᵢω,ℵ
 
-	ω = V[end]
-	V = reshape(V[1:end-1],2m+1,3)
+	ω,ℵ = V[end-1:end]
+	V = reshape(V[1:end-2],2m+1,3)
 	X₀,Y₀,Z₀ = V[1,1], V[1,2], V[1,3]
 	Xᵣ,Yᵣ,Zᵣ = V[2:2+m-1,1], V[2:2+m-1,2], V[2:2+m-1,3]
 	Xᵢ,Yᵢ,Zᵢ = V[2+m:end,1], V[2+m:end,2], V[2+m:end,3]
@@ -28,11 +28,11 @@ function Hroessler(V::Vector{Float64})
 		Xᵣ+a*Yᵣ+D.*Yᵢ
 		Xᵢ+a*Yᵢ-D.*Yᵣ
 		#C
-		(2m+1)*b-ℵ*Z₀+S₀
+		-ℵ*Z₀+S₀+(2m+1)*b
 		-ℵ*Zᵣ+Sᵣ+D.*Zᵢ
 		-ℵ*Zᵢ+Sᵢ-D.*Zᵣ
 
-		sum(Xᵣ)
+		X₀+sum(Xᵣ)
 	]
 
   return rtn
@@ -41,11 +41,11 @@ end
 
 
 function Jroessler(V)
-	local m = length(V-4)÷6
-	local ω,X₀,Xᵣ,Xᵢ,Y₀,Yᵣ,Yᵢ,Z₀,Zᵣ,Zᵢ
+	local m = length(V-5)÷6
+	local X₀,Xᵣ,Xᵢ,Y₀,Yᵣ,Yᵢ,Z₀,Zᵣ,Zᵢ,ω,ℵ
 
-	ω = V[end]
-	V = reshape(V[1:end-1],2m+1,3)
+	ω,ℵ = V[end-1:end]
+	V = reshape(V[1:end-2],2m+1,3)
 	X₀,Y₀,Z₀ = V[1,1], V[1,2], V[1,3]
 	Xᵣ,Yᵣ,Zᵣ = V[2:2+m-1,1], V[2:2+m-1,2], V[2:2+m-1,3]
 	Xᵢ,Yᵢ,Zᵢ = V[2+m:end,1], V[2+m:end,2], V[2+m:end,3]
@@ -60,13 +60,18 @@ function Jroessler(V)
 		Wᵣ = [V₀; Vᵣ; Vᵣ[end:-1:1]]
 		Wᵢ = [.0; Vᵢ; -Vᵢ[end:-1:1]]
 
-		return [
+		local rtn =  [
 			(Wᵣ[I1]+Wᵣ[I2])					(-Wᵢ[I1]+Wᵢ[I2])[:,2:end]
 			(Wᵢ[I1]+Wᵢ[I2])[2:end,:]		(Wᵣ[I1]-Wᵣ[I2])[2:end,2:end]
 		] / (2m+1)
+		rtn[:,1] /= 2.0
+		return rtn		
 	end
 
-	local AbyX, AbyY, AbyZ, BbyX, BbyY, BbyZ, CbyX, CbyY, CbyZ, LbyX, LbyY, LbyZ
+	local AbyX, AbyY, AbyZ, Abyω, Abyℵ,
+		BbyX, BbyY, BbyZ, Bbyω, Bbyℵ,
+		CbyX, CbyY, CbyZ, Cbyω, Cbyℵ,
+		LbyX, LbyY, LbyZ, Lbyω, Lbyℵ
 
 	AbyX = [
 		.0					zeros(1,m)			zeros(1,m)
@@ -74,23 +79,9 @@ function Jroessler(V)
 		zeros(m)			diagm(-D)			zeros(m,m)
 	]
 
-	AbyY = [
-		-1.0				zeros(1,m)			zeros(1,m)
-		zeros(m)			-eye(m)				zeros(m,m)
-		zeros(m)			zeros(m,m)			-eye(m)
-	]
+	AbyY = AbyZ = -eye(2m+1)
 
-	AbyZ = [
-		-1.0				zeros(1,m)			zeros(1,m)
-		zeros(m)			-eye(m,m)			zeros(m,m)
-		zeros(m)			zeros(m,m)			-eye(m,m)
-	]
-
-	BbyX = [
-		1.0					zeros(1,m)			zeros(1,m)
-		zeros(m)			eye(m)				zeros(m,m)
-		zeros(m)			zeros(m,m)			eye(m)
-	]
+	BbyX = eye(2m+1)
 
 	BbyY = [
 		a					zeros(1,m)			zeros(1,m)
@@ -110,7 +101,7 @@ function Jroessler(V)
 		zeros(m)			diagm(-D)			-ℵ*eye(m,m)
 	]
 
-	LbyX = [ 1.0			ones(1,m)				zeros(1,m) ]
+	LbyX = [ 1.0			ones(1,m)			zeros(1,m) ]
 	LbyY = zeros(1,2m+1)
 	LbyZ = zeros(1,2m+1)
 
@@ -132,11 +123,17 @@ function Jroessler(V)
 		-(1:m).*Zᵣ
 	]
 
+	Lbyω = .0
+
+	Abyℵ = Bbyℵ = zeros(2m+1)
+	Cbyℵ = [-Z₀; -Zᵣ; -Zᵢ]
+	Lbyℵ = .0
+
 	return [
-		AbyX AbyY AbyZ Abyω
-		BbyX BbyY BbyZ Bbyω
-		CbyX CbyY CbyZ Cbyω
-		LbyX LbyY LbyZ .0
+		AbyX AbyY AbyZ Abyω Abyℵ
+		BbyX BbyY BbyZ Bbyω Bbyℵ
+		CbyX CbyY CbyZ Cbyω Cbyℵ
+		LbyX LbyY LbyZ Lbyω Lbyℵ
 	]
 end
 
@@ -146,7 +143,7 @@ end
 
 # functions
 Dimensions = 3
-System = roessler
+System = (t,v) -> roessler(t,[v; ℵ])
 H = Hroessler
 J = Jroessler
 

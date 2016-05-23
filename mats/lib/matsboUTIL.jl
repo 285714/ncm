@@ -111,15 +111,14 @@ end
 # returns trigonometric polynomial.
 # use with 2a,-2b and divide by 2m+1 to use with rfft coefficients.
 function interpolateTrigonometric(a₀, a, b)
-	local m = length(a)
 	return vectorize() do x
-		a₀ + sum(a.*cos(x*(1:m)) + b.*sin(x*(1:m)))
+		a₀ + sum(a.*cos(x*(1:length(a))) + b.*sin(x*(1:length(b))))
 	end
 end
 
 
 function tangent(A)
-	local t = [A;ones(1,size(A,2))] \ [zeros(size(A,1)), 1.0]
+	local t = [A;ones(1,size(A,2))] \ [zeros(size(A,1)); 1.0]
 	return flipsign(t / norm(t), det([A;t']))
 end
 

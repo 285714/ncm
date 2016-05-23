@@ -27,7 +27,7 @@ function incrementalLoading(V, Δℵ, ℶ; init=Void, callback=Void)
 
 	for ℵ′′ in ℵ:(ℵ≤ℶ?Δℵ:-Δℵ):ℶ 	# =)
 		ℵ = ℵ′′
-		W = matsboNWTN.newton(H, J, W, predCount(128)∧predEps(.001))
+		W = matsboNWTN.newton(H, J, W, predCount(8)∧predEps(1e-4))
 		local w = toTraj(W[1:end-1])
 		callback≠Void&& callback(ℵ, W, w)
 		local maxs = Float64[]
@@ -46,14 +46,42 @@ end
 
 
 
-function PC(H,J,V₀,pred)
-	local h,V
-	h = .001
-	V = deepcopy(V₀)
+function PC(H, J, V₀, pred; init=Void, callback=Void, h₀=1.0, κ₀=.5, δ₀=1.0, α₀=2pi*10/360, dir=true)
+	local V,h; V,h = deepcopy(V₀),h₀
 
-	while pred
-		V += h*matsboUTIL.tangent(J(V))
-		V = matsboNWTN.newton(H,J,V,predCount(128)∧predEps(.001))
+	init≠Void && init()
+	callback≠Void && callback(V)
+
+	local T′ = Void
+	while pred(V)
+		# P-step
+		local T = matsboUTIL.tangent(J(V))
+		local W = V + (dir?h:-h) * T
+
+		# step-length adaption
+		local κ,δ,α
+
+		T′==Void && (T′=T)
+		α = acos(clamp(dot(T′, T), -1.0, 1.0))
+		T′=T
+
+		local X = Any[]
+		W = matsboNWTN.newton(H, J, W, predCount(2); callback=(W,H,J)->push!(X,W))
+		δ = norm(X[1]-X[2])
+		κ = norm(X[3]-X[2]) / δ
+
+		local f = clamp(max(sqrt(κ/κ₀), sqrt(δ/δ₀), α/α₀), .5, 2.0)
+		h /= f
+
+		println("$((sqrt(κ/κ₀), sqrt(δ/δ₀), α/α₀))")
+
+		# C-step
+		f==2.0 && continue
+		V = matsboNWTN.newton(H, J, W, predEps(1e-2))
+
+		# println("$h")
+
+		callback≠Void && callback(V)
 	end
 
 	return V
