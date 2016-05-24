@@ -16,23 +16,25 @@ function findCycle(
 	if TransientIterations <= 0
 		dataTransient = y₀'
 	else
-		matsboRK.rk4(H, t₀, y₀, TransientStepSize, matsboPRED.predCount(TransientIterations); callback=callbackTransient)
+		# rk1(H, t₀, y₀, TransientStepSize/10, predCount(TransientIterations); callback=callbackTransient)
+		rk4(H, t₀, y₀, TransientStepSize, predCount(TransientIterations); callback=callbackTransient)
 	end
 
 	# (hopefully) steady state part
 	local t₁, y₁
-	t₁, y₁ = TransientIterations*TransientStepSize, squeeze(dataTransient[end,:]', [2])
-	matsboRK.rk4(H, t₁, y₁, SteadyStateStepSize, matsboPRED.predCount(SteadyStateIterations); callback=callbackSteadyState)
+	t₁, y₁ = TransientIterations*TransientStepSize, squeeze(dataTransient[end,:]', (2))
+	# rk1(H, t₁, y₁, SteadyStateStepSize/10, predCount(SteadyStateIterations); callback=callbackSteadyState)
+	rk4(H, t₁, y₁, SteadyStateStepSize, predCount(SteadyStateIterations); callback=callbackSteadyState)
 
 	# autocorrelate trajectory, standardize, take minimum
 	# 	(and-connect them, only interested in periodicity of ALL components)
 	local ac, peaks, P, cyc
 
-	ac = matsboUTIL.autocorrelation(dataSteadyState)
-	ac = mapslices(minimum, matsboUTIL.standardize(ac), [2])
+	ac = autocorrelation(dataSteadyState)
+	ac = mapslices(minimum, standardize(ac), [2])
 
 	# find peaks in AC, take second highest (not interested in 0-shift)
-	peaks = matsboUTIL.findPeaks(ac)[2:end-1]
+	peaks = findPeaks(ac)[2:end-1]
 	P = peaks[findmax(ac[peaks])[2]]
 
 	return dataTransient, dataSteadyState, P

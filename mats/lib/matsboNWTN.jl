@@ -80,7 +80,9 @@ function broyden(H, J)
 		dv, dH = v₁-v₀, H₁-H₀
 		v₀, H₀ = v₁, H₁
 
-		return J₀ += (dH-J₀*dv) / norm(dv)^2 * dv'
+		norm(dv)>1e-10 && (J₀ += (dH-J₀*dv) ./ norm(dv)^2 * dv')
+
+		return J₀
 	end
 end
 

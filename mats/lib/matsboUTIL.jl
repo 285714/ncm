@@ -1,10 +1,10 @@
 module matsboUTIL
 export mapi, standardize, trim, findPeaks, autocorrelation,
 	inputConvert, outputConvert, circconv,
-	vectorize, interpolate, interpolateTrigonometric,
+	vectorize,
 	circulantMatrix,
+	bisection,
 	rows, columns,
-	tangent,
 	∘, ⊕, ⊗
 
 # map with additional index
@@ -86,40 +86,20 @@ circconv(x,y) = fft(ifft(x) .* ifft(y))
 # vectorize a function
 vectorize(f) = x -> map(f,x)
 
-# simple periodic (!) Lanczos interpolation
-# TODO fix weird modulo thing
-function interpolate(V,a::Integer)
-	return vectorize() do y
-		local sum = zero(V[1])
-		local N = length(V)
-		for i in floor(y)+(-a+1:a)
-			local tmp = y-i
-			sum += sinc(tmp)*sinc(tmp/a)*V[((i-1)%N+N)%N + 1]
-		end
-		return sum
-	end
-end
-interpolate(V, a::Integer, x) = interpolate(V,a)(x)
 
-
+# TODO inefficient
 function circulantMatrix(U)
 	local V = reverse(U)
 	return reduce(vcat, [ circshift(V,[i])' for i in 1:length(V) ])
 end
 
-
-# returns trigonometric polynomial.
-# use with 2a,-2b and divide by 2m+1 to use with rfft coefficients.
-function interpolateTrigonometric(a₀, a, b)
-	return vectorize() do x
-		a₀ + sum(a.*cos(x*(1:length(a))) + b.*sin(x*(1:length(b))))
+function bisection(f,a,b; ϵ=1e-10)
+	@assert a≤b
+	while norm(a-b) > ϵ
+		local c = (a+b)/2
+		f(c) < 0 ? a=c : b=c
 	end
-end
-
-
-function tangent(A)
-	local t = [A;ones(1,size(A,2))] \ [zeros(size(A,1)); 1.0]
-	return flipsign(t / norm(t), det([A;t']))
+	return a
 end
 
 
