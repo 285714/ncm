@@ -1,3 +1,4 @@
+using Immerse
 using Gtk.ShortNames
 
 #TODO multithreading
@@ -10,10 +11,12 @@ using Gtk.ShortNames
 function startGUI()
 	windowMain = @Window("Main View", 800, 600, true, true)
 
+	boxImmerse, toolbarImmerse, canvasImmerse = Immerse.createPlotGuiComponents()
+
 	# Main division
 	gridMain = @Grid()
 	push!(windowMain, gridMain)
-	setproperty!(gridMain, :row_spacing, 10)
+	setproperty!(gridMain, :row_spacing, 5)
 
 	# Menu
 	menubarMain = @MenuBar()
@@ -30,9 +33,11 @@ function startGUI()
 	push!(menuFile, menuitemFileQuit)
 
 	# Main Plotting Area
-	canvasPlot = @Canvas()
-	setproperty!(canvasPlot, :expand, true)
-	gridMain[1,2] = canvasPlot
+	# canvasPlot = @Canvas()
+	# setproperty!(canvasPlot, :expand, true)
+	# gridMain[1,2] = canvasPlot
+	setproperty!(boxImmerse, :expand, true)
+	gridMain[1,2] = boxImmerse
 
 	# Control Area
 	gridControls = @Grid()
@@ -47,6 +52,9 @@ function startGUI()
 	gridControls[1:2,2] = scaleTest3
 
 	showall(windowMain)
+
+	figure(figure(canvasImmerse))
+	display(Immerse._display, plot(x=rand(10), y=rand(10)))
 
 	while visible(windowMain) sleep(1/25) end
 
