@@ -1,3 +1,5 @@
+__precompile__()
+
 module matsboUTIL
 export mapi, standardize, trim, findPeaks, autocorrelation,
 	inputConvert, outputConvert, circconv,

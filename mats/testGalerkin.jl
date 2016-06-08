@@ -1,3 +1,9 @@
+# lorenz,
+# verzw
+# interface
+# defekt vs ortsraum
+# startlösung homotopie
+
 # TODO externalize predicates
 # TODO externalize 'bifurcation indicator'
 # TODO think of something for global ℵ
@@ -31,8 +37,8 @@ include("callbacks.jl")
 
 ### Start ###
 
-ℵ = 12.6
-InternSamples = 256
+ℵ = 4.0
+InternSamples = 64
 
 Transient, SteadyState, P	= findCycle(System, .0, 10*rand(3), TransientIterations, TransientStepSize, SteadyStateIterations, SteadyStateStepSize)
 y,ω							= prepareCycle(SteadyState, P, fac=2)
@@ -64,7 +70,11 @@ end
 # V = newton(Hroessler, Jtest, V₀, predCount(16); init=initPlotResidual, callback=callbackPlotResidual)
 
 global pl = [] #line array.. careful...
-W = PC(H, J, V, V -> 3.0 ≤ V[end] ≤ 30.0; init=initPC, callback=callbackPC, h₀=1.0, κ₀=0.5, δ₀=1.0, α₀=pi/180*2, dir=true)
+dir = true
+W = PC(H, J, V, V -> 3.0 ≤ V[end] ≤ 20.0; init=initPC2, callback=callbackPC2, h₀=1.0, κ₀=0.5, δ₀=1.0, α₀=pi/180*2, dir=dir)
+
+W = PC(V->H(V)+1e-2, J, W, V -> abs(V[end]-W[end]) ≤ 1; h₀=1.0, κ₀=0.5, δ₀=1.0, α₀=pi/180*2, dir=dir)
+W = PC(H, J, W, V -> 3.0 ≤ V[end] ≤ 20.0; init=initPC2, callback=callbackPC2, h₀=1.0, κ₀=0.5, δ₀=1.0, α₀=pi/180*2, dir=dir)
 
 W₁ = W
 W₂ = W

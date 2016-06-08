@@ -77,34 +77,6 @@ function initPC()
 	ion()
 end
 
-# function callbackPC(V)
-# 	global pl
-# 	local v,ℵ,A
-#
-# 	v,ℵ = toTraj(V[1:end-2]), V[end]
-# 	A = Float64[]
-#
-# 	f(a,b) = -a[1]/(-a[1]+b[1])*a + b[1]/(-a[1]+b[1])*b
-#
-# 	for i in 1:size(v,1)-1
-# 		v[i,1] ≤ 0 && v[i+1,1] > 0 && push!(A,norm(f(v[i,:],v[i+1,:])))
-# 	end
-# 	v[end,1] ≤ 0 && v[1,1] > 0 && push!(A,norm(f(v[end,:],v[1,:])))
-#
-# 	while length(pl) < length(A); push!(pl, plot([],[])[1]) end
-# 	for i in 1:length(A)
-# 		local x,y; x,y = pl[i]["get_xdata"](), pl[i]["get_ydata"]()
-# 		push!(x,ℵ); push!(y,A[i])
-# 		pl[i]["set_xdata"](x); pl[i]["set_ydata"](y)
-# 	end
-# 	gca()["relim"](); gca()["autoscale"]()
-# 	sleep(.01)
-#
-# 	return Void
-# end
-
-
-
 
 function callbackPC(V)
 	global pl, InternSamples
@@ -126,6 +98,40 @@ function callbackPC(V)
 		push!(x,ℵ); push!(y,A[i])
 		pl[i]["set_xdata"](x); pl[i]["set_ydata"](y)
 	end
+	gca()["relim"](); gca()["autoscale"]()
+	sleep(.01)
+
+	return Void
+end
+
+
+
+
+
+function initPC2()
+	global pl = plot([],[])[1]
+	hold(true)
+	ion()
+end
+
+
+function callbackPC2(V)
+	global pl, InternSamples
+	local P,ℵ,A
+
+	P,ℵ = toTrajInterp(V[1:end-2]), V[end]
+	A = Float64[]
+
+	local t = linspace(.0,2pi,InternSamples)
+	for (a,b) in zip(t, t+t[2])
+		P[1](a) ≤ 0 ≤ P[1](b) || continue
+		local c = bisection(P[1],a,b)
+		push!(A, norm(map(f->f(c), P[2:end])))
+	end
+
+	local x,y; x,y = pl["get_xdata"](), pl["get_ydata"]()
+	push!(x,ℵ); push!(y,maximum(A))
+	pl["set_xdata"](x); pl["set_ydata"](y)
 	gca()["relim"](); gca()["autoscale"]()
 	sleep(.01)
 

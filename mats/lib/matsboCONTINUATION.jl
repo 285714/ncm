@@ -1,3 +1,5 @@
+__precompile__()
+
 module matsboCONTINUATION
 export PC, tangent, incrementalLoading
 
@@ -11,6 +13,7 @@ end
 
 function PC(H, J, V₀, pred; init=Void, callback=Void, predC=predEps(1e-10), h₀=1.0, κ₀=.5, δ₀=1.0, α₀=pi/36, dir=true)
 	local V,h; V,h = deepcopy(V₀),h₀
+	V = matsboNWTN.newton(H, J, V, predC)
 
 	init≠Void && init()
 	callback≠Void && callback(V)
@@ -27,6 +30,8 @@ function PC(H, J, V₀, pred; init=Void, callback=Void, predC=predEps(1e-10), h�
 		T′==Void && (T′=T)
 		α = acos(clamp(dot(T′, T), -1.0, 1.0))
 		T′=T
+
+		α>.95pi && break #TODO fix... bifurcation point detection...
 
 		local X = Any[]
 		W = matsboNWTN.newton(H, J, W, predCount(2); callback=(W,H,J)->push!(X,W))

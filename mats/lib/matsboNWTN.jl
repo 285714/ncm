@@ -1,3 +1,5 @@
+__precompile__()
+
 module matsboNWTN
 export newton, centralDifference, forwardDifference, broyden
 
