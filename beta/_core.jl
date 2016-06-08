@@ -42,5 +42,6 @@
 #	only necessary to view/manipulate single solution
 #	can create new branches from here?
 
+include("GUI.jl")
 
 startGUI()
