@@ -7,6 +7,8 @@
 
 #TODO name aptly
 #TODO howto forward difference, etc?
+#TODO combine C,V - both reside on the same pane and are implementation specific
+#	whole S window is application dependent
 
 abstract Homotopy
 
