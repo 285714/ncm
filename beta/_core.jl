@@ -31,8 +31,6 @@
 #			commit finished branch?
 #	initial finding
 
-
-
 # B window
 #	set limits
 #	set perturbation?
@@ -42,6 +40,17 @@
 #	only necessary to view/manipulate single solution
 #	can create new branches from here?
 
-include("GUI.jl")
+using Immerse
+using Gtk.ShortNames
 
+push!(LOAD_PATH, "$(pwd())/lib")
+
+include("types.jl")
+map(s -> include("homotopies/$s"), readdir("homotopies/"))
+map(s -> include("continuationmethods/$s"), readdir("continuationmethods/"))
+
+include("GUI.jl")
 startGUI()
+
+
+# who controls data, when

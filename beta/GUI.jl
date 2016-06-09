@@ -1,6 +1,3 @@
-using Immerse
-using Gtk.ShortNames
-
 #TODO multithreading
 #TODO externalize margins, distances etc.
 
@@ -9,7 +6,7 @@ using Gtk.ShortNames
 # GUI wrapper
 # returns when program is closed
 function startGUI()
-	windowMain = @Window("Main View", 800, 600, false, true)
+	global windowMain = @Window("Main View", 800, 600, false, true)
 
 	boxImmerse, toolbarImmerse, canvasImmerse = Immerse.createPlotGuiComponents()
 
@@ -27,12 +24,16 @@ function startGUI()
 	push!(menubarMain, menuitemFile)
 	menuFile = @Menu(menuitemFile)
 
+	menuitemFileNew = @MenuItem("New")
+	push!(menuFile, menuitemFileNew)
+
 	menuitemFileOpen = @MenuItem("Open")
 	push!(menuFile, menuitemFileOpen)
 
 	menuitemFileQuit = @MenuItem("Quit")
 	push!(menuFile, menuitemFileQuit)
 
+	#=
 	#	Cont
 	#TODO populate dynamically
 	menuitemCont = @MenuItem("_Continuation")
@@ -41,11 +42,15 @@ function startGUI()
 
 	menuitemContPC = @MenuItem("PC")
 	push!(menuCont, menuitemContPC)
+	=#
 
 	#	View
 	menuitemView = @MenuItem("_View")
 	push!(menubarMain, menuitemView)
 	menuView = @Menu(menuitemView)
+
+	menuitemViewBV = @MenuItem("Bifurcation View")
+	push!(menuView, menuitemViewBV)
 
 	menuitemViewSSV = @MenuItem("Single Solution View")
 	push!(menuView, menuitemViewSSV)
@@ -57,24 +62,52 @@ function startGUI()
 	setproperty!(boxImmerse, :expand, true)
 	gridMain[1,2] = boxImmerse
 
-	# Control Area
-	gridControls = @Grid()
-	gridMain[1,3] = gridControls
+	# Control Area ~> now in separate window
+	# depending on continuation method
+	#gridMain[1,3] = C(Proj.Cont)
 
-	setproperty!(gridControls, :column_homogeneous, true)
-	setproperty!(gridControls, :column_spacing, 10)
-	buttonTest1, buttonTest2 = @Button("Test1"), @Button("Test2")
-	scaleTest3 = @Scale(false, 0:100)
-	gridControls[1,1] = buttonTest1
-	gridControls[2,1] = buttonTest2
-	gridControls[1:2,2] = scaleTest3
+	# Signals
+	signal_connect(menuitemFileNewActivateHandler, menuitemFileNew, "activate")
+	signal_connect(menuitemFileOpenActivateHandler, menuitemFileOpen, "activate")
+	signal_connect(menuitemViewBVActivateHandler, menuitemViewBV, "activate")
+	signal_connect(menuitemViewSSVActivateHandler, menuitemViewSSV, "activate")
 
 	showall(windowMain)
 
-	figure(figure(canvasImmerse))
-	display(Immerse._display, plot(x=rand(10), y=rand(10)))
-
-	while visible(windowMain) sleep(1/25) end
+	figure(canvasImmerse)
+	display(plot(x=rand(100), y=rand(100)))
 
 	return 0
+end
+
+
+#TODO disable unavailable items
+
+# Handlers
+#TODO singleton handling
+menuitemViewSSVActivateHandler(widget) = C(Proj.Hom)
+menuitemViewBVActivateHandler(widget) = C(Proj.Cont)
+
+#TODO unsaved bla
+function menuitemFileNewActivateHandler(widget)
+	windowNew = @Window("New", 200, 100, false)
+
+	gridNew = @Grid()
+	push!(windowNew, gridNew)
+
+	comboCont = @ComboBoxText()
+	for c in subtypes(ContinuationMethod)  push!(comboCont, string(c)) end
+	gridNew[1,1] = comboCont
+
+	comboHom = @ComboBoxText()
+	for c in subtypes(Homotopy)  push!(comboHom, string(c)) end
+	gridNew[1,2] = comboHom
+
+	showall(windowNew)
+end
+
+
+
+function menuitemFileOpenActivateHandler(widget)
+	include(open_dialog("Choose a system file.", windowMain))
 end

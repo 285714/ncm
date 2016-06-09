@@ -18,14 +18,31 @@
 
 abstract Homotopy
 
-H(x::Homotopy) = error("H not defined for $(typeof(x))")
-J(x::Homotopy) = error("J not defined for $(typeof(x))")
-V(x::Homotopy) = error("V not defined for $(typeof(x))")
-C(x::Homotopy) = error("C not defined for $(typeof(x))")
-S(x::Homotopy) = error("S not defined for $(typeof(x))")
+H(x::Homotopy) = error("H not defined for $(typeof(x)).")
+J(x::Homotopy) = error("J not defined for $(typeof(x)).")
+V(x::Homotopy) = error("V not defined for $(typeof(x)).")
+C(x::Homotopy) = error("C not defined for $(typeof(x)).")
+S(x::Homotopy) = error("S not defined for $(typeof(x)).")
+
+
+# supertype for continuation methods
+abstract ContinuationMethod
+
+C(x::ContinuationMethod) = error("C not defined for $(typeof(x)).")
+
+
 
 # type encapsulating solutions and their sequence
 # this is bifurcation view territory
-type branch
+type Branch
 	S::Vector{Vector{Float64}}
+end
+
+
+type Project
+	Cont::ContinuationMethod
+	Hom::Homotopy
+	Data::Vector{Branch}
+
+	Project(c,h) = new(c,h,Branch[])
 end
