@@ -43,7 +43,7 @@ function centralDifference(H::Function, v::Vector{Float64}; ϵ::Float64=1e-4)
 	for i in 1:length(v)
 		w[i] = v[i]+ϵ; 	J[i] = H(w)
 		w[i] = v[i]-ϵ; 	J[i] -= H(w)
-	  J[i] /= 2ϵ; 		w[i] = v[i]
+	 	J[i] /= 2ϵ;		w[i] = v[i]
 	end
 	return reduce(hcat, J)
 end

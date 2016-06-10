@@ -4,16 +4,20 @@
 
 include("../lib/ncmprojFINDINITIALDATA.jl")
 using matsboINTERPOLATE
+using matsboNWTN
 
 type Galerkin <: Homotopy
 	f::Function
 	d::Int
+
+	V::Vector{Float64}
 
 	TIters::Int
 	TStepSize::Float64
 	SSIters::Int
 	SSStepSize::Float64
 	m::Int
+	Periods::Int
 
 	Galerkin(f::Function, d::Int) = new(f,d)
 end
@@ -22,10 +26,12 @@ end
 
 function H(G::Galerkin)
 	return function H(V::Vector{Float64})
-		local m = ((length(V)-2)÷G.d - 1) ÷ 2
-		local C = reduce(hcat, [ complex(V[(i-1)*(2m+1)+(1:m+1)], [0, V[(i-1)*(2m+1)+(m+1)+(1:m)]]) for i in 1:G.d ])
-		C = rfft(mapslices(G.f, irfft(C, 2m, [1]), [2]), [1])
-		return reduce(vcat, [ [real(C[i]); imag(C[i][2:end])] for i in 1:G.d ])
+		m = G.m
+		ω,ℵ = V[end-2:end]
+		C = reduce(hcat, [ complex(V[(i-1)*(2m+1)+(1:m+1)], [0, V[(i-1)*(2m+1)+(m+1)+(1:m)]]) for i in 1:G.d ])
+		D = rfft(mapslices(v->G.f([v;ℵ]), irfft(C, 2m, [1]), [2]), [1])
+		E = D - im*ω*(0:m) .* C
+		return [ reduce(vcat, [ [real(E[:,i]); imag(E[2:end,i])] for i in 1:G.d ]); sum(abs(C[:,1])) ]
 	end
 end
 
@@ -73,7 +79,7 @@ function C(G::Galerkin)
 	gridControls[1,2] = @Label("SS Iterations");		gridControls[2,2] = spinSSIters
 	gridControls[3,2] = @Label("SS StepSize"); 			gridControls[4,2] = spinSSStepSize
 	gridControls[1,3] = @Label("m");					gridControls[2,3] = spinm
-	gridControls[3,3] = @Label("Periods");					gridControls[4,3] = spinPeriods
+	gridControls[3,3] = @Label("Periods");				gridControls[4,3] = spinPeriods
 	gridControls[3:4,4] = buttonFindInitialValue
 
 	# Handlers
@@ -95,6 +101,10 @@ function C(G::Galerkin)
 
 	signal_connect(spinm, "value_changed")				do w
 		G.m = getproperty(w, :value, Float64)
+	end
+
+	signal_connect(spinPeriods, "value_changed")		do w
+		G.Periods = getproperty(w, :value, Float64)
 	end
 
 	signal_connect(buttonFindInitialValue, "clicked") 	do w
@@ -134,16 +144,56 @@ end
 #TODO add missing fields: t0, y0
 #TODO add omega
 function handlerFindInitialData(G)
-	dataT, dataSS, P = findCycle(G.f, .0, rand(G.d), G.TIters, G.TStepSize, G.SSIters, G.SSStepSize)
-	cyc,ω = prepareCycle(dataSS, G.SSStepSize, P)
+	dataT, dataSS, P = findCycle((t,v)->G.f(t,[v;7.0]), .0, rand(G.d), G.TIters, G.TStepSize, G.SSIters, G.SSStepSize)
+	cyc,ω = prepareCycle(dataSS, G.SSStepSize, P; fac=G.Periods)
 
 	C = mapslices(cyc, [1]) do v
 		tmp = rfft(v)
 		m = length(tmp)-1
 		f = x -> interpolateTrigonometric(real(tmp[1]), 2*real(tmp[2:end]), -2*imag(tmp[2:end]))(x) / (2m+1)
-		return map(f, linspace(.0,2pi,G.m+1)[1:end-1])
+		tmp = map(f, linspace(.0,2pi,2*G.m+2)[1:end-1])
+		tmp = rfft(tmp)
+		return [ real(tmp); imag(tmp[2:end]) ]
 	end
-	C = [vec(C); 0; ω]
 
+	C = [reduce(vcat, C); ω; 7.0]
 	V(G, C)
+	return
+	
+	# C = newton(H(G), x->forwardDifference(H(G),x), C, predCount(1); callback=(v,h,j)->println(norm(h)))
+
+	#tmp
+	# m = G.m
+	# C = [ irfft(complex(C[(i-1)*(2m+1)+(1:m+1)], [0, C[(i-1)*(2m+1)+(m+1)+(1:m)]]), 2m) for i in 1:G.d ]
+
+	m = G.m
+	ω,ℵ = C[end-2:end]
+	C = reduce(hcat, [ complex(C[(i-1)*(2m+1)+(1:m+1)], [0, C[(i-1)*(2m+1)+(m+1)+(1:m)]]) for i in 1:G.d ])
+	D = rfft(mapslices(v->G.f([v;ℵ]), irfft(C, 2m, [1]), [2]), [1])
+	E = D - im*ω*(0:m) .* C
+	F = mapslices(x->irfft(x,2m), E, [1])
+
+	settings = [
+		Theme(background_color=colorant"white"),
+		Guide.xticks(ticks=nothing, orientation=:horizontal),
+		Guide.yticks(ticks=:auto, orientation=:horizontal),
+		Guide.xlabel(""),
+		Guide.ylabel(""),
+		Coord.cartesian(xmin=.0, xmax=2pi)
+	]
+
+	x1 = linspace(0, 2pi, size(cyc,1)+1)[1:end-1]
+	x2 = linspace(0, 2pi, 2*G.m+1)[1:end-1]
+	local Pl = Plot[ plot(
+		layer(x=x1, y=cyc[:,i], Geom.line()),
+		layer(x=x2, y=F[:,i], Geom.line()), settings...)
+		for i in 1:G.d
+			]
+
+	fig = Figure(canvasGalerkin, plot(x=[0], y=[0]))
+	fig.cc = vstack(Pl)
+	display(fig)
+
+	return
+	#tmp
 end
