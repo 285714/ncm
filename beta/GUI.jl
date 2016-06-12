@@ -86,7 +86,20 @@ end
 # Handlers
 #TODO singleton handling
 menuitemViewSSVActivateHandler(widget) = C(Proj.Hom)
-menuitemViewBVActivateHandler(widget) = C(Proj.Cont)
+
+let
+	windowCont = false
+	global menuitemViewBVActivateHandler = function(widget)
+		if (windowCont !== false)
+			present(windowCont)
+			return
+		end
+
+		windowCont = @Window("Continuation Settings", 500, 220, false) |> C(Proj.Cont) |> showall
+		signal_connect(_ -> windowCont = false, windowCont, :destroy)
+	end
+end
+
 
 #TODO unsaved bla
 function menuitemFileNewActivateHandler(widget)

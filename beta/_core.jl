@@ -46,11 +46,12 @@ using Gtk.ShortNames
 push!(LOAD_PATH, "$(pwd())/lib")
 
 include("types.jl")
-map(s -> include("homotopies/$s"), readdir("homotopies/"))
-map(s -> include("continuationmethods/$s"), readdir("continuationmethods/"))
+includeDir(path) = map(s -> splitext(s)[2] == ".jl" && include("$path/$s"), readdir(path))
+includeDir("homotopies/")
+includeDir("continuationmethods/")
 
 include("GUI.jl")
-startGUI()
+# startGUI()
 
 
 # who controls data, when
