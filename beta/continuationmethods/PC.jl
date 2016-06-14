@@ -66,27 +66,6 @@ end
 PC_logWidgets = false
 
 
-macro mkWidgetId(property, args...)
-	return :@mkWidget($property, identity, identity, $args)
-end
-
-macro mkWidget(property, to, from, args)
-	return quote
-		let
-			t = typeof($from($property))
-			(w,p,s) = t == Float64 ? (@SpinButton($args[1], $args[2], $args[3]), :value, :event) :
-			          t == Bool    ? (@CheckButton($args[1]), :active, :toggled) : error("no widget for type $t")
-
-			setproperty!(w, p, $from($property))
-			signal_connect(w, s) do obj, args...
-				v = getproperty(w, p, t)
-				$property = $to(v)
-			end
-			
-			w
-		end
-	end
-end
 
 function C(pc :: PC)
 	g = @Grid()
@@ -108,7 +87,7 @@ function C(pc :: PC)
 	g[1,5] = @Label("α")
 	g[2,5] = @mkWidgetId(pc.α, 0, 1000, 0.00001)
 
-	g[1:2,6] = @mkWidget(pc.direction, x -> x ? -1 : 1, x -> x < 0, ["inverted direction"])
+	g[1:2,6] = @mkWidget(pc.direction, x -> x ? -1 : 1, x -> x < 0, ["Inverted direction"])
 
 	g[3,1:6] = sw = @ScrolledWindow()
 	logView  = @TextView()
