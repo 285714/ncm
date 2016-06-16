@@ -34,7 +34,7 @@
 # B window
 #	set limits
 #	set perturbation?
-#	start continuation
+#	start f
 
 # T window
 #	only necessary to view/manipulate single solution
@@ -43,15 +43,17 @@
 using Immerse
 using Gtk.ShortNames
 
+pwd()
 push!(LOAD_PATH, "$(pwd())/lib")
 
 include("types.jl")
 include("GUI.jl")
-includeDir(path) = map(s -> splitext(s)[2] == ".jl" && include("$path/$s"), readdir(path))
+
+includeDir(path) = map(s -> splitext(s)[2] == ".jl" && include("$(path)/$(s)"), readdir(path))
 includeDir("homotopies/")
 includeDir("continuationmethods/")
 
-# startGUI()
+startGUI()
 
 
-# who controls data, when
+# who controls data, when?

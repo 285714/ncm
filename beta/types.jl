@@ -29,7 +29,7 @@ S(x::Homotopy) = error("S not defined for $(typeof(x)).")
 abstract ContinuationMethod
 
 C(x::ContinuationMethod) = error("C not defined for $(typeof(x)).")
-step(x::ContinuationMethod, ::Homotopy, ::Vector{Float64}) = error("step not defined for $(typeof(x))")
+continuationStep(x::ContinuationMethod, ::Homotopy, ::Vector{Float64}) = error("step not defined for $(typeof(x))")
 
 
 

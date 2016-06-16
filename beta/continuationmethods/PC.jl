@@ -12,7 +12,7 @@ PC() = PC(0.01, 0.01, 1.8, 0.1, 0.51, 1)
 
 
 # untested
-function step(pc :: PC, h :: Homotopy, v :: Vector{Float64})
+function continuationStep(pc :: PC, h :: Homotopy, v :: Vector{Float64})
 
 	# tangent-vector for matrix A
 	function tang(A)
@@ -99,4 +99,3 @@ function C(pc :: PC)
 
 	g
 end
-
