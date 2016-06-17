@@ -14,8 +14,8 @@ using Gtk.ShortNames
 
 #(do menu stuff, other global GUI stuff, saving, ...)
 
-#create empty project
-global Proj = Vector{Vector{Float64}}
+#create empty project: vector of branches of solutions
+global Proj = Vector{Vector{Float64}}[]
 #(or load project data)
 
 #select continuation method, select system
