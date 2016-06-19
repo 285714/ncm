@@ -3,7 +3,7 @@ pygui(:tk) #prevent conflict with gtk
 using PyPlot
 
 using Gtk.ShortNames
-using matsboINTERPOLATE
+using matsboINTERPOLATE, matsboNWTN, matsboPRED, matsboUTIL
 
 include("../lib/ncmprojFINDINITIALDATA.jl")
 include("../lib/ncmprojMKCONTROLGRID.jl")
@@ -70,22 +70,62 @@ function handlerFindInitialData(dataGUI)
 	end
 
 	C = [reduce(vcat, C); ω; 6.0]
+	function Jtmp(x)
+		a = Jroessler(x)
+		a[:,end] = 0
+		return a
+	end
+	C = newton(Hroessler, J, C, predCount(10); callback=(v...)->println(norm(v[2])))
+
 	global Proj = Array[Array[C]]
 	plotSolution(C)
 end
 
-function plotSolution(C)
+function plotSolution(V)
+	f = toTrajInterp(V, 3)
+	t = linspace(.0,2pi,1024)
+	T = reduce(hcat, f(t))'
+
 	global solutionFig
 	figure(solutionFig[:number])
-	plot(C)
+	clf()
+	gca(projection="3d")
+	plot(T[:,1], T[:,2], T[:,3])
 end
 
+function plotBifurcation()
+	global bifurcationFig
+	figure(bifurcationFig[:number])
+	clf()
 
+	function projection(V)
+		f = toTrajInterp(V,3)
+		rtn = Float64[]
+
+		dt = 2pi/1025
+		for t in .0:dt:2pi
+			if f(t)[1] ≤ .0 ≤ f(t+dt)[1]
+				x = bisection(x->f(x)[1], t, t+dt)
+				push!(rtn, norm(f(x)))
+			end
+		end
+
+		return rtn
+	end
+
+	for branch in Proj
+		x = map(last, branch)
+		y = reduce(hcat, map(projection, branch))'
+		plot(x,y)
+	end
+
+	return Void
+end
 
 
 function Hroessler(V::Vector{Float64})
 	local m = length(V-5)÷6
-	local X₀,Xᵣ,Xᵢ,Y₀,Yᵣ,Yᵢ,Z₀,Zᵣ,Zᵢω,ℵ
+	local X₀,Xᵣ,Xᵢ,Y₀,Yᵣ,Yᵢ,Z₀,Zᵣ,Zᵢ,ω,ℵ
 
 	ω,ℵ = V[end-1:end]
 	V = reshape(V[1:end-2],2m+1,3)
@@ -219,3 +259,13 @@ function Jroessler(V)
 end
 
 H,J = Hroessler, Jroessler
+
+
+
+
+
+function toTrajInterp(V, d)
+	m = (length(V)-d-2)÷(2*d)
+	tmp = reshape(V[1:end-2], 2m+1, d)
+	return vectorize(x -> [ interpolateTrigonometric(tmp[1,i], 2tmp[2:2+m-1,i], -2tmp[2+m:end,i])(x) / (2m+1) for i in 1:d ])
+end

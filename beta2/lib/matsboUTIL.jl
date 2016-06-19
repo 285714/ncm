@@ -88,7 +88,6 @@ circconv(x,y) = fft(ifft(x) .* ifft(y))
 # vectorize a function
 vectorize(f) = x -> map(f,x)
 
-
 # TODO inefficient
 function circulantMatrix(U)
 	local V = reverse(U)
@@ -96,7 +95,7 @@ function circulantMatrix(U)
 end
 
 function bisection(f,a,b; ϵ=1e-10)
-	@assert a≤b
+	b < a && ((a,b) = (b,a))
 	while norm(a-b) > ϵ
 		local c = (a+b)/2
 		f(c) < 0 ? a=c : b=c

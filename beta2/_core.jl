@@ -9,6 +9,8 @@
 
 #	this file specifies the whole interface...
 
+addprocs(1)
+
 push!(LOAD_PATH, "$(pwd())/lib")
 using Gtk.ShortNames
 

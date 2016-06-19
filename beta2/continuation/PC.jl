@@ -1,3 +1,4 @@
+using matsboNWTN
 include("../lib/ncmprojMKCONTROLGRID.jl")
 
 function continuationExec()
@@ -14,15 +15,18 @@ function continuationGUI()
 		("ϵ", Float64, .0, 100.0, 1e-2),
 		("κ", Float64, .0, 1.0, 1e-4),
 		("δ", Float64, .0, 1e2, 1e-2),
-		("α", Float64, .0, 360.0, 1e-1),
+		("α", Float64, .0, 180.0, 1e-1),
 		("inv", Bool)
 	])
 	g[1,1] = gridPC
 
 	buttonStep = @Button("Step")
 	g[1,2] = buttonStep
-	signal_connect(w -> @async(handlerButtonStep(dataPC)), buttonStep, "clicked")
+	signal_connect(w -> handlerButtonStep(dataPC), buttonStep, "clicked") #TODO async
 
+	buttonRun = @ToggleButton("Run")
+	g[1,3] = buttonRun
+	signal_connect(w -> handlerButtonRun(w, dataPC), buttonRun, "toggled")
 	g[2,1] = sw = @ScrolledWindow()
 	logView  = @TextView()
 	push!(sw, logView)
@@ -45,8 +49,14 @@ function showLog(msg)
 	end
 end
 
+function handlerButtonRun(w, D)
+	@async while getproperty(w, :active, Bool)
+			handlerButtonStep(D)
+			yield()
+	end
+end
 
-
+#TODO dir...
 function handlerButtonStep(D)
 	# choose a solution
 	V = Proj[end][end]
@@ -56,51 +66,48 @@ function handlerButtonStep(D)
 
 	# write back
 	push!(Proj[end], W)
+
+	plotBifurcation()
 end
 
 # untested
 global h = 1.0 #fix
 function continuationStep(H, J, V, dir::Bool, ϵ, κ, δ, α)
-	global h
-
 	# tangent-vector for matrix A
 	function tang(A)
-		t = nullspace(A)[:,1]
-		copysign(t, det([A; t']))
+		t = A \ [zeros(size(A,1)-1); 1]
+		copysign(t / norm(t), det([A; t']))
 	end
 
 	# newton corrector step
 	function Δ(v)
 		Hv, Jv = H(v), J(v)
-		Hv, Jv, [Jv; tang(Jv)'] \ [H(v); 0]
+		Hv, Jv, Jv \ Hv
 	end
 
-	tangJV = tang(J(V))
-	v₀ = V + (dir?1:-1) * h * tangJV
+	local v₁, Hv₁
+	while true
+		# showLog("... h=$h") #TODO fix... blocks execution at that point
+		v₀ = V + (dir?h:-h) * tang(J(V))
 
-	# step size control
-	Hv₀, Jv₀, Δv₀ = Δ(v₀)
-	v₁ = v₀ - Δv₀
-	Hv₁, Jv₁, Δv₁ = Δ(v₁)
-	κ′ = norm(Δv₁) / norm(Δv₀)
-	δ′ = norm(Δv₀)
-	α′ = acos( dot(tang(Jv₁), tang(Jv₀)) )
-
-	f₀ = max(sqrt(κ′ / κ), sqrt(δ′ / δ), α′ / α)
-	f = clamp(f₀, .5, 2.0)
-	h /= f
-
-
-	if (f >= 2.0)
-		showLog("... h=$h")
-		return continuationStep(H, J, V, dir, ϵ, κ, δ, α) #TODO recursive?
-	end
-
-	while norm(Hv₁) > ɛ
+		# step size control
+		Hv₀, Jv₀, Δv₀ = Δ(v₀)
+		v₁ = v₀ - Δv₀
 		Hv₁, Jv₁, Δv₁ = Δ(v₁)
 		v₁ = v₁ - Δv₁
+		κ′ = norm(Δv₁) / norm(Δv₀)
+		δ′ = norm(Δv₀)
+		α′ = acos( dot(tang(Jv₁), tang(Jv₀)) )
+
+		f = clamp(max(sqrt(κ′/κ), sqrt(δ′/δ), α′/α), .5, 2.0)
+		global h /= f
+
+		f < 2.0 && break
 	end
 
-	showLog("done!")
+	println("$h")
+	newton(H, J, v₁, predEps(ϵ))
+
+	#showLog("done!")
 	return v₁
 end
