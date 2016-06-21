@@ -13,11 +13,21 @@ function systemExec()
 
 	global bifurcationFig = figure()
 	bifurcationFig["canvas"]["set_window_title"]("Bifurcation Plot")
+	bifurcationFig["canvas"]["mpl_connect"]("pick_event", handlerBifurcationPick)
+
+	#index for associating plotlines with solutions
+	global idxLinesToBranch = Dict{PyObject, Int}()
 
 	global solutionFig = figure()
 	solutionFig["canvas"]["set_window_title"]("Solution Plot")
 end
 
+
+function handlerBifurcationPick(ev)
+	i = idxLinesToBranch[ev["artist"]]
+	j = ev["ind"][1]+1
+	plotSolution(project.branches[i].solutions[j])
+end
 
 
 a,b = .1,.1
@@ -36,13 +46,14 @@ function roesslerGUI()
 	local dataItSS, gridItSS
 	local initItSS = [
 		("Trans. Iterations", Int, 0, 1e8, 1000),
-		("Trans. StepSize", Float64, .0, 1.0, .001),
-		("m", Int, 0, 4096, 1),
 		("SS Iterations", Int, 0, 1e8, 1000),
+		("Trans. StepSize", Float64, .0, 1.0, .001),
 		("SS StepSize", Float64, 0, 1.0, .001),
-		("Periods", Int, 1, 128,1)
+		("c₀", Float64, .0, 100.0, .1),
+		("Periods", Int, 1, 128,1),
+		("m", Int, 0, 4096, 1)
 	]
-	dataItSS, gridItSS = mkControlGrid(initItSS, 2)
+	dataItSS, gridItSS = mkControlGrid(initItSS, 1)
 	gridRoessler[1,1] = gridItSS
 
 	buttonFindInitialValue = @Button("Find Initial Value")
@@ -55,12 +66,13 @@ end
 
 
 function handlerFindInitialData(dataGUI)
-	TIters, SSIters, TStepSize, SSStepSize, Periods, m = map(x->dataGUI[x], ["Trans. Iterations", "SS Iterations", "Trans. StepSize", "SS StepSize", "Periods", "m"])
+	#TODO function/macro bringIntoScope(D::Dict)
+	TIters, SSIters, TStepSize, SSStepSize, Periods, m, c₀ = map(x->dataGUI[x], ["Trans. Iterations", "SS Iterations", "Trans. StepSize", "SS StepSize", "Periods", "m", "c₀"])
 
-	dataT, dataSS, P = findCycle((t,v)->roessler(t,[v;6.0]), .0, rand(3), TIters, TStepSize, SSIters, SSStepSize)
+	dataT, dataSS, P = findCycle((t,v)->roessler(t,[v;c₀]), .0, rand(3), TIters, TStepSize, SSIters, SSStepSize)
 	cyc,ω = prepareCycle(dataSS, SSStepSize, P; fac=Periods)
 
-	C = mapslices(cyc, [1]) do v
+	local C = mapslices(cyc, [1]) do v
 		tmp = rfft(v)
 		tmp = map(linspace(.0,2pi,2*m+2)[1:end-1]) do x
 			interpolateTrigonometric(real(tmp[1]), 2*real(tmp[2:end]), -2*imag(tmp[2:end]))(x) / (2m+1)
@@ -69,17 +81,14 @@ function handlerFindInitialData(dataGUI)
 		return [ real(tmp); imag(tmp[2:end]) ]
 	end
 
-	C = [reduce(vcat, C); ω; 6.0]
-	function Jtmp(x)
-		a = Jroessler(x)
-		a[:,end] = 0
-		return a
-	end
-	C = newton(Hroessler, J, C, predCount(10); callback=(v...)->println(norm(v[2])))
+	C = [reduce(vcat, C); ω; c₀]
+	C = newton(H, J, C, predCount(10) ∧ predEps(1e-10))
 
-	global Proj = Array[Array[C]]
+	global project
+	push!(project.branches, Branch(C))
 	plotSolution(C)
 end
+
 
 function plotSolution(V)
 	f = toTrajInterp(V, 3)
@@ -91,36 +100,62 @@ function plotSolution(V)
 	clf()
 	gca(projection="3d")
 	plot(T[:,1], T[:,2], T[:,3])
+
+	plotBifurcationSingle(V)
 end
 
-function plotBifurcation()
+
+function projection(V)
+	f = toTrajInterp(V,3)
+	rtn = Float64[]
+
+	dt = 2pi/1025
+	for t in .0:dt:2pi
+		if f(t)[1] ≤ .0 ≤ f(t+dt)[1]
+			x = matsboUTIL.bisection(x->f(x)[1], t, t+dt) #TODO precision
+			push!(rtn, norm(f(x)))
+		end
+	end
+
+	return rtn
+end
+
+
+function plotBifurcation(project::Project)
 	global bifurcationFig
 	figure(bifurcationFig[:number])
 	clf()
 
-	function projection(V)
-		f = toTrajInterp(V,3)
-		rtn = Float64[]
-
-		dt = 2pi/1025
-		for t in .0:dt:2pi
-			if f(t)[1] ≤ .0 ≤ f(t+dt)[1]
-				x = bisection(x->f(x)[1], t, t+dt)
-				push!(rtn, norm(f(x)))
-			end
-		end
-
-		return rtn
-	end
-
-	for branch in Proj
-		x = map(last, branch)
-		y = reduce(hcat, map(projection, branch))'
-		plot(x,y)
+	#TODO parallel, changing length of projection
+	for i in 1:length(project.branches)
+		branch = project.branches[i]
+		x = map(last, branch.solutions)
+		tmp = map(projection, branch.solutions)
+		maxTmp = maximum(map(length, tmp))
+		y = reduce((A,a) -> hcat(A,a[(0:maxTmp-1) % length(a) + 1]), Array(Float64, maxTmp, 0), tmp)'
+		lines = plot(x,y,picker=5)
+		map(l -> (idxLinesToBranch[l]=i), lines)
 	end
 
 	return Void
 end
+
+
+function plotBifurcationSingle(V)
+	global bifurcationFig, singleSolutionMark
+	figure(bifurcationFig[:number])
+
+	println(singleSolutionMark)
+
+	isdefined(:singleSolutionMark) && try singleSolutionMark["remove"]() end
+
+	y = projection(V)
+	x = fill(V[end], size(y))
+	singleSolutionMark = scatter(x,y)
+
+	println(singleSolutionMark)
+end
+
 
 
 function Hroessler(V::Vector{Float64})
@@ -258,8 +293,8 @@ function Jroessler(V)
 	]
 end
 
-H,J = Hroessler, Jroessler
 
+H,J = Hroessler, Jroessler
 
 
 
@@ -267,5 +302,5 @@ H,J = Hroessler, Jroessler
 function toTrajInterp(V, d)
 	m = (length(V)-d-2)÷(2*d)
 	tmp = reshape(V[1:end-2], 2m+1, d)
-	return vectorize(x -> [ interpolateTrigonometric(tmp[1,i], 2tmp[2:2+m-1,i], -2tmp[2+m:end,i])(x) / (2m+1) for i in 1:d ])
+	return matsboUTIL.vectorize(x -> [ matsboINTERPOLATE.interpolateTrigonometric(tmp[1,i], 2tmp[2:2+m-1,i], -2tmp[2+m:end,i])(x) / (2m+1) for i in 1:d ])
 end

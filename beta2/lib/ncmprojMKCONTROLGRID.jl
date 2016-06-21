@@ -1,3 +1,5 @@
+#TODO convert to real MVC, unify interface
+
 # creates a grid of controls with labels, handlers and encapsulated storage
 function mkControlGrid(C, cols=1)
 	local Data = [ x[1] => zero(x[2]) for x in C ]
@@ -18,7 +20,7 @@ function mkControlGrid(C, cols=1)
 		elseif x[2] == Bool
 			tmp = @CheckButton(x[3:end]...)
 			signal_connect(tmp, "toggled") do w
-				Data[x[1]] = getproperty(w, :value, x[2])
+				Data[x[1]] = getproperty(w, :active, x[2])
 			end
 		end
 		tmp == Void && error("No handling for type $(x[2]) defined.")

@@ -9,6 +9,8 @@
 
 #	this file specifies the whole interface...
 
+include("Model.jl")
+
 addprocs(1)
 
 push!(LOAD_PATH, "$(pwd())/lib")
@@ -17,7 +19,7 @@ using Gtk.ShortNames
 #(do menu stuff, other global GUI stuff, saving, ...)
 
 #create empty project: vector of branches of solutions
-global Proj = Vector{Vector{Float64}}[]
+global project = Project(Branch[])
 #(or load project data)
 
 #select continuation method, select system
@@ -31,3 +33,9 @@ include("system/roessler.jl")
 # start
 continuationExec()
 systemExec()
+
+
+#TODO-2DAY:
+#	choose/add branch
+#	modify solution
+#	select solution
