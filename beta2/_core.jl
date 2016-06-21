@@ -36,6 +36,16 @@ systemExec()
 
 
 #TODO-2DAY:
-#	choose/add branch
+#	choose branch ✓
+#	select solution ✓
+#	add branch ✓
 #	modify solution
-#	select solution
+#	delete branches
+#	plot thread... not working... forget that... pyplot needs thread 1... Gtk might work...
+#	singular branches...
+
+#	abstraction: plotting, galerkin, continuation, project (!)
+#	howto associate additional info with solutions/branches? transparent, general...
+#		projects must be method agnostic...
+#		plots, projection, stepsize, ...
+#		encapsulate to simulate inheritance? serializability?

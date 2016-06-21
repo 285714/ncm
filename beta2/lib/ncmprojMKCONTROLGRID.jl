@@ -1,4 +1,5 @@
-#TODO convert to real MVC, unify interface
+#TODO convert to real MVC, unify interface, plugin style, fix grid interface
+#TODO additional abstraction layer encapsulating an element plus data and handler
 
 # creates a grid of controls with labels, handlers and encapsulated storage
 function mkControlGrid(C, cols=1)
@@ -11,17 +12,20 @@ function mkControlGrid(C, cols=1)
 			signal_connect(tmp, "value_changed") do w
 				Data[x[1]] = getproperty(w, :value, x[2])
 			end
+			signal_emit(tmp, "value_changed", Void)
 		elseif x[2] == Float64
 			tmp = @Scale(:h, x[3:end]...)
 			local adj = @Adjustment(tmp)
 			signal_connect(adj, "value_changed") do w
 				Data[x[1]] = getproperty(w, :value, x[2])
 			end
+			signal_emit(tmp, "value_changed", Void)
 		elseif x[2] == Bool
 			tmp = @CheckButton(x[3:end]...)
 			signal_connect(tmp, "toggled") do w
 				Data[x[1]] = getproperty(w, :active, x[2])
 			end
+			signal_emit(tmp, "toggled", Void)
 		end
 		tmp == Void && error("No handling for type $(x[2]) defined.")
 		setproperty!(tmp, :hexpand, true)

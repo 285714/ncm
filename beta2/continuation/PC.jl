@@ -67,13 +67,15 @@ function handlerButtonStep(D)
 	V = B.solutions[D["inv"]?1:end]
 
 	# advance it one step
-	W,h = continuationStep(H, J, V, B.h[D["inv"]], D["ϵ"], D["κ"], D["δ"], D["α"])
+	h = B.D[D["inv"]?"hUp":"hDown"]
+	W,h = continuationStep(H, J, V, h, D["ϵ"], D["κ"], D["δ"], D["α"])
 
 	# write back
 	(D["inv"]?unshift!:push!)(project.branches[end].solutions, W)
-	B.h[D["inv"]] = h
+	B.D[D["inv"]?"hUp":"hDown"] = h
 
 	plotBifurcation(project)
+	plotSolution(W)
 end
 
 # untested

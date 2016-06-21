@@ -26,6 +26,7 @@ end
 function handlerBifurcationPick(ev)
 	i = idxLinesToBranch[ev["artist"]]
 	j = ev["ind"][1]+1
+	plotBranch(project.branches[i])
 	plotSolution(project.branches[i].solutions[j])
 end
 
@@ -85,7 +86,9 @@ function handlerFindInitialData(dataGUI)
 	C = newton(H, J, C, predCount(10) ∧ predEps(1e-10))
 
 	global project
-	push!(project.branches, Branch(C))
+	B = Branch(C)
+	B.D["hUp"], B.D["hDown"] = 1.0, -1.0
+	push!(project.branches, B)
 	plotSolution(C)
 end
 
@@ -129,13 +132,30 @@ function plotBifurcation(project::Project)
 	#TODO parallel, changing length of projection
 	for i in 1:length(project.branches)
 		branch = project.branches[i]
-		x = map(last, branch.solutions)
-		tmp = map(projection, branch.solutions)
-		maxTmp = maximum(map(length, tmp))
-		y = reduce((A,a) -> hcat(A,a[(0:maxTmp-1) % length(a) + 1]), Array(Float64, maxTmp, 0), tmp)'
-		lines = plot(x,y,picker=5)
-		map(l -> (idxLinesToBranch[l]=i), lines)
+
+		if true #get(branch.D, "changed", true)
+			try branch.D["plot"]["remove"]() end
+			x = map(last, branch.solutions)
+			y = reduce(hcat, map(projection, branch.solutions))'
+			lines = plot(x,y,picker=5)
+			map(l -> (idxLinesToBranch[l]=i), lines)
+			branch.D["plot"] = lines
+			branch.D["changed"] = false
+		end
 	end
+end
+
+
+function plotBranch(branch::Branch)
+	global bifurcationFig, branchPoints
+	figure(bifurcationFig[:number])
+
+	try for b in branchPoints try b["remove"]() end end end
+	branchPoints = Any[]
+
+	x = map(last, branch.solutions)
+	y = reduce(vcat, map(transpose∘projection, branch.solutions))
+	scatter(broadcast((x,y)->x, x, y), y, color="k")
 
 	return Void
 end
@@ -145,15 +165,13 @@ function plotBifurcationSingle(V)
 	global bifurcationFig, singleSolutionMark
 	figure(bifurcationFig[:number])
 
-	println(singleSolutionMark)
-
-	isdefined(:singleSolutionMark) && try singleSolutionMark["remove"]() end
+	try singleSolutionMark["remove"]() end
 
 	y = projection(V)
 	x = fill(V[end], size(y))
-	singleSolutionMark = scatter(x,y)
+	singleSolutionMark = scatter(x,y,color="r")
 
-	println(singleSolutionMark)
+	return Void
 end
 
 
