@@ -1,8 +1,6 @@
 using matsboNWTN
 include("../lib/ncmprojMKCONTROLGRID.jl")
 
-#TODO plotting thread
-
 function continuationExec()
 	continuationGUI()
 end
@@ -54,8 +52,9 @@ end
 
 function handlerButtonRun(w, D)
 	if getproperty(w, :active, Bool)
-		@async while getproperty(w, :active, Bool)
+		@schedule while getproperty(w, :active, Bool)
 			handlerButtonStep(D)
+			yield()
 		end
 	end
 end
@@ -73,9 +72,6 @@ function handlerButtonStep(D)
 	# write back
 	(D["inv"]?unshift!:push!)(project.branches[end].solutions, W)
 	B.D[D["inv"]?"hUp":"hDown"] = h
-
-	plotBifurcation(project)
-	plotSolution(W)
 end
 
 # untested

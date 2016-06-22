@@ -19,7 +19,8 @@ using Gtk.ShortNames
 #(do menu stuff, other global GUI stuff, saving, ...)
 
 #create empty project: vector of branches of solutions
-global project = Project(Branch[])
+# global project = Project(Branch[])
+global project = open(deserialize, "p1.txt")
 #(or load project data)
 
 #select continuation method, select system
@@ -30,7 +31,10 @@ global project = Project(Branch[])
 include("continuation/PC.jl")
 include("system/roessler.jl")
 
+include("lib/ncmprojBIFPLOT.jl")
+
 # start
+BifPlot(project)
 continuationExec()
 systemExec()
 

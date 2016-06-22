@@ -1,33 +1,14 @@
-using PyCall
-pygui(:tk) #prevent conflict with gtk
-using PyPlot
-
 using Gtk.ShortNames
 using matsboINTERPOLATE, matsboNWTN, matsboPRED, matsboUTIL
 
 include("../lib/ncmprojFINDINITIALDATA.jl")
 include("../lib/ncmprojMKCONTROLGRID.jl")
 
+include("../lib/ncmprojBIFPLOT.jl")
+
 function systemExec()
+	BifPlot(project)
 	roesslerGUI()
-
-	global bifurcationFig = figure()
-	bifurcationFig["canvas"]["set_window_title"]("Bifurcation Plot")
-	bifurcationFig["canvas"]["mpl_connect"]("pick_event", handlerBifurcationPick)
-
-	#index for associating plotlines with solutions
-	global idxLinesToBranch = Dict{PyObject, Int}()
-
-	global solutionFig = figure()
-	solutionFig["canvas"]["set_window_title"]("Solution Plot")
-end
-
-
-function handlerBifurcationPick(ev)
-	i = idxLinesToBranch[ev["artist"]]
-	j = ev["ind"][1]+1
-	plotBranch(project.branches[i])
-	plotSolution(project.branches[i].solutions[j])
 end
 
 
@@ -89,22 +70,6 @@ function handlerFindInitialData(dataGUI)
 	B = Branch(C)
 	B.D["hUp"], B.D["hDown"] = 1.0, -1.0
 	push!(project.branches, B)
-	plotSolution(C)
-end
-
-
-function plotSolution(V)
-	f = toTrajInterp(V, 3)
-	t = linspace(.0,2pi,1024)
-	T = reduce(hcat, f(t))'
-
-	global solutionFig
-	figure(solutionFig[:number])
-	clf()
-	gca(projection="3d")
-	plot(T[:,1], T[:,2], T[:,3])
-
-	plotBifurcationSingle(V)
 end
 
 
@@ -124,59 +89,10 @@ function projection(V)
 end
 
 
-function plotBifurcation(project::Project)
-	global bifurcationFig
-	figure(bifurcationFig[:number])
-	clf()
-
-	#TODO parallel, changing length of projection
-	for i in 1:length(project.branches)
-		branch = project.branches[i]
-
-		if true #get(branch.D, "changed", true)
-			try branch.D["plot"]["remove"]() end
-			x = map(last, branch.solutions)
-			y = reduce(hcat, map(projection, branch.solutions))'
-			lines = plot(x,y,picker=5)
-			map(l -> (idxLinesToBranch[l]=i), lines)
-			branch.D["plot"] = lines
-			branch.D["changed"] = false
-		end
-	end
-end
-
-
-function plotBranch(branch::Branch)
-	global bifurcationFig, branchPoints
-	figure(bifurcationFig[:number])
-
-	try for b in branchPoints try b["remove"]() end end end
-	branchPoints = Any[]
-
-	x = map(last, branch.solutions)
-	y = reduce(vcat, map(transpose∘projection, branch.solutions))
-	scatter(broadcast((x,y)->x, x, y), y, color="k")
-
-	return Void
-end
-
-
-function plotBifurcationSingle(V)
-	global bifurcationFig, singleSolutionMark
-	figure(bifurcationFig[:number])
-
-	try singleSolutionMark["remove"]() end
-
-	y = projection(V)
-	x = fill(V[end], size(y))
-	singleSolutionMark = scatter(x,y,color="r")
-
-	return Void
-end
 
 
 
-function Hroessler(V::Vector{Float64})
+function H(V::Vector{Float64})
 	local m = length(V-5)÷6
 	local X₀,Xᵣ,Xᵢ,Y₀,Yᵣ,Yᵢ,Z₀,Zᵣ,Zᵢ,ω,ℵ
 
@@ -214,7 +130,7 @@ end
 
 
 
-function Jroessler(V)
+function J(V)
 	local m = length(V-5)÷6
 	local X₀,Xᵣ,Xᵢ,Y₀,Yᵣ,Yᵢ,Z₀,Zᵣ,Zᵢ,ω,ℵ
 
@@ -310,9 +226,6 @@ function Jroessler(V)
 		LbyX LbyY LbyZ Lbyω Lbyℵ
 	]
 end
-
-
-H,J = Hroessler, Jroessler
 
 
 
