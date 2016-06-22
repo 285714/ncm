@@ -1,11 +1,7 @@
-using matsboNWTN
+@everywhere using matsboNWTN
 include("../lib/ncmprojMKCONTROLGRID.jl")
 
-function continuationExec()
-	continuationGUI()
-end
-
-function continuationGUI()
+function pcGUI()
 	win = @Window("Continuation Controls", 500, 100, false)
 
 	g = @Grid()
@@ -54,28 +50,41 @@ function handlerButtonRun(w, D)
 	if getproperty(w, :active, Bool)
 		@schedule while getproperty(w, :active, Bool)
 			handlerButtonStep(D)
-			yield()
 		end
 	end
 end
 
 #TODO dir...
+global h = Dict()
 function handlerButtonStep(D)
-	# choose a solution
-	B = project.branches[end]
-	V = B.solutions[D["inv"]?1:end]
+	V = project.activeSolution
+	branch = findBranch(project, V)
 
-	# advance it one step
-	h = B.D[D["inv"]?"hUp":"hDown"]
-	W,h = continuationStep(H, J, V, h, D["ϵ"], D["κ"], D["δ"], D["α"])
+	local htmp
+	if V == branch.solutions[end]
+		htmp = get(h, (branch, true), 1)
+	elseif V == branch.solutions[1]
+		htmp = get(h, (branch, false), -1)
+	else #solution not at start/end: create new branch, continue in pos dir
+		htmp = 1
+		V = deepcopy(V)
+		branch = Branch(V)
+		push!(project.branches, branch)
+	end
+
+	W,htmp = @fetch continuationStep(H, J, V, htmp, D["ϵ"], D["κ"], D["δ"], D["α"])
 
 	# write back
-	(D["inv"]?unshift!:push!)(project.branches[end].solutions, W)
-	B.D[D["inv"]?"hUp":"hDown"] = h
+	dir = htmp > 0
+	(dir?push!:unshift!)(branch.solutions, W)
+	project.activeSolution = W
+	h[(branch, dir)] = htmp
+
+	return Void
 end
 
 # untested
-function continuationStep(H, J, V, h, ϵ, κ, δ, α)
+@everywhere function continuationStep(H, J, V, h, ϵ, κ, δ, α)
 	# tangent-vector for matrix A
 	function tang(A)
 		t = nullspace(A)[:,1] #[A; ones(1,size(A,2))] \ [zeros(size(A,1)); 1]

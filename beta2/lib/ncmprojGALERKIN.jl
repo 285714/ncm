@@ -1,18 +1,7 @@
-type Galerkin
-	f::Function
-	H::Function
-	J::Function
-end
-
 using Gtk.ShortNames
-using matsboINTERPOLATE, matsboNWTN, matsboPRED, matsboUTIL
-
-include("../lib/ncmprojFINDINITIALDATA.jl")
+@everywhere using matsboINTERPOLATE, matsboNWTN, matsboPRED, matsboUTIL
+@everywhere include("$(pwd())/lib/ncmprojFINDINITIALDATA.jl")
 include("../lib/ncmprojMKCONTROLGRID.jl")
-
-function systemExec()
-	roesslerGUI()
-end
 
 function galerkinGUI()
 	windowGalerkin = @Window("Galerkin Controls", 128, 256, false, true)
@@ -49,25 +38,29 @@ function handlerFindInitialData(dataGUI)
 	#TODO function/macro bringIntoScope(D::Dict)
 	TIters, SSIters, TStepSize, SSStepSize, Periods, m, c₀ = map(x->dataGUI[x], ["Trans. Iterations", "SS Iterations", "Trans. StepSize", "SS StepSize", "Periods", "m", "c₀"])
 
-	dataT, dataSS, P = findCycle((t,v)->roessler(t,[v;c₀]), .0, rand(3), TIters, TStepSize, SSIters, SSStepSize)
-	cyc,ω = prepareCycle(dataSS, SSStepSize, P; fac=Periods)
+	C = @fetch begin
+		dataT, dataSS, P = findCycle((t,v)->f(t,[v;c₀]), .0, rand(3), TIters, TStepSize, SSIters, SSStepSize)
+		cyc,ω = prepareCycle(dataSS, SSStepSize, P; fac=Periods)
 
-	local C = mapslices(cyc, [1]) do v
-		tmp = rfft(v)
-		tmp = map(linspace(.0,2pi,2*m+2)[1:end-1]) do x
-			interpolateTrigonometric(real(tmp[1]), 2*real(tmp[2:end]), -2*imag(tmp[2:end]))(x) / (2m+1)
+		local C = mapslices(cyc, [1]) do v
+			tmp = rfft(v)
+			tmp = map(linspace(.0,2pi,2*m+2)[1:end-1]) do x
+				interpolateTrigonometric(real(tmp[1]), 2*real(tmp[2:end]), -2*imag(tmp[2:end]))(x) / (2m+1)
+			end
+			tmp = rfft(tmp)
+			return [ real(tmp); imag(tmp[2:end]) ]
 		end
-		tmp = rfft(tmp)
-		return [ real(tmp); imag(tmp[2:end]) ]
+
+		C = [reduce(vcat, C); ω]
+		Htmp(V) = H([V; c₀]) # R^N -> R^N system
+		Jtmp(V) = J([V; c₀])[:, 1:end-1] # R^N -> R^(NxN) system
+		newton(Htmp, Jtmp, C, predCount(10) ∧ predEps(1e-10))
 	end
 
-	C = [reduce(vcat, C); ω; c₀]
-	C = newton(H, J, C, predCount(10) ∧ predEps(1e-10))
-
+	branch = Branch([C; c₀])
 	global project
-	B = Branch(C)
-	B.D["hUp"], B.D["hDown"] = 1.0, -1.0
-	push!(project.branches, B)
+	push!(project.branches, branch)
+	project.activeSolution = branch.solutions[end]
 end
 
 
@@ -79,11 +72,11 @@ function toTrajInterp(V, d)
 end
 
 
-function galerkinProjection(V)
+function projection(V)
 	f = toTrajInterp(V,3)
 	rtn = Float64[]
 
-	dt = 2pi/1025
+	dt = 2pi/1025 #TODO ...
 	for t in .0:dt:2pi
 		if f(t)[1] ≤ .0 ≤ f(t+dt)[1]
 			x = matsboUTIL.bisection(x->f(x)[1], t, t+dt) #TODO precision

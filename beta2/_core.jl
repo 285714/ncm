@@ -9,7 +9,7 @@
 
 #	this file specifies the whole interface...
 
-include("Model.jl")
+@everywhere include("Model.jl")
 
 addprocs(1)
 
@@ -19,8 +19,10 @@ using Gtk.ShortNames
 #(do menu stuff, other global GUI stuff, saving, ...)
 
 #create empty project: vector of branches of solutions
-# global project = Project(Branch[])
-global project = open(deserialize, "p1.txt")
+global project = Project(Branch[])
+# f = open("p1.txt", "w"); serialize(f, project); close(f)
+#global project = open(deserialize, "p1.txt")
+global lockProject = ReentrantLock()
 #(or load project data)
 
 #select continuation method, select system
@@ -28,15 +30,10 @@ global project = open(deserialize, "p1.txt")
 # include(open_dialog("Select system.", Gtk.GtkNullContainer(), ASCIIString[]))
 
 #DEBUG prevent loading screens
-include("continuation/PC.jl")
-include("system/roessler.jl")
-
-include("lib/ncmprojBIFPLOT.jl")
-
-# start
-BifPlot(project)
-continuationExec()
-systemExec()
+@everywhere include("system/roessler.jl")
+include("continuation/PC.jl");		pcGUI()
+include("lib/ncmprojGALERKIN.jl");	galerkinGUI()
+include("lib/ncmprojBIFPLOT.jl");	BifPlot(project)
 
 
 #TODO-2DAY:
@@ -48,7 +45,10 @@ systemExec()
 #	plot thread... not working... forget that... pyplot needs thread 1... Gtk might work...
 #	singular branches...
 
-#	abstraction: plotting, galerkin, continuation, project (!)
+#	abstraction: plotting, galerkin, continuation, project (! - for access, sync, sanity, ...)
+#		lock
+#		branch: dequeue only
+#		project: all operations
 #	howto associate additional info with solutions/branches? transparent, general...
 #		projects must be method agnostic...
 #		plots, projection, stepsize, ...
