@@ -9,10 +9,10 @@
 
 #	this file specifies the whole interface...
 
-@everywhere include("Model.jl")
 
 addprocs(1)
 
+@everywhere include("Model.jl")
 push!(LOAD_PATH, "$(pwd())/lib")
 using Gtk.ShortNames
 
@@ -53,3 +53,11 @@ include("lib/ncmprojBIFPLOT.jl");	BifPlot(project)
 #		projects must be method agnostic...
 #		plots, projection, stepsize, ...
 #		encapsulate to simulate inheritance? serializability?
+
+
+# PC chosing MUST work
+# resampling
+# deleting solutions/branches
+# interface: galerkin only influences active solution
+# (perturbation)
+# remove inv

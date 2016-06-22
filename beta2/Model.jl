@@ -14,4 +14,9 @@ type Project
 	Project(B) = new(B, Void)
 end
 
-findBranch(P::Project, S::Vector{Float64}) = for branch in P.branches; S in branch.solutions && return branch end
+function findBranch(P::Project, S::Vector{Float64})
+	for i in 1:length(P.branches)
+		S in P.branches[i].solutions && return i
+	end
+	return 0
+end

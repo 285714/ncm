@@ -57,13 +57,15 @@ end
 #TODO dir...
 global h = Dict()
 function handlerButtonStep(D)
+	i = @fetch findBranch(project, project.activeSolution) #TODO hint parent
 	V = project.activeSolution
-	branch = findBranch(project, V)
 
-	local htmp
-	if V == branch.solutions[end]
+	local branch,htmp
+	if i != 0 && i == length(project.branches[i].solutions)
+		branch = project.branches[i]
 		htmp = get(h, (branch, true), 1)
-	elseif V == branch.solutions[1]
+	elseif i == 1
+		branch = project.branches[i]
 		htmp = get(h, (branch, false), -1)
 	else #solution not at start/end: create new branch, continue in pos dir
 		htmp = 1
