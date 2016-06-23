@@ -1,10 +1,11 @@
 using Gtk.ShortNames
-@everywhere using matsboINTERPOLATE, matsboNWTN, matsboPRED, matsboUTIL
-@everywhere include("$(pwd())/lib/ncmprojFINDINITIALDATA.jl")
-include("../lib/ncmprojMKCONTROLGRID.jl")
+using matsboINTERPOLATE, matsboNWTN, matsboPRED, matsboUTIL
+include("$(pwd())/lib/ncmprojFINDINITIALDATA.jl")
+include("$(pwd())/lib/ncmprojMKCONTROLGRID.jl")
 
 function galerkinGUI()
-	windowGalerkin = @Window("Galerkin Controls", 128, 256, false, true)
+	windowGalerkin = @Window("Galerkin Controls", 256, 256, false, true)
+	setproperty!(windowGalerkin, :resizable, false)
 	# setproperty!(windowGalerkin, :type_hint, Gtk.GdkWindowTypeHint.TOOLBAR)
 
 	gridGalerkin = @Grid()
@@ -26,7 +27,7 @@ function galerkinGUI()
 	gridGalerkin[1,1] = gridItSS
 
 	buttonFindInitialValue = @Button("Find Initial Solution")
-	signal_connect(w -> @async(handlerFindInitialData(dataItSS)), buttonFindInitialValue, "clicked")
+	signal_connect(w -> @async(handlerFindInitialData(w, dataItSS)), buttonFindInitialValue, "clicked")
 	gridGalerkin[1,2] = buttonFindInitialValue
 
 	showall(windowGalerkin)
@@ -34,7 +35,8 @@ end
 
 
 
-function handlerFindInitialData(dataGUI)
+function handlerFindInitialData(w, dataGUI)
+	setproperty!(w, :sensitive, false)
 	#TODO function/macro bringIntoScope(D::Dict)
 	TIters, SSIters, TStepSize, SSStepSize, Periods, m, c₀ = map(x->dataGUI[x], ["Trans. Iterations", "SS Iterations", "Trans. StepSize", "SS StepSize", "Periods", "m", "c₀"])
 
@@ -57,10 +59,11 @@ function handlerFindInitialData(dataGUI)
 		newton(Htmp, Jtmp, C, predCount(10) ∧ predEps(1e-10))
 	end
 
-	branch = Branch([C; c₀])
 	global project
-	push!(project.branches, branch)
-	project.activeSolution = branch.solutions[end]
+	project.activeSolution = [C; c₀]
+
+	setproperty!(w, :sensitive, true)
+	return Void
 end
 
 
@@ -79,7 +82,7 @@ function projection(V)
 	dt = 2pi/1025 #TODO ...
 	for t in .0:dt:2pi
 		if f(t)[1] ≤ .0 ≤ f(t+dt)[1]
-			x = matsboUTIL.bisection(x->f(x)[1], t, t+dt) #TODO precision
+			x = matsboUTIL.bisection(x->f(x)[1], t, t+dt, ϵ=1e-4) #TODO precision
 			push!(rtn, norm(f(x)))
 		end
 	end

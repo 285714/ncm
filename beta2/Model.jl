@@ -14,9 +14,10 @@ type Project
 	Project(B) = new(B, Void)
 end
 
-function findBranch(P::Project, S::Vector{Float64})
+function findSolution(P::Project, S::Vector{Float64})
 	for i in 1:length(P.branches)
-		S in P.branches[i].solutions && return i
+		j = findfirst(x -> x == S, P.branches[i].solutions)
+		j > 0 && return i,j
 	end
-	return 0
+	return 0,0
 end

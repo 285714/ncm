@@ -1,80 +1,74 @@
-@everywhere using matsboNWTN
+using Gtk.ShortNames
+using matsboNWTN
 include("../lib/ncmprojMKCONTROLGRID.jl")
+include("../lib/ncmprojLOGGER.jl")
 
 function pcGUI()
-	win = @Window("Continuation Controls", 500, 100, false)
+	win = @Window("Continuation Controls", 256, 512, false)
+	# setproperty!(win, :resizable, false)
 
 	g = @Grid()
 	push!(win, g)
 
+	global L = Logger() #TODO encapsulate
+	g[1:2,1] = L.w
+
 	dataPC, gridPC = mkControlGrid([
-		("ϵ", Float64, 1e-8, 1e-2, 1e-8),
-		("κ", Float64, .0, 1.0, 1e-4),
-		("δ", Float64, .0, 1e2, 1),
-		("α", Float64, .0, 180.0, 1e-1),
-		("inv", Bool)
+		("ϵ", Float64, 1e-6, 1e-2, 1e-8),
+		("κ", Float64, .0, 1.0, 1e-3),
+		("δ", Float64, .0, 10.0, 1e-2),
+		("α", Float64, .0, 90.0, 1e-1)
 	])
-	g[1,1] = gridPC
+	g[1:2,2] = gridPC
 
 	buttonStep = @Button("Step")
-	g[1,2] = buttonStep
-	signal_connect(w -> @async(handlerButtonStep(dataPC)), buttonStep, "clicked") #TODO async
+	g[1,3] = buttonStep
+	signal_connect(buttonStep, "clicked") do w
+		@schedule begin
+			project.activeSolution == Void && return Void
+			setproperty!(w, :sensitive, false)
+			goSingleStep(dataPC)
+			setproperty!(w, :sensitive, true)
+		end
+	end
 
 	buttonRun = @ToggleButton("Run")
-	g[1,3] = buttonRun
-	signal_connect(w -> handlerButtonRun(w, dataPC), buttonRun, "toggled")
-
-	g[2,1] = sw = @ScrolledWindow()
-	logView  = @TextView()
-	push!(sw, logView)
-	global PC_logWidgets = (sw, logView)
-	setproperty!(logView, :justification, 0)
-	setproperty!(logView, :hexpand, true)
-	setproperty!(logView, :editable, false)
+	g[2,3] = buttonRun
+	signal_connect(buttonRun, "toggled") do w
+		if getproperty(w, :active, Bool)
+			@schedule while getproperty(w, :active, Bool)
+				goSingleStep(dataPC)
+			end
+		end
+	end
 
 	showall(win)
 end
 
-global PC_logWidgets = false
-function showLog(msg)
-	if (PC_logWidgets !== false)
-		setproperty!(PC_logWidgets[2], :editable, true)
-		insert!(PC_logWidgets[2], "\n$msg")
-		setproperty!(PC_logWidgets[2], :editable, false)
-		adj = getproperty(PC_logWidgets[1], :vadjustment, Gtk.GtkAdjustment)
-		setproperty!(adj, :value, getproperty(adj, :upper, Int))
-	end
-end
-
-function handlerButtonRun(w, D)
-	if getproperty(w, :active, Bool)
-		@schedule while getproperty(w, :active, Bool)
-			handlerButtonStep(D)
-		end
-	end
-end
-
-#TODO dir...
-global h = Dict()
-function handlerButtonStep(D)
-	i = @fetch findBranch(project, project.activeSolution) #TODO hint parent
+global h = Dict() #TODO encapsulate
+function goSingleStep(D)
+	lock(lockProject)
+	i,j = @fetch findSolution(project, project.activeSolution) #TODO hint parent
 	V = project.activeSolution
 
 	local branch,htmp
-	if i != 0 && i == length(project.branches[i].solutions)
+	if i ≠ 0 && j == length(project.branches[i].solutions)
 		branch = project.branches[i]
 		htmp = get(h, (branch, true), 1)
-	elseif i == 1
+	elseif i ≠ 0 && j == 1
 		branch = project.branches[i]
 		htmp = get(h, (branch, false), -1)
-	else #solution not at start/end: create new branch, continue in pos dir
+	else #solution not at start/end of branch, not in branch: create new branch, continue in pos dir
 		htmp = 1
 		V = deepcopy(V)
 		branch = Branch(V)
 		push!(project.branches, branch)
+		println("new branch!") #TODO remove
 	end
 
 	W,htmp = @fetch continuationStep(H, J, V, htmp, D["ϵ"], D["κ"], D["δ"], D["α"])
+
+	write(L, htmp)
 
 	# write back
 	dir = htmp > 0
@@ -82,6 +76,7 @@ function handlerButtonStep(D)
 	project.activeSolution = W
 	h[(branch, dir)] = htmp
 
+	unlock(lockProject)
 	return Void
 end
 
@@ -101,8 +96,6 @@ end
 
 	local v₁, Hv₁
 	while true
-		# showLog("... h=$h") #TODO fix... blocks execution at that point
-
 		v₀ = V + h * tang(J(V))
 
 		# step size control
@@ -120,9 +113,7 @@ end
 		f < 2.0 && break
 	end
 
-	println(h)
 	v₁ = newton(H, J, v₁, predEps(ϵ))
 
-	#showLog("done!")
 	return v₁, h
 end

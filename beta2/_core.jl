@@ -15,13 +15,14 @@ addprocs(1)
 @everywhere include("Model.jl")
 push!(LOAD_PATH, "$(pwd())/lib")
 using Gtk.ShortNames
+@everywhere using matsboNWTN, matsboPRED, matsboUTIL, matsboINTERPOLATE
 
 #(do menu stuff, other global GUI stuff, saving, ...)
 
 #create empty project: vector of branches of solutions
-global project = Project(Branch[])
+# global project = Project(Branch[])
 # f = open("p1.txt", "w"); serialize(f, project); close(f)
-#global project = open(deserialize, "p1.txt")
+global project = open(deserialize, "p1.txt")
 global lockProject = ReentrantLock()
 #(or load project data)
 
@@ -31,9 +32,15 @@ global lockProject = ReentrantLock()
 
 #DEBUG prevent loading screens
 @everywhere include("system/roessler.jl")
-include("continuation/PC.jl");		pcGUI()
-include("lib/ncmprojGALERKIN.jl");	galerkinGUI()
-include("lib/ncmprojBIFPLOT.jl");	BifPlot(project)
+
+@everywhere include("continuation/PC.jl")
+pcGUI()
+
+@everywhere include("lib/ncmprojGALERKIN.jl")
+galerkinGUI()
+
+include("lib/ncmprojBIFPLOT.jl") #needs thread 1
+BifPlot(project)
 
 
 #TODO-2DAY:
@@ -55,9 +62,12 @@ include("lib/ncmprojBIFPLOT.jl");	BifPlot(project)
 #		encapsulate to simulate inheritance? serializability?
 
 
-# PC chosing MUST work
+# PC choosing MUST work
 # resampling
-# deleting solutions/branches
+# deleting solutions/branches ✓
 # interface: galerkin only influences active solution
 # (perturbation)
 # remove inv
+# button enabled corresponding to availability
+# bug: stepsize is associated with branch, not correct on deletion... reset, make changeable, associate with solution
+;

@@ -27,51 +27,80 @@ function BifPlot(project::Project)
 
 	B = BifPlot(fig, project, idx, cache, Void)
 
-	local scatterBranch
-	function handlerBifurcationPick(ev)
+	function handlerPick(ev)
 		branch = B.idx[ev["artist"]]
 		i = ev["ind"][1]+1
-
+		lock(lockProject)
 		project.activeSolution = branch.solutions[i]
+		unlock(lockProject)
+		# B.cache[project.activeSolution] = plotSolution(B, project.activeSolution)
+		return Void
 	end
 
-	fig["canvas"]["mpl_connect"]("pick_event", handlerBifurcationPick)
+	function handlerKey(ev)
+		global tmp = ev
+		if ev[:key] == "delete"
+			project.activeSolution == Void && return Void
+			i,j = findSolution(project, project.activeSolution)
+			if i ≠ 0 && j ≠ 0
+				deleteat!(project.branches[i].solutions, j)
+				isempty(project.branches[i].solutions) && deleteat!(project.branches, i)
+			end
+		elseif ev[:key] == "ctrl+delete"
+			project.activeSolution == Void && return Void
+			i,j = findSolution(project, project.activeSolution)
+			i ≠ 0 && deleteat!(project.branches, i)
+		elseif ev[:key] == "r"
+			figure(B.fig[:number])
+			ax = subplot(121)
+			ax[:relim]()
+			autoscale()
+		end
+		return Void
+	end
+
+	fig["canvas"]["mpl_connect"]("pick_event", handlerPick)
+	fig["canvas"]["mpl_connect"]("key_press_event", handlerKey)
 
 	@schedule while true
-		plotBifurcation(B) #TODO try plotBifurcation(B) end
+		try plotBifurcation(B) end
 		sleep(1)
 	end
 
 	return B
 end
 
-
-
 #update changed plot lines
 function plotBifurcation(B::BifPlot)
 	figure(B.fig[:number])
 	subplot(121)
 
+	hit, miss = 0,0
 	cacheNew = Dict()
 
 	#TODO parallel, changing length of projection
 	for branch in B.project.branches
 		if !haskey(B.cache, branch.solutions)
 			x = map(last, branch.solutions)
-			y = reduce(hcat, map(projection, branch.solutions))'
-			lines = plot(x, y, picker=5, color="k", marker=".")
+			y = reduce(map(transpose∘projection, branch.solutions)) do A,a
+				sA,sa = size(A,2), size(a,2)
+				s = max(sA,sa)
+				return [ A[:,(0:s-1)%sA+1]; a[1,(0:s-1)%sa+1] ]
+			end
 
-			# u = repmat(x[[1;end]], 1, size(y,2))
-			# v = y[[1;end],:]
-			# handles = scatter(u, v, color="k")
+			miss += 1
 
-			cacheNew[branch] = lines #[lines; handles]
+			lines = plot(x, y, picker=5, color="k", marker=".", markersize=5)
+			cacheNew[branch.solutions] = lines
 			map(l -> (B.idx[l]=branch), lines)
 		else
-			cacheNew[branch] = B.cache[branch]
-			delete!(B.cache, branch)
+			hit += 1
+			cacheNew[branch.solutions] = B.cache[branch.solutions]
+			delete!(B.cache, branch.solutions)
 		end
 	end
+
+	println("hit: $(hit), miss: $(miss)")
 
 	S = project.activeSolution
 	if S ≠ Void
