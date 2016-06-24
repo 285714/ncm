@@ -13,7 +13,6 @@ function galerkinGUI()
 	setproperty!(gridGalerkin, :row_spacing, 5)
 	push!(windowGalerkin, gridGalerkin)
 
-	local dataItSS, gridItSS
 	local initItSS = [
 		("Trans. Iterations", Int, 0, 1e8, 1000),
 		("SS Iterations", Int, 0, 1e8, 1000),
@@ -21,48 +20,75 @@ function galerkinGUI()
 		("SS StepSize", Float64, 0, 1.0, .001),
 		("c₀", Float64, .0, 100.0, .1),
 		("Periods", Int, 1, 128,1),
-		("m", Int, 0, 4096, 1)
+		("m", Int, 8, 4096, 1)
 	]
 	dataItSS, gridItSS = mkControlGrid(initItSS, 1)
-	gridGalerkin[1,1] = gridItSS
+	gridGalerkin[1:2,1] = gridItSS
 
 	buttonFindInitialValue = @Button("Find Initial Solution")
+	setproperty!(buttonFindInitialValue, :expand, false)
 	signal_connect(w -> @async(handlerFindInitialData(w, dataItSS)), buttonFindInitialValue, "clicked")
-	gridGalerkin[1,2] = buttonFindInitialValue
+	gridGalerkin[1:2,2] = buttonFindInitialValue
+
+	dataRS, gridRS = mkControlGrid([("Samples", Int, 8, 4096, 1)])
+	buttonResample = @Button("Resample")
+	setproperty!(buttonResample, :expand, false)
+	signal_connect(w -> @async(handlerResample(w,dataRS)), buttonResample, "clicked")
+	gridGalerkin[1,3], gridGalerkin[2,3] = gridRS, buttonResample
 
 	showall(windowGalerkin)
 end
 
 
+function handlerResample(w, D)
+	setproperty!(w, :sensitive, false)
+	lock(lockProject)
+	try
+		ω,ℵ = project.activeSolution[end-1:end]
+		f = toTrajInterp(project.activeSolution, 3)
+		tmp = f(linspace(.0, 2pi, D["Samples"]))
+		tmp = reduce(hcat, tmp)'
+		tmp = rfft(tmp, [1])
+		tmp = vec([real(tmp); imag(tmp[2:end,:])])
+		tmp = [tmp; ω]
+
+		Htmp(V) = H([V; ℵ])
+		Jtmp(V) = J([V; ℵ])[:, 1:end-1]
+		tmp = newton(Htmp, Jtmp, tmp, predCount(10) ∧ predEps(1e-10))
+		project.activeSolution = [tmp; ℵ]
+	finally
+		unlock(lockProject)
+		setproperty!(w, :sensitive, true)
+	end
+	return Void
+end
+
 
 function handlerFindInitialData(w, dataGUI)
 	setproperty!(w, :sensitive, false)
-	#TODO function/macro bringIntoScope(D::Dict)
-	TIters, SSIters, TStepSize, SSStepSize, Periods, m, c₀ = map(x->dataGUI[x], ["Trans. Iterations", "SS Iterations", "Trans. StepSize", "SS StepSize", "Periods", "m", "c₀"])
+	lock(lockProject)
 
-	C = @fetch begin
-		dataT, dataSS, P = findCycle((t,v)->f(t,[v;c₀]), .0, rand(3), TIters, TStepSize, SSIters, SSStepSize)
-		cyc,ω = prepareCycle(dataSS, SSStepSize, P; fac=Periods)
+	try
+		#TODO function/macro bringIntoScope(D::Dict)
+		TIters, SSIters, TStepSize, SSStepSize, Periods, m, c₀ = map(x->dataGUI[x], ["Trans. Iterations", "SS Iterations", "Trans. StepSize", "SS StepSize", "Periods", "m", "c₀"])
 
-		local C = mapslices(cyc, [1]) do v
-			tmp = rfft(v)
-			tmp = map(linspace(.0,2pi,2*m+2)[1:end-1]) do x
-				interpolateTrigonometric(real(tmp[1]), 2*real(tmp[2:end]), -2*imag(tmp[2:end]))(x) / (2m+1)
-			end
-			tmp = rfft(tmp)
-			return [ real(tmp); imag(tmp[2:end]) ]
+		tmp = @fetch begin
+			dataT, dataSS, P = findCycle((t,v)->f(t,[v;c₀]), .0, rand(3), TIters, TStepSize, SSIters, SSStepSize)
+			cyc,ω = prepareCycle(dataSS, SSStepSize, P; fac=Periods)
+
+			C = resample(rfft(cyc, [1]), m)
+			C = [vec(vcat(real(C), imag(C[2:end,:]))); ω]
+
+			Htmp(V) = H([V; c₀]) # R^N -> R^N system
+			Jtmp(V) = J([V; c₀])[:, 1:end-1] # R^N -> R^(NxN) system
+			return newton(Htmp, Jtmp, C, predCount(10) ∧ predEps(1e-10))
 		end
 
-		C = [reduce(vcat, C); ω]
-		Htmp(V) = H([V; c₀]) # R^N -> R^N system
-		Jtmp(V) = J([V; c₀])[:, 1:end-1] # R^N -> R^(NxN) system
-		newton(Htmp, Jtmp, C, predCount(10) ∧ predEps(1e-10))
+		project.activeSolution = [tmp; c₀]
+	finally
+		unlock(lockProject)
+		setproperty!(w, :sensitive, true)
 	end
-
-	global project
-	project.activeSolution = [C; c₀]
-
-	setproperty!(w, :sensitive, true)
 	return Void
 end
 
@@ -71,7 +97,7 @@ end
 function toTrajInterp(V, d)
 	m = (length(V)-d-2)÷(2*d)
 	tmp = reshape(V[1:end-2], 2m+1, d)
-	return matsboUTIL.vectorize(x -> [ matsboINTERPOLATE.interpolateTrigonometric(tmp[1,i], 2tmp[2:2+m-1,i], -2tmp[2+m:end,i])(x) / (2m+1) for i in 1:d ])
+	return matsboUTIL.vectorize(x -> Float64[ matsboINTERPOLATE.interpolateTrigonometric(tmp[1,i], 2tmp[2:2+m-1,i], -2tmp[2+m:end,i])(x) / (2m+1) for i in 1:d ])
 end
 
 
@@ -88,4 +114,13 @@ function projection(V)
 	end
 
 	return rtn
+end
+
+
+# takes real F-coefficients  V  , returns resampled version
+function resample(V, m::Int)
+	mapslices(V, [1]) do v
+		f(x) = interpolateTrigonometric(real(v[1]), 2*real(v[2:end]), -2*imag(v[2:end]))(x) / (2*length(v)-1)
+		rfft(f(linspace(.0,2pi,2*m+2)[1:end-1]))
+	end
 end

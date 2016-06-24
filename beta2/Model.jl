@@ -2,6 +2,8 @@
 # 	raw::Vector{Float64}
 # end
 
+#TODO encapsulate refreshing stuff in setters, flags?
+
 type Branch
 	solutions::Vector{Vector{Float64}}	# ordered
 	Branch(solutions::Vector{Vector{Float64}}) = new(solutions)

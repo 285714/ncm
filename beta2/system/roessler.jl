@@ -1,4 +1,3 @@
-a,b = .1,.1
 roessler(t,v) = [-v[2] - v[3]; v[1] + a*v[2]; b + v[3]*(v[1]-v[4])]
 
 function Hroessler(V::Vector{Float64})
@@ -34,7 +33,7 @@ function Hroessler(V::Vector{Float64})
 		X₀+sum(Xᵣ)
 	]
 
-  return rtn
+	return rtn
 end
 
 

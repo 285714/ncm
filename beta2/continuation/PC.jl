@@ -4,14 +4,14 @@ include("../lib/ncmprojMKCONTROLGRID.jl")
 include("../lib/ncmprojLOGGER.jl")
 
 function pcGUI()
-	win = @Window("Continuation Controls", 256, 512, false)
+	win = @Window("Continuation Controls", 256, 256, false)
 	# setproperty!(win, :resizable, false)
 
 	g = @Grid()
 	push!(win, g)
 
-	global L = Logger() #TODO encapsulate
-	g[1:2,1] = L.w
+	# global L = Logger() #TODO encapsulate
+	# g[1:2,1] = L.w
 
 	dataPC, gridPC = mkControlGrid([
 		("ϵ", Float64, 1e-6, 1e-2, 1e-8),
@@ -38,6 +38,7 @@ function pcGUI()
 		if getproperty(w, :active, Bool)
 			@schedule while getproperty(w, :active, Bool)
 				goSingleStep(dataPC)
+				yield()
 			end
 		end
 	end
@@ -45,7 +46,7 @@ function pcGUI()
 	showall(win)
 end
 
-global h = Dict() #TODO encapsulate
+global h = Dict() #TODO encapsulate, keep per solution and branch
 function goSingleStep(D)
 	lock(lockProject)
 	i,j = @fetch findSolution(project, project.activeSolution) #TODO hint parent
@@ -68,7 +69,7 @@ function goSingleStep(D)
 
 	W,htmp = @fetch continuationStep(H, J, V, htmp, D["ϵ"], D["κ"], D["δ"], D["α"])
 
-	write(L, htmp)
+	# write(L, htmp)
 
 	# write back
 	dir = htmp > 0
@@ -110,7 +111,7 @@ end
 		f = clamp(max(sqrt(κ′/κ), sqrt(δ′/δ), α′/α), .5, 2.0)
 		h /= f
 
-		f < 2.0 && break
+		.5 < f < 2.0 && break
 	end
 
 	v₁ = newton(H, J, v₁, predEps(ϵ))

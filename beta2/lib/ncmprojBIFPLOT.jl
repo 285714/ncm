@@ -2,6 +2,11 @@
 # provides a view on a project
 # should be auto-updating for minimum interface
 
+#TODO maintain projected state better
+#		maybe forbid changing branch in middle?
+#			=> consistency, can only add or remove point of projection!
+#			callback from project abstraction
+
 using PyCall
 pygui(:tk) #prevent conflict with gtk
 using PyPlot
@@ -28,11 +33,12 @@ function BifPlot(project::Project)
 	B = BifPlot(fig, project, idx, cache, Void)
 
 	function handlerPick(ev)
-		branch = B.idx[ev["artist"]]
+		branch = get(B.idx, ev["artist"], Void)
+		branch == Void && return Void
 		i = ev["ind"][1]+1
-		lock(lockProject)
+		# lock(lockProject)
 		project.activeSolution = branch.solutions[i]
-		unlock(lockProject)
+		# unlock(lockProject)
 		# B.cache[project.activeSolution] = plotSolution(B, project.activeSolution)
 		return Void
 	end
@@ -55,6 +61,11 @@ function BifPlot(project::Project)
 			ax = subplot(121)
 			ax[:relim]()
 			autoscale()
+		elseif ev[:key] == "ctrl+r"
+			empty!(B.cache)
+			empty!(B.idx)
+			figure(B.fig[:number])
+			clf()
 		end
 		return Void
 	end
@@ -63,6 +74,7 @@ function BifPlot(project::Project)
 	fig["canvas"]["mpl_connect"]("key_press_event", handlerKey)
 
 	@schedule while true
+		try B.fig[:show]() catch ex return end
 		try plotBifurcation(B) end
 		sleep(1)
 	end
@@ -75,10 +87,10 @@ function plotBifurcation(B::BifPlot)
 	figure(B.fig[:number])
 	subplot(121)
 
-	hit, miss = 0,0
 	cacheNew = Dict()
 
 	#TODO parallel, changing length of projection
+	lock(lockProject)
 	for branch in B.project.branches
 		if !haskey(B.cache, branch.solutions)
 			x = map(last, branch.solutions)
@@ -88,21 +100,16 @@ function plotBifurcation(B::BifPlot)
 				return [ A[:,(0:s-1)%sA+1]; a[1,(0:s-1)%sa+1] ]
 			end
 
-			miss += 1
-
-			lines = plot(x, y, picker=5, color="k", marker=".", markersize=5)
+			lines = plot(x, y, picker=5, color="k", marker=".", markersize=3)
 			cacheNew[branch.solutions] = lines
 			map(l -> (B.idx[l]=branch), lines)
 		else
-			hit += 1
 			cacheNew[branch.solutions] = B.cache[branch.solutions]
 			delete!(B.cache, branch.solutions)
 		end
 	end
 
-	println("hit: $(hit), miss: $(miss)")
-
-	S = project.activeSolution
+	S = B.project.activeSolution
 	if S ≠ Void
 		if !haskey(B.cache, S)
 			cacheNew[S] = plotSolution(B, S)
@@ -111,6 +118,7 @@ function plotBifurcation(B::BifPlot)
 			delete!(B.cache, S)
 		end
 	end
+	unlock(lockProject)
 
 	#cache now contains only obsolete plots
 	for (k,v) in B.cache map(l->l["remove"](), v) end

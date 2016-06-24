@@ -9,6 +9,7 @@
 
 #	this file specifies the whole interface...
 
+#TODO ifft for trigoninterp
 
 addprocs(1)
 
@@ -20,9 +21,9 @@ using Gtk.ShortNames
 #(do menu stuff, other global GUI stuff, saving, ...)
 
 #create empty project: vector of branches of solutions
-# global project = Project(Branch[])
+global project = Project(Branch[])
 # f = open("p1.txt", "w"); serialize(f, project); close(f)
-global project = open(deserialize, "p1.txt")
+# global project = open(deserialize, "p1.txt")
 global lockProject = ReentrantLock()
 #(or load project data)
 
@@ -40,7 +41,7 @@ pcGUI()
 galerkinGUI()
 
 include("lib/ncmprojBIFPLOT.jl") #needs thread 1
-BifPlot(project)
+B = BifPlot(project)
 
 
 #TODO-2DAY:
@@ -65,9 +66,17 @@ BifPlot(project)
 # PC choosing MUST work
 # resampling
 # deleting solutions/branches ✓
-# interface: galerkin only influences active solution
+# interface: galerkin only influences active solution ✓
 # (perturbation)
-# remove inv
-# button enabled corresponding to availability
+# remove inv ✓
+# button enabled corresponding to availability ✓
 # bug: stepsize is associated with branch, not correct on deletion... reset, make changeable, associate with solution
+# bug: apparently activeSoltion read from wrong (global) project...
+
 ;
+
+# poincare
+# improv RK
+# perturbation
+# lorenz
+# fix h
