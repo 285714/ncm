@@ -1,7 +1,7 @@
 using Gtk.ShortNames
 using matsboNWTN
 include("../lib/ncmprojMKCONTROLGRID.jl")
-include("../lib/ncmprojLOGGER.jl")
+# include("../lib/ncmprojLOGGER.jl")
 
 function pcGUI()
 	win = @Window("Continuation Controls", 256, 256, false)
@@ -16,8 +16,9 @@ function pcGUI()
 	dataPC, gridPC = mkControlGrid([
 		("ϵ", Float64, 1e-6, 1e-2, 1e-8),
 		("κ", Float64, .0, 1.0, 1e-3),
-		("δ", Float64, .0, 10.0, 1e-2),
-		("α", Float64, .0, 90.0, 1e-1)
+		("δ", Float64, .0, 5.0, 1e-2),
+		("α", Float64, .0, 90.0, 1e-1),
+		("Perturb", Float64, -1e-2, 1e-2, 1e-4)
 	])
 	g[1:2,2] = gridPC
 
@@ -26,9 +27,14 @@ function pcGUI()
 	signal_connect(buttonStep, "clicked") do w
 		@schedule begin
 			project.activeSolution == Void && return Void
-			setproperty!(w, :sensitive, false)
-			goSingleStep(dataPC)
-			setproperty!(w, :sensitive, true)
+			try
+				lock(lockProject)
+				setproperty!(w, :sensitive, false)
+				goSingleStep(dataPC)
+			finally
+				setproperty!(w, :sensitive, true)
+				unlock(lockProject)
+			end
 		end
 	end
 
@@ -37,7 +43,9 @@ function pcGUI()
 	signal_connect(buttonRun, "toggled") do w
 		if getproperty(w, :active, Bool)
 			@schedule while getproperty(w, :active, Bool)
-				goSingleStep(dataPC)
+				lock(lockProject)
+				try goSingleStep(dataPC)
+				finally unlock(lockProject) end
 				yield()
 			end
 		end
@@ -48,7 +56,6 @@ end
 
 global h = Dict() #TODO encapsulate, keep per solution and branch
 function goSingleStep(D)
-	lock(lockProject)
 	i,j = @fetch findSolution(project, project.activeSolution) #TODO hint parent
 	V = project.activeSolution
 
@@ -64,20 +71,18 @@ function goSingleStep(D)
 		V = deepcopy(V)
 		branch = Branch(V)
 		push!(project.branches, branch)
-		println("new branch!") #TODO remove
 	end
 
-	W,htmp = @fetch continuationStep(H, J, V, htmp, D["ϵ"], D["κ"], D["δ"], D["α"])
+	Htmp = V -> H(V) + D["Perturb"]
+	W,htmp = @fetch continuationStep(Htmp, J, V, htmp, D["ϵ"], D["κ"], D["δ"], D["α"])
 
 	# write(L, htmp)
 
-	# write back
 	dir = htmp > 0
 	(dir?push!:unshift!)(branch.solutions, W)
 	project.activeSolution = W
 	h[(branch, dir)] = htmp
 
-	unlock(lockProject)
 	return Void
 end
 
@@ -112,9 +117,10 @@ end
 		h /= f
 
 		.5 < f < 2.0 && break
+		h == .0 && error("h = 0!") #TODO remove
 	end
 
-	v₁ = newton(H, J, v₁, predEps(ϵ))
+	v₁ = newton(H, J, v₁, predEps(ϵ) ∧ predCount(100)) #TODO integrate max count
 
 	return v₁, h
 end
