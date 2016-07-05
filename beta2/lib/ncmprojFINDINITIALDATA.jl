@@ -88,7 +88,7 @@ function findCyclePoincare(
 		if (sign(plane(y)) > 0 &&  sign(plane(y⁻)) <= 0)
 			# find h′ ∈ [0,h] s.t. plane(y⁻ + h′⋅V(h′,y⁻)) = 0
 			step(h′) = y⁻ + h′*V(h′,y⁻)
-			h′ = bisection(h′ -> plane(step(h′)), 0, h, ϵ=0.00001)
+			h′ = matsboUTIL.bisection(h′ -> plane(step(h′)), 0, h, ϵ=0.00001)
 			y′ = step(h′)
 			intersections = [intersections [y′; t+h′]]
 		end
