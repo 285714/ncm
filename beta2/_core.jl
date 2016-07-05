@@ -22,10 +22,10 @@ using Gtk.ShortNames
 
 #create empty project: vector of branches of solutions
 global project = Project(Branch[])
-# f = open("p1.txt", "w"); serialize(f, project); close(f)
-# global project = open(deserialize, "p1.txt")
 global lockProject = ReentrantLock()
-#(or load project data)
+
+save(filename) = open("save/$(filename)", "w") do f serialize(f, project) end
+load(filename) = (global project = open(deserialize, "save/$(filename)"))
 
 #select continuation method, select system
 # include(open_dialog("Select continuation method.", Gtk.GtkNullContainer(), ASCIIString[]))
@@ -53,7 +53,7 @@ B = BifPlot(project)
 #	plot thread... not working... forget that... pyplot needs thread 1... Gtk might work...
 #	singular branches...
 
-#	abstraction: plotting, galerkin, continuation, project (! - for access, sync, sanity, ...)
+#	abstraction: plotting ✓, galerkin, continuation, project (! - for access, sync, sanity, ...)
 #		lock
 #		branch: dequeue only
 #		project: all operations
@@ -62,14 +62,7 @@ B = BifPlot(project)
 #		plots, projection, stepsize, ...
 #		encapsulate to simulate inheritance? serializability?
 
-
-# PC choosing MUST work
-# resampling
-# deleting solutions/branches ✓
-# interface: galerkin only influences active solution ✓
 # (perturbation)
-# remove inv ✓
-# button enabled corresponding to availability ✓
 # bug: stepsize is associated with branch, not correct on deletion... reset, make changeable, associate with solution
 # bug: apparently activeSoltion read from wrong (global) project...
 

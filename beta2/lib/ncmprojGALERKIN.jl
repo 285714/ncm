@@ -40,11 +40,15 @@ function galerkinGUI()
 	signal_connect(w -> @async(handlerFindInitialData(w, dataItSS)), buttonFindInitialValue, "clicked")
 	gridGalerkin[1:2,2] = buttonFindInitialValue
 
-	dataRS, gridRS = mkControlGrid([("Samples", Int, 8, 4096, 1)])
-	buttonResample = @Button("Resample")
+	dataRS, gridRS = mkControlGrid([
+		("Samples", Int, 8, 4096, 1),
+		("Crop", Float64, .0, 8.0, 1e-1)
+	])
+	buttonResample = @Button("Process")
 	setproperty!(buttonResample, :expand, false)
 	signal_connect(w -> @async(handlerResample(w,dataRS)), buttonResample, "clicked")
-	gridGalerkin[1,3], gridGalerkin[2,3] = gridRS, buttonResample
+	gridGalerkin[1:2,3] = gridRS
+	gridGalerkin[1:2,4] = buttonResample
 
 	showall(windowGalerkin)
 end
@@ -55,17 +59,17 @@ function handlerResample(w, D)
 	lock(lockProject)
 	try
 		ω,ℵ = project.activeSolution[end-1:end]
-		f = toTrajInterp(project.activeSolution, 3)
-		tmp = f(linspace(.0, 2pi, D["Samples"]))
-		tmp = reduce(hcat, tmp)'
-		tmp = rfft(tmp, [1])
-		tmp = vec([real(tmp); imag(tmp[2:end,:])])
-		tmp = [tmp; ω]
+		m = (length(project.activeSolution)-5)÷6
+		V = reshape(project.activeSolution[1:end-2], 2m+1, 3)
+		V = complex(V[1:m+1,:], [zeros(1, size(V,2)); V[m+2:end,:]])
+
+		C = resample(V, D["Samples"], D["Crop"])
+		C = [vec(vcat(real(C), imag(C[2:end,:]))); ω/D["Crop"]]
 
 		Htmp(V) = H([V; ℵ])
 		Jtmp(V) = J([V; ℵ])[:, 1:end-1]
-		tmp = newton(Htmp, Jtmp, tmp, predCount(10) ∧ predEps(1e-10))
-		project.activeSolution = [tmp; ℵ]
+		tmp = newton(Htmp, Jtmp, C, predCount(10) ∧ predEps(1e-10))
+		project.activeSolution = [C; ℵ]
 	finally
 		unlock(lockProject)
 		setproperty!(w, :sensitive, true)
@@ -149,9 +153,9 @@ end
 
 
 # takes real F-coefficients  V  , returns resampled version
-function resample(V, m::Int)
+function resample(V, m::Int, scale=1.0)
 	mapslices(V, [1]) do v
 		f(x) = interpolateTrigonometric(real(v[1]), 2*real(v[2:end]), -2*imag(v[2:end]))(x) / (2*length(v)-1)
-		rfft(f(linspace(.0,2pi,2*m+2)[1:end-1]))
+		rfft(f(linspace(.0,2pi*scale,2*m+2)[1:end-1]))
 	end
 end
