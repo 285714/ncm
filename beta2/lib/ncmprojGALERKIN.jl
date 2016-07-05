@@ -1,7 +1,6 @@
 using Gtk.ShortNames
 using matsboINTERPOLATE, matsboNWTN, matsboPRED, matsboUTIL
 include("$(pwd())/lib/ncmprojFINDINITIALDATA.jl")
-include("$(pwd())/lib/poincareInitialData.jl")
 include("$(pwd())/lib/ncmprojMKCONTROLGRID.jl")
 
 function galerkinGUI()
@@ -24,11 +23,11 @@ function galerkinGUI()
 		("m", Int, 8, 4096, 1)
 	]=#
 	local initItSS = [
-		("Trans. Iterations", Int, 0, 1e8, 1000),
-		("Trans. StepSize", Float64, .0, 1.0, .001),
-		("SS StepSize", Float64, 0, 1.0, .001),
-		("Max. period", Int, 1, 128,1),
-		("Intersections", Int, 1, 128,1),
+		("Trans. Iterations", Int, 0, 1e8, 1000), # 2000
+		("Trans. StepSize", Float64, .0, 1.0, .001), # 0.1
+		("SS StepSize", Float64, 0, 1.0, .001), # 0.1
+		("Max. period", Int, 1, 128,1), # 30
+		("Intersections", Int, 1, 128,1), # 120
 		("m", Int, 8, 4096, 1),
 		("c₀", Float64, .0, 100.0, .1)
 	]
@@ -87,31 +86,15 @@ function handlerFindInitialData(w, dataGUI)
 		# TIters, SSIters, TStepSize, SSStepSize, Periods, m, c₀ = map(x->dataGUI[x], ["Trans. Iterations", "SS Iterations", "Trans. StepSize", "SS StepSize", "Periods", "m", "c₀"])
 		TIters, TStepSize, SSStepSize, maxCycles, nIntersections, m, c₀ = map(x->dataGUI[x], ["Trans. Iterations", "Trans. StepSize", "SS StepSize", "Max. period", "Intersections", "m", "c₀"])
 
-		#=tmp = @fetch begin
-			dataT, dataSS, P = findCycle((t,v)->f(t,[v;c₀]), .0, rand(3), TIters, TStepSize, SSIters, SSStepSize)
-			cyc,ω = prepareCycle(dataSS, SSStepSize, P; fac=Periods)
-
-			C = resample(rfft(cyc, [1]), m)
-			C = [vec(vcat(real(C), imag(C[2:end,:]))); ω]
-
-			Htmp(V) = H([V; c₀]) # R^N -> R^N system
-			Jtmp(V) = J([V; c₀])[:, 1:end-1] # R^N -> R^(NxN) system
-			return newton(Htmp, Jtmp, C, predCount(10) ∧ predEps(1e-10))
-		end=#
-
-		println("TIters: $TIters, TStepSize: $TStepSize, SSStepSize: $SSStepSize, maxCycles: $maxCycles, nIntersections: $nIntersections, m:$m, c₀:$c₀")
-
 		tmp = @fetch begin
-			cyc, P, T = findCyclePoincare((t,v)->f(t,[v;c₀]), rand(3),
+			# dataT, dataSS, P = findCycle((t,v)->f(t,[v;c₀]), .0, rand(3), TIters, TStepSize, SSIters, SSStepSize)
+			# cyc,ω = prepareCycle(dataSS, SSStepSize, P; fac=Periods)
+			cyc, P, ω = findCyclePoincare((t,v)->f(t,[v;c₀]), rand(3),
 				nIntersections=nIntersections, maxCycles=maxCycles, sampleSize=m,
 				transientIterations=TIters, transientStepSize=TStepSize,
 				steadyStateStepSize=SSStepSize)
 
-			println("period $P for c=$(c₀) with T=$T on $(size(cyc,1)) samples")
-			return
-
-			ω = 1/T
-			C = rfft(cyc, [1])
+			C = resample(rfft(cyc, [1]), m)
 			C = [vec(vcat(real(C), imag(C[2:end,:]))); ω]
 
 			Htmp(V) = H([V; c₀]) # R^N -> R^N system

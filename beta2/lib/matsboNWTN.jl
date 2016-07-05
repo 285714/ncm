@@ -1,7 +1,7 @@
 __precompile__()
 
 module matsboNWTN
-export newton, centralDifference, forwardDifference, broyden
+export newton, centralDifference, forwardDifference, broyden, bisection
 
 # base function
 function newton(H::Function, J::Function, v₀::Vector{Float64}, pred::Function;
@@ -89,6 +89,19 @@ function broyden(H, J)
 end
 
 
+
+#=function bisection(f, x₋, x₊, ɛ)
+	while true
+		x₀ = (x₋ + x₊) / 2
+		if f(x₀) == 0 || abs(x₋ - x₊) < ɛ
+			return x₀
+		elseif sign(f(x₀)) * sign(f(x₋)) < 0
+			x₊ = x₀
+		else
+			x₋ = x₀
+		end
+	end
+end=#
 
 
 end
