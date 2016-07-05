@@ -90,18 +90,5 @@ end
 
 
 
-#=function bisection(f, x₋, x₊, ɛ)
-	while true
-		x₀ = (x₋ + x₊) / 2
-		if f(x₀) == 0 || abs(x₋ - x₊) < ɛ
-			return x₀
-		elseif sign(f(x₀)) * sign(f(x₋)) < 0
-			x₊ = x₀
-		else
-			x₋ = x₀
-		end
-	end
-end=#
-
 
 end
