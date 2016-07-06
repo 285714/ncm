@@ -13,12 +13,13 @@ function pcGUI()
 	# global L = Logger() #TODO encapsulate
 	# g[1:2,1] = L.w
 
-	dataPC, gridPC = mkControlGrid([
-		("ϵ", Float64, 1e-6, 1e-2, 1e-8),
-		("κ", Float64, .0, 1.0, 1e-3),
-		("δ", Float64, .0, 5.0, 1e-2),
-		("α", Float64, .0, 90.0, 1e-1),
-		("Perturb", Float64, -1e-2, 1e-2, 1e-4)
+	dataPC = Dict{AbstractString, Any}()
+	gridPC = mkControlGrid(dataPC, [
+		("ϵ", Float64, 1e-4, 1e-6:1e-8:1e-2),
+		("κ", Float64, .4, .0:1e-3:1.0),
+		("δ", Float64, .5, .0:1e-2:5.0),
+		("α", Float64, 10.0, .0:.1:90.0),
+		("Perturb", Float64, .0, -1e-2:1e-4:1e-2, )
 	])
 	g[1:2,2] = gridPC
 
@@ -27,13 +28,13 @@ function pcGUI()
 	signal_connect(buttonStep, "clicked") do w
 		@schedule begin
 			project.activeSolution == Void && return Void
+			setproperty!(w, :sensitive, false)
+			lock(lockProject)
 			try
-				lock(lockProject)
-				setproperty!(w, :sensitive, false)
 				goSingleStep(dataPC)
 			finally
-				setproperty!(w, :sensitive, true)
 				unlock(lockProject)
+				setproperty!(w, :sensitive, true)
 			end
 		end
 	end
@@ -117,10 +118,12 @@ end
 		h /= f
 
 		.5 < f < 2.0 && break
-		h == .0 && error("h = 0!") #TODO remove
+		abs(h) ≤ 1e-8 && error("h≈0 !") #TODO remove
 	end
 
-	v₁ = newton(H, J, v₁, predEps(ϵ) ∧ predCount(100)) #TODO integrate max count
+	println("step!")
+
+	v₁ = newton(H, J, v₁, predEps(ϵ) ∧ predCount(25)) #TODO integrate max count
 
 	return v₁, h
 end

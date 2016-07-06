@@ -35,11 +35,13 @@ function BifPlot(project::Project)
 	function handlerPick(ev)
 		branch = get(B.idx, ev["artist"], Void)
 		branch == Void && return Void
-		i = ev["ind"][1]+1
-		# lock(lockProject)
-		project.activeSolution = branch.solutions[i]
-		# unlock(lockProject)
-		# B.cache[project.activeSolution] = plotSolution(B, project.activeSolution)
+		lock(lockProject)
+		try
+			i = ev["ind"][1]+1
+			project.activeSolution = branch.solutions[i]
+		finally
+			unlock(lockProject)
+		end
 		return Void
 	end
 

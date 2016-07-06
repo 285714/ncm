@@ -1,3 +1,5 @@
+#TODO dimensions...
+
 using Gtk.ShortNames
 using matsboINTERPOLATE, matsboNWTN, matsboPRED, matsboUTIL
 include("$(pwd())/lib/ncmprojFINDINITIALDATA.jl")
@@ -13,30 +15,31 @@ function galerkinGUI()
 	setproperty!(gridGalerkin, :row_spacing, 5)
 	push!(windowGalerkin, gridGalerkin)
 
-	local initItSS = [
-		("Trans. Iterations", Int, 0, 1e8, 1000),
-		("SS Iterations", Int, 0, 1e8, 1000),
-		("Trans. StepSize", Float64, .0, 1.0, .001),
-		("SS StepSize", Float64, 0, 1.0, .001),
-		("c₀", Float64, .0, 100.0, .1),
-		("Periods", Int, 1, 128,1),
-		("m", Int, 8, 4096, 1)
+	dataGUI = Dict{AbstractString, Any}()
+	initItSS = [
+		("Trans. Iterations", Int, 10000, 0:1000:1e8),
+		("SS Iterations", Int, 10000, 0:1000:1e8),
+		("Trans. StepSize", Float64, .1, .0:.001:1.0),
+		("SS StepSize", Float64, .05, 0:.001:1.0),
+		("c₀", Float64, 6.0, .0:.1:100.0),
+		("Periods", Int, 1, 1:128),
+		("m", Int, 64, 8:4096)
 	]
-	dataItSS, gridItSS = mkControlGrid(initItSS, 1)
+	gridItSS = mkControlGrid(dataGUI, initItSS)
 	gridGalerkin[1:2,1] = gridItSS
 
 	buttonFindInitialValue = @Button("Find Initial Solution")
 	setproperty!(buttonFindInitialValue, :expand, false)
-	signal_connect(w -> @async(handlerFindInitialData(w, dataItSS)), buttonFindInitialValue, "clicked")
+	signal_connect(w -> @async(handlerFindInitialData(w, dataGUI)), buttonFindInitialValue, "clicked")
 	gridGalerkin[1:2,2] = buttonFindInitialValue
 
-	dataRS, gridRS = mkControlGrid([
-		("Samples", Int, 8, 4096, 1),
-		("Crop", Float64, .0, 8.0, 1e-1)
+	gridRS = mkControlGrid(dataGUI, [
+		("Samples", Int, 64, 8:4096),
+		("Crop", Float64, 1.0, .0:.1:8.0)
 	])
 	buttonResample = @Button("Process")
 	setproperty!(buttonResample, :expand, false)
-	signal_connect(w -> @async(handlerResample(w,dataRS)), buttonResample, "clicked")
+	signal_connect(w -> @async(handlerResample(w, dataGUI)), buttonResample, "clicked")
 	gridGalerkin[1:2,3] = gridRS
 	gridGalerkin[1:2,4] = buttonResample
 
@@ -59,7 +62,7 @@ function handlerResample(w, D)
 		Htmp(V) = H([V; ℵ])
 		Jtmp(V) = J([V; ℵ])[:, 1:end-1]
 		tmp = newton(Htmp, Jtmp, C, predCount(10) ∧ predEps(1e-10))
-		project.activeSolution = [C; ℵ]
+		project.activeSolution = [tmp; ℵ]
 	finally
 		unlock(lockProject)
 		setproperty!(w, :sensitive, true)

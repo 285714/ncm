@@ -2,28 +2,32 @@
 #TODO additional abstraction layer encapsulating an element plus data and handler
 
 # creates a grid of controls with labels, handlers and encapsulated storage
-function mkControlGrid(C, cols=1)
-	local Data = [ x[1] => zero(x[2]) for x in C ]
+# c in C is Tuple (name::String, ::Type, init, v...)
+function mkControlGrid(D::Dict{AbstractString, Any}, C, cols=1)
+	for x in C; D[x[1]] = x[3] end
 
 	local Control = map(C) do x
 		local tmp = Void
 		if x[2] == Int
-			tmp = @SpinButton(x[3:end]...)
+			tmp = @SpinButton(x[4][1], x[4][end], step(x[4]))
+			setproperty!(tmp, :value, x[3])
 			signal_connect(tmp, "value_changed") do w
-				Data[x[1]] = getproperty(w, :value, x[2])
+				D[x[1]] = getproperty(w, :value, x[2])
 			end
 			signal_emit(tmp, "value_changed", Void)
 		elseif x[2] == Float64
-			tmp = @Scale(:h, x[3:end]...)
+			tmp = @Scale(:h, x[4][1], x[4][end], step(x[4]))
 			local adj = @Adjustment(tmp)
+			setproperty!(adj, :value, x[3])
 			signal_connect(adj, "value_changed") do w
-				Data[x[1]] = getproperty(w, :value, x[2])
+				D[x[1]] = getproperty(w, :value, x[2])
 			end
 			signal_emit(tmp, "value_changed", Void)
 		elseif x[2] == Bool
-			tmp = @CheckButton(x[3:end]...)
+			tmp = @CheckButton()
+			setproperty!(tmp, :active, x[3])
 			signal_connect(tmp, "toggled") do w
-				Data[x[1]] = getproperty(w, :active, x[2])
+				D[x[1]] = getproperty(w, :active, x[2])
 			end
 			signal_emit(tmp, "toggled", Void)
 		end
@@ -44,5 +48,5 @@ function mkControlGrid(C, cols=1)
 		G[2j, i] = Control[idx]
 	end
 
-	return Data, G
+	return G
 end

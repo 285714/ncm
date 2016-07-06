@@ -72,4 +72,9 @@ B = BifPlot(project)
 # improv RK
 # perturbation
 # lorenz
-# fix h
+
+#TODO keys: delete from here, delete till here
+#TODO h box, fix
+#TODO broyden
+#TODO controlgrid custom dict
+#TODO mark current branch
