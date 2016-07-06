@@ -15,40 +15,29 @@ function galerkinGUI()
 	setproperty!(gridGalerkin, :row_spacing, 5)
 	push!(windowGalerkin, gridGalerkin)
 
-	#=local initItSS = [
-		("Trans. Iterations", Int, 0, 1e8, 1000),
-		("SS Iterations", Int, 0, 1e8, 1000),
-		("Trans. StepSize", Float64, .0, 1.0, .001),
-		("SS StepSize", Float64, 0, 1.0, .001),
-		("c₀", Float64, .0, 100.0, .1),
-		("Periods", Int, 1, 128,1),
-		("m", Int, 8, 4096, 1)
-	]=#
-	local initItSS = [
-		("Trans. Iterations", Int, 0, 1e8, 1000), # 2000
-		("Trans. StepSize", Float64, .0, 1.0, .001), # 0.1
-		("SS StepSize", Float64, 0, 1.0, .001), # 0.1
-		("Max. period", Int, 1, 128,1), # 30
-		("Intersections", Int, 1, 128,1), # 120
-		("m", Int, 8, 4096, 1),
-		("c₀", Float64, .0, 100.0, .1)
-	]
-	gridItSS = mkControlGrid(dataGUI, initItSS)
-	gridGalerkin[1:2,1] = gridItSS
+	dataGal = Dict{AbstractString, Any}()
+	gridGalerkin[1:2,1] = mkControlGrid(dataGal, [
+		("Trans. Iterations", Int, 2000, 0:1000:1e8),
+		("Trans. StepSize", Float64, .1, .0:.01:1.0),
+		("SS StepSize", Float64, .1, 0:.001:1.0),
+		("Max. period", Int, 30, 1:128),
+		("Intersections", Int, 120, 1:128),
+		("m", Int, 64, 8:4096),
+		("c₀", Float64, 4.0, .0:.1:100.0)
+	])
 
 	buttonFindInitialValue = @Button("Find Initial Solution")
 	setproperty!(buttonFindInitialValue, :expand, false)
-	signal_connect(w -> @async(handlerFindInitialData(w, dataGUI)), buttonFindInitialValue, "clicked")
+	signal_connect(w -> @async(handlerFindInitialData(w, dataGal)), buttonFindInitialValue, "clicked")
 	gridGalerkin[1:2,2] = buttonFindInitialValue
 
-	gridRS = mkControlGrid(dataGUI, [
+	gridGalerkin[1:2,3] = mkControlGrid(dataGal, [
 		("Samples", Int, 64, 8:4096),
 		("Crop", Float64, 1.0, .0:.1:8.0)
 	])
 	buttonResample = @Button("Process")
 	setproperty!(buttonResample, :expand, false)
-	signal_connect(w -> @async(handlerResample(w, dataGUI)), buttonResample, "clicked")
-	gridGalerkin[1:2,3] = gridRS
+	signal_connect(w -> @async(handlerResample(w, dataGal)), buttonResample, "clicked")
 	gridGalerkin[1:2,4] = buttonResample
 
 	showall(windowGalerkin)
@@ -79,14 +68,14 @@ function handlerResample(w, D)
 end
 
 
-function handlerFindInitialData(w, dataGUI)
+function handlerFindInitialData(w, dataGal)
 	setproperty!(w, :sensitive, false)
 	lock(lockProject)
 
 	try
 		#TODO function/macro bringIntoScope(D::Dict)
-		# TIters, SSIters, TStepSize, SSStepSize, Periods, m, c₀ = map(x->dataGUI[x], ["Trans. Iterations", "SS Iterations", "Trans. StepSize", "SS StepSize", "Periods", "m", "c₀"])
-		TIters, TStepSize, SSStepSize, maxCycles, nIntersections, m, c₀ = map(x->dataGUI[x], ["Trans. Iterations", "Trans. StepSize", "SS StepSize", "Max. period", "Intersections", "m", "c₀"])
+		# TIters, SSIters, TStepSize, SSStepSize, Periods, m, c₀ = map(x->dataGal[x], ["Trans. Iterations", "SS Iterations", "Trans. StepSize", "SS StepSize", "Periods", "m", "c₀"])
+		TIters, TStepSize, SSStepSize, maxCycles, nIntersections, m, c₀ = map(x->dataGal[x], ["Trans. Iterations", "Trans. StepSize", "SS StepSize", "Max. period", "Intersections", "m", "c₀"])
 
 		tmp = @fetch begin
 			# dataT, dataSS, P = findCycle((t,v)->f(t,[v;c₀]), .0, rand(3), TIters, TStepSize, SSIters, SSStepSize)
