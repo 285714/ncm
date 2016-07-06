@@ -1,7 +1,7 @@
 __precompile__()
 
 module matsboNWTN
-export newton, centralDifference, forwardDifference, broyden
+export newton, centralDifference, forwardDifference, broyden, bisection
 
 # base function
 function newton(H::Function, J::Function, v₀::Vector{Float64}, pred::Function;
