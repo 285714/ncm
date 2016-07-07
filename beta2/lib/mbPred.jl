@@ -1,6 +1,6 @@
 __precompile__()
 
-module matsboPRED
+module mbPred
 export predCount, predEps, ∧
 
 # general iterface:

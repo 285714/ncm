@@ -18,6 +18,7 @@ type BifPlot
 	idx::Dict
 	cache::Dict
 	solutionMark
+	currPlot
 end
 
 
@@ -30,23 +31,31 @@ function BifPlot(project::Project)
 	idx = Dict{Any,Any}()
 	cache = Dict{Any,Any}()
 
-	B = BifPlot(fig, project, idx, cache, Void)
+	B = BifPlot(fig, project, idx, cache, Void, Void)
 
 	function handlerPick(ev)
-		branch = get(B.idx, ev["artist"], Void)
+		branch = get(B.idx, ev[:artist], Void)
 		branch == Void && return Void
 		lock(lockProject)
 		try
-			i = ev["ind"][1]+1
+			i = ev[:ind][1]+1
 			project.activeSolution = branch.solutions[i]
+			try map(x->x[:set_lw](1), B.currPlot) end
+			B.currPlot = B.cache[branch.solutions]
+			try map(x->x[:set_lw](2), B.currPlot) end
 		finally
 			unlock(lockProject)
 		end
+		figure(B.fig[:number])
+		PyPlot.draw()
 		return Void
 	end
 
 	function handlerKey(ev)
 		global tmp = ev
+
+		figure(B.fig[:number])
+
 		if ev[:key] == "delete"
 			project.activeSolution == Void && return Void
 			i,j = findSolution(project, project.activeSolution)
@@ -59,16 +68,26 @@ function BifPlot(project::Project)
 			i,j = findSolution(project, project.activeSolution)
 			i ≠ 0 && deleteat!(project.branches, i)
 		elseif ev[:key] == "r"
-			figure(B.fig[:number])
 			ax = subplot(121)
 			ax[:relim]()
 			autoscale()
 		elseif ev[:key] == "ctrl+r"
 			empty!(B.cache)
 			empty!(B.idx)
-			figure(B.fig[:number])
 			clf()
+		elseif ev[:key] in [ "$(i)" for i in 0:9 ]
+			const colMap = Dict(
+				"0" => "#000000", "1" => "#FF0000",
+				"2" => "#00FF00", "3" => "#0000FF",
+				"4" => "#00FFFF", "5" => "#FF00FF",
+				"6" => "#FFFF00", "7" => "#800000",
+				"8" => "#008000", "9" => "#000080"
+				)
+			try map(x->x[:set_color](colMap[ev[:key]]), B.currPlot) end
 		end
+
+		PyPlot.draw()
+
 		return Void
 	end
 

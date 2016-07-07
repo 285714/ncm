@@ -16,7 +16,7 @@ addprocs(1)
 @everywhere include("Model.jl")
 push!(LOAD_PATH, "$(pwd())/lib")
 using Gtk.ShortNames
-@everywhere using matsboNWTN, matsboPRED, matsboUTIL, matsboINTERPOLATE
+@everywhere using mbNewton, mbPred, mbUtil, mbInterpolate
 
 #(do menu stuff, other global GUI stuff, saving, ...)
 
@@ -68,9 +68,9 @@ B = BifPlot(project)
 
 ;
 
-# poincare
-# improv RK
-# perturbation
+# poincare ✓
+# improv RK	?
+# perturbation ✓
 # lorenz
 
 #TODO keys: delete from here, delete till here
@@ -78,3 +78,10 @@ B = BifPlot(project)
 #TODO broyden
 #TODO controlgrid custom dict
 #TODO mark current branch
+
+
+# plot:
+#	mark curr branch ✓
+#	color ✓
+#	lock branch (make unselectable, how to unlock?, how switch branches efficiently?)
+#	rebuild completely as observable

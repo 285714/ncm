@@ -1,6 +1,6 @@
 __precompile__()
 
-module matsboNWTN
+module mbNewton
 export newton, centralDifference, forwardDifference, broyden, bisection
 
 # base function

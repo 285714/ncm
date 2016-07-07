@@ -1,6 +1,6 @@
 __precompile__()
 
-module matsboRK
+module mbRK
 export rk1, rk4
 
 import Base.length

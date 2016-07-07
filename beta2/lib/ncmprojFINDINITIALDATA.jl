@@ -1,6 +1,6 @@
-using matsboRK
-using matsboPRED
-using matsboUTIL
+using mbRK
+using mbPred
+using mbUtil
 
 # procedure usually underestimates length of period
 function findCycle(
@@ -52,7 +52,7 @@ function prepareCycle(data::Array{Float64}, h::Float64, P::Integer; fac::Integer
 	cyc = data[end-P*fac+2:end,:]
 
 	# resample
-	# y = mapslices(V->matsboUTIL.interpolate(V, precision, linspace(1.0, size(cyc,1), samples)), cyc, [1])
+	# y = mapslices(V->mbUtil.interpolate(V, precision, linspace(1.0, size(cyc,1), samples)), cyc, [1])
 
 	# local I = linspace(1.0, size(cyc,1), Samples)
 	# y = mapslices(V->(V[floor(Integer,I)] + V[ceil(Integer,I)])/2, cyc, [1])
@@ -88,7 +88,7 @@ function findCyclePoincare(
 		if (sign(plane(y)) > 0 &&  sign(plane(y⁻)) <= 0)
 			# find h′ ∈ [0,h] s.t. plane(y⁻ + h′⋅V(h′,y⁻)) = 0
 			step(h′) = y⁻ + h′*V(h′,y⁻)
-			h′ = matsboUTIL.bisection(h′ -> plane(step(h′)), 0, h, ϵ=0.00001)
+			h′ = mbUtil.bisection(h′ -> plane(step(h′)), 0, h, ϵ=0.00001)
 			y′ = step(h′)
 			intersections = [intersections [y′; t+h′]]
 		end

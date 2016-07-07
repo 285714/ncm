@@ -1,5 +1,5 @@
 using Gtk.ShortNames
-using matsboNWTN
+using mbNewton
 include("../lib/ncmprojMKCONTROLGRID.jl")
 # include("../lib/ncmprojLOGGER.jl")
 

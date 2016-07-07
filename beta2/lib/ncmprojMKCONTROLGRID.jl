@@ -7,6 +7,8 @@ function mkControlGrid(D::Dict{AbstractString, Any}, C, cols=1)
 	for x in C; D[x[1]] = x[3] end
 
 	local Control = map(C) do x
+		typeof(x) <: Gtk.GtkWidget && return x #simply insert widgets
+
 		local tmp = Void
 		if x[2] == Int
 			tmp = @SpinButton(x[4][1], x[4][end], step(x[4]))

@@ -1,6 +1,6 @@
 __precompile__()
 
-module matsboUTIL
+module mbUtil
 export mapi, standardize, trim, findPeaks, autocorrelation,
 	inputConvert, outputConvert, circconv,
 	vectorize,
@@ -102,6 +102,10 @@ function bisection(f,a,b; ϵ=1e-10)
 	end
 	return a
 end
+
+
+#TODO expose?
+varToIter(v...) = return v
 
 # prefer the compact solution, plus stays in sync.
 # function bisection(f, x₋, x₊; ϵ=1e-10)

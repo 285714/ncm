@@ -1,7 +1,7 @@
 #TODO dimensions...
 
 using Gtk.ShortNames
-using matsboINTERPOLATE, matsboNWTN, matsboPRED, matsboUTIL
+using mbInterpolate, mbNewton, mbPred, mbUtil
 include("$(pwd())/lib/ncmprojFINDINITIALDATA.jl")
 include("$(pwd())/lib/ncmprojMKCONTROLGRID.jl")
 
@@ -106,7 +106,7 @@ end
 function toTrajInterp(V, d)
 	m = (length(V)-d-2)÷(2*d)
 	tmp = reshape(V[1:end-2], 2m+1, d)
-	return matsboUTIL.vectorize(x -> Float64[ matsboINTERPOLATE.interpolateTrigonometric(tmp[1,i], 2tmp[2:2+m-1,i], -2tmp[2+m:end,i])(x) / (2m+1) for i in 1:d ])
+	return mbUtil.vectorize(x -> Float64[ mbInterpolate.interpolateTrigonometric(tmp[1,i], 2tmp[2:2+m-1,i], -2tmp[2+m:end,i])(x) / (2m+1) for i in 1:d ])
 end
 
 
@@ -117,7 +117,7 @@ function projection(V)
 	dt = 2pi/1025 #TODO ...
 	for t in .0:dt:2pi
 		if f(t)[1] ≤ .0 ≤ f(t+dt)[1]
-			x = matsboUTIL.bisection(x->f(x)[1], t, t+dt, ϵ=1e-4) #TODO precision
+			x = mbUtil.bisection(x->f(x)[1], t, t+dt, ϵ=1e-4) #TODO precision
 			push!(rtn, norm(f(x)))
 		end
 	end
@@ -129,7 +129,7 @@ end
 # takes real F-coefficients  V  , returns resampled version
 function resample(V, m::Int, scale=1.0)
 	mapslices(V, [1]) do v
-		f(x) = interpolateTrigonometric(real(v[1]), 2*real(v[2:end]), -2*imag(v[2:end]))(x) / (2*length(v)-1)
+		f(x) = mbInterpolate.interpolateTrigonometric(real(v[1]), 2*real(v[2:end]), -2*imag(v[2:end]))(x) / (2*length(v)-1)
 		rfft(f(linspace(.0,2pi*scale,2*m+2)[1:end-1]))
 	end
 end
