@@ -57,37 +57,34 @@ end
 
 global h = Dict() #TODO encapsulate, keep per solution and branch
 function goSingleStep(D)
-	i,j = @fetch findSolution(project, project.activeSolution) #TODO hint parent
 	V = project.activeSolution
+	V == Void && return Void #TODO elaborate..
 
-	local branch,htmp
-	if i ≠ 0 && j == length(project.branches[i].solutions)
-		branch = project.branches[i]
-		htmp = get(h, (branch, true), 1)
-	elseif i ≠ 0 && j == 1
-		branch = project.branches[i]
-		htmp = get(h, (branch, false), -1)
-	else #solution not at start/end of branch, not in branch: create new branch, continue in pos dir
-		htmp = 1
-		V = deepcopy(V)
-		branch = Branch(V)
-		push!(project.branches, branch)
+	local B
+	if typeof(V) == Solution && (V == V.parent[1] || V == V.parent[end])
+		B = V.parent
+	else
+		B = Branch(project)
+		V = Solution(V, B)
+		B.solutions = Solution[V]
+		push!(project, B)
 	end
 
+	htmp = get!(h, V, 1.0)
+	V!=B[1] && (htmp=-htmp)
+
 	Htmp = V -> H(V) + D["Perturb"]
-	W,htmp = @fetch continuationStep(Htmp, J, V, htmp, D["ϵ"], D["κ"], D["δ"], D["α"])
+	W,htmp = continuationStep(Htmp, J, V.data, htmp, D["ϵ"], D["κ"], D["δ"], D["α"]) #TODO fetch...
 
-	# write(L, htmp)
+	W = Solution(W, B)
+	h[W] = abs(htmp)
 
-	dir = htmp > 0
-	(dir?push!:unshift!)(branch.solutions, W)
-	project.activeSolution = W
-	h[(branch, dir)] = htmp
+	(htmp>0?push!:unshift!)(B, W)
+	setActiveSolution(project, W)
 
 	return Void
 end
 
-# untested
 @everywhere function continuationStep(H, J, V, h, ϵ, κ, δ, α)
 	# tangent-vector for matrix A
 	function tang(A)

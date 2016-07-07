@@ -13,15 +13,15 @@
 
 addprocs(1)
 
-@everywhere include("Model.jl")
 push!(LOAD_PATH, "$(pwd())/lib")
 using Gtk.ShortNames
-@everywhere using mbNewton, mbPred, mbUtil, mbInterpolate
+@everywhere using mbNewton, mbPred, mbUtil, mbInterpolate, mbObserve
+@everywhere include("Model.jl")
 
 #(do menu stuff, other global GUI stuff, saving, ...)
 
 #create empty project: vector of branches of solutions
-global project = Project(Branch[])
+global project = Project()
 global lockProject = ReentrantLock()
 
 save(filename) = open("save/$(filename)", "w") do f serialize(f, project) end

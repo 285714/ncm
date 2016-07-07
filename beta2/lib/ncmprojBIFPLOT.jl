@@ -15,10 +15,9 @@ ioff()
 type BifPlot
 	fig
 	project::Project
-	idx::Dict
-	cache::Dict
-	solutionMark
-	currPlot
+	idxLineBranch::Dict
+	idxBranchLines::Dict
+	activeSolutionMark
 end
 
 
@@ -28,26 +27,21 @@ function BifPlot(project::Project)
 	fig["show"]()
 
 	#index for associating plotlines with solutions
-	idx = Dict{Any,Any}()
-	cache = Dict{Any,Any}()
+	idxLineBranch = Dict{Any,Any}()
+	idxBranchLines = Dict{Any,Any}()
 
-	B = BifPlot(fig, project, idx, cache, Void, Void)
+	B = BifPlot(fig, project, idxLineBranch, idxBranchLines, Void)
 
 	function handlerPick(ev)
-		branch = get(B.idx, ev[:artist], Void)
-		branch == Void && return Void
-		lock(lockProject)
+		b = get(B.idxLineBranch, ev[:artist], Void)
+		b == Void && return Void
+		lock(lockProject) #TODO move locking in this case to setActiveSolution
 		try
 			i = ev[:ind][1]+1
-			project.activeSolution = branch.solutions[i]
-			try map(x->x[:set_lw](1), B.currPlot) end
-			B.currPlot = B.cache[branch.solutions]
-			try map(x->x[:set_lw](2), B.currPlot) end
+			setActiveSolution(project, b[i])
 		finally
 			unlock(lockProject)
 		end
-		figure(B.fig[:number])
-		PyPlot.draw()
 		return Void
 	end
 
@@ -56,25 +50,34 @@ function BifPlot(project::Project)
 
 		figure(B.fig[:number])
 
+		#TODO implement dequeue style branch handling
+
 		if ev[:key] == "delete"
 			project.activeSolution == Void && return Void
-			i,j = findSolution(project, project.activeSolution)
+			i,j = findSolution(project, project.activeSolution) #TODO fix this
 			if i ≠ 0 && j ≠ 0
 				deleteat!(project.branches[i].solutions, j)
 				isempty(project.branches[i].solutions) && deleteat!(project.branches, i)
 			end
 		elseif ev[:key] == "ctrl+delete"
-			project.activeSolution == Void && return Void
-			i,j = findSolution(project, project.activeSolution)
-			i ≠ 0 && deleteat!(project.branches, i)
+			S = project.activeSolution
+			(S == Void || typeof(S) != Solution) && return Void
+			b = S.parent
+			lines = B.idxBranchLines[b]
+			delete!(B.idxBranchLines, b)
+			for l in lines
+				delete!(B.idxLineBranch,l)
+				l[:remove]()
+			end
+			deleteat!(b.parent.branches, findfirst(b.parent.branches, S))
 		elseif ev[:key] == "r"
 			ax = subplot(121)
 			ax[:relim]()
 			autoscale()
-		elseif ev[:key] == "ctrl+r"
-			empty!(B.cache)
-			empty!(B.idx)
-			clf()
+		# elseif ev[:key] == "ctrl+r"
+		# 	empty!(B.cache)
+		# 	empty!(B.idx)
+		# 	clf()
 		elseif ev[:key] in [ "$(i)" for i in 0:9 ]
 			const colMap = Dict(
 				"0" => "#000000", "1" => "#FF0000",
@@ -94,75 +97,92 @@ function BifPlot(project::Project)
 	fig["canvas"]["mpl_connect"]("pick_event", handlerPick)
 	fig["canvas"]["mpl_connect"]("key_press_event", handlerKey)
 
-	@schedule while true
-		try B.fig[:show]() catch ex return end
-		try plotBifurcation(B) end
-		sleep(1)
+	#connect to project events
+	observe(project, :pushBranch) do b
+		pushBranch(B, b) end
+
+	observe(project, :activeSolutionChanged) do
+		s = project.activeSolution
+		s == Void && return
+		typeof(s) == Solution && (s = s.data)
+		plotSolution(B, s)
+	end
+
+	observe(project, :pushSolution) do b,s
+		addToBranch(push!, B::BifPlot, b::Branch, s::Solution) end
+
+	observe(project, :unshiftSolution) do b,s
+		addToBranch(unshift!, B::BifPlot, b::Branch, s::Solution) end
+
+	observe(project, :popSolution) do b,s
+		# update plot
+	end
+
+	observe(project, :shiftSolution) do b,s
+		# update plot
 	end
 
 	return B
 end
 
-#update changed plot lines
-function plotBifurcation(B::BifPlot)
+
+function pushBranch(B::BifPlot, b::Branch)
 	figure(B.fig[:number])
 	subplot(121)
 
-	cacheNew = Dict()
-
-	#TODO parallel, changing length of projection
-	lock(lockProject)
-	for branch in B.project.branches
-		if !haskey(B.cache, branch.solutions)
-			x = map(last, branch.solutions)
-			y = reduce(map(transpose∘projection, branch.solutions)) do A,a
-				sA,sa = size(A,2), size(a,2)
-				s = max(sA,sa)
-				return [ A[:,(0:s-1)%sA+1]; a[1,(0:s-1)%sa+1] ]
-			end
-
-			lines = plot(x, y, picker=5, color="k", marker=".", markersize=3)
-			cacheNew[branch.solutions] = lines
-			map(l -> (B.idx[l]=branch), lines)
-		else
-			cacheNew[branch.solutions] = B.cache[branch.solutions]
-			delete!(B.cache, branch.solutions)
-		end
+	x = map(last, b.solutions)
+	y = reduce(map(transpose∘projection, b.solutions)) do A,a
+		sA,sa = size(A,2), size(a,2)
+		s = max(sA,sa)
+		return [ A[:,(0:s-1)%sA+1]; a[1,(0:s-1)%sa+1] ]
 	end
 
-	S = B.project.activeSolution
-	if S ≠ Void
-		if !haskey(B.cache, S)
-			cacheNew[S] = plotSolution(B, S)
-		else
-			cacheNew[S] = B.cache[S]
-			delete!(B.cache, S)
-		end
-	end
-	unlock(lockProject)
-
-	#cache now contains only obsolete plots
-	for (k,v) in B.cache map(l->l["remove"](), v) end
-	B.cache = cacheNew
-
+	lines = plot(x, y, picker=5, color="k", marker=".", markersize=3)
 	PyPlot.draw()
 
-	return Void
+	map(l -> (B.idxLineBranch[l]=b), lines)
+	B.idxBranchLines[b] = lines
+
+	return lines
 end
 
 
+function addToBranch(op, B::BifPlot, b::Branch, s::Solution)
+	x = last(s) #TODO extend relay?
+	Y = projection(s) #TODO broadcast to common size
+
+	lines = B.idxBranchLines[b]
+	for (l,y) in zip(lines, Y)
+		l[:set_xdata](op(l[:get_xdata](), x))
+		l[:set_ydata](op(l[:get_ydata](), y))
+	end
+
+	figure(B.fig[:number])
+	PyPlot.draw()
+	return Void
+end
+
+function delFromBranch(op, B::BifPlot, b::Branch, s::Solution)
+	error("asdfasdfasdf")
+end
+
+
+# plotSolution(B::BifPlot, S::Solution) = plotSolution(B,S.data) # handled by convert? prob not..
 function plotSolution(B::BifPlot, V::Vector{Float64})
 	figure(B.fig[:number])
-	subplot(121)
 
+	subplot(121)
+	try B.activeSolutionMark[:remove]() end
 	x = V[end]
 	y = projection(V)
-	p1 = scatter(fill(x, size(y)), y, color="r")
+	B.activeSolutionMark = scatter(fill(x, size(y)), y, color="r")
 
 	subplot(122, projection="3d")
 	t = linspace(0, 2pi, length(V)÷3 * 8)
 	v = reduce(hcat, toTrajInterp(V, 3)(t))'
 	p2 = plot(v[:,1], v[:,2], v[:,3], color="k")
 
-	return [p1;p2]
+	PyPlot.draw()
+
+	return Void
 end

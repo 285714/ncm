@@ -1,4 +1,4 @@
-#TODO dimensions...
+#TODO encapsulate... project, dimensions, data
 
 using Gtk.ShortNames
 using mbInterpolate, mbNewton, mbPred, mbUtil
@@ -46,7 +46,7 @@ end
 
 function handlerResample(w, D)
 	setproperty!(w, :sensitive, false)
-	lock(lockProject)
+	lock(project)
 	try
 		ω,ℵ = project.activeSolution[end-1:end]
 		m = (length(project.activeSolution)-5)÷6
@@ -59,9 +59,10 @@ function handlerResample(w, D)
 		Htmp(V) = H([V; ℵ])
 		Jtmp(V) = J([V; ℵ])[:, 1:end-1]
 		tmp = newton(Htmp, Jtmp, C, predCount(10) ∧ predEps(1e-10))
-		project.activeSolution = [tmp; ℵ]
+
+		setActiveSolution(project, [tmp; ℵ])
 	finally
-		unlock(lockProject)
+		unlock(project)
 		setproperty!(w, :sensitive, true)
 	end
 	return Void
@@ -70,7 +71,7 @@ end
 
 function handlerFindInitialData(w, dataGal)
 	setproperty!(w, :sensitive, false)
-	lock(lockProject)
+	lock(project)
 
 	try
 		#TODO function/macro bringIntoScope(D::Dict)
@@ -93,9 +94,9 @@ function handlerFindInitialData(w, dataGal)
 			return newton(Htmp, Jtmp, C, predCount(10) ∧ predEps(1e-10))
 		end
 
-		project.activeSolution = [tmp; c₀]
+		setActiveSolution(project, [tmp; c₀])
 	finally
-		unlock(lockProject)
+		unlock(project)
 		setproperty!(w, :sensitive, true)
 	end
 	return Void
