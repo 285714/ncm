@@ -6,9 +6,15 @@
 #		maybe forbid changing branch in middle?
 #			=> consistency, can only add or remove point of projection!
 #			callback from project abstraction
+#TODO lock: lower opacity, hide solution dots
 
 using PyCall
 pygui(:tk) #prevent conflict with gtk
+D = PyCall.PyDict(matplotlib["rcParams"])
+D["keymap.back"] =  deleteat!(
+	D["keymap.back"],
+	findfirst(D["keymap.back"], "backspace")
+	)
 using PyPlot
 ioff()
 
@@ -32,70 +38,8 @@ function BifPlot(project::Project)
 
 	B = BifPlot(fig, project, idxLineBranch, idxBranchLines, Void)
 
-	function handlerPick(ev)
-		b = get(B.idxLineBranch, ev[:artist], Void)
-		b == Void && return Void
-		lock(lockProject) #TODO move locking in this case to setActiveSolution
-		try
-			i = ev[:ind][1]+1
-			setActiveSolution(project, b[i])
-		finally
-			unlock(lockProject)
-		end
-		return Void
-	end
-
-	function handlerKey(ev)
-		global tmp = ev
-
-		figure(B.fig[:number])
-
-		#TODO implement dequeue style branch handling
-
-		if ev[:key] == "delete"
-			project.activeSolution == Void && return Void
-			i,j = findSolution(project, project.activeSolution) #TODO fix this
-			if i ≠ 0 && j ≠ 0
-				deleteat!(project.branches[i].solutions, j)
-				isempty(project.branches[i].solutions) && deleteat!(project.branches, i)
-			end
-		elseif ev[:key] == "ctrl+delete"
-			S = project.activeSolution
-			(S == Void || typeof(S) != Solution) && return Void
-			b = S.parent
-			lines = B.idxBranchLines[b]
-			delete!(B.idxBranchLines, b)
-			for l in lines
-				delete!(B.idxLineBranch,l)
-				l[:remove]()
-			end
-			deleteat!(b.parent.branches, findfirst(b.parent.branches, S))
-		elseif ev[:key] == "r"
-			ax = subplot(121)
-			ax[:relim]()
-			autoscale()
-		# elseif ev[:key] == "ctrl+r"
-		# 	empty!(B.cache)
-		# 	empty!(B.idx)
-		# 	clf()
-		elseif ev[:key] in [ "$(i)" for i in 0:9 ]
-			const colMap = Dict(
-				"0" => "#000000", "1" => "#FF0000",
-				"2" => "#00FF00", "3" => "#0000FF",
-				"4" => "#00FFFF", "5" => "#FF00FF",
-				"6" => "#FFFF00", "7" => "#800000",
-				"8" => "#008000", "9" => "#000080"
-				)
-			try map(x->x[:set_color](colMap[ev[:key]]), B.currPlot) end
-		end
-
-		PyPlot.draw()
-
-		return Void
-	end
-
-	fig["canvas"]["mpl_connect"]("pick_event", handlerPick)
-	fig["canvas"]["mpl_connect"]("key_press_event", handlerKey)
+	fig["canvas"]["mpl_connect"]("pick_event", ev -> handlerPick(B,ev))
+	fig["canvas"]["mpl_connect"]("key_press_event", ev -> handlerKey(B,ev))
 
 	#connect to project events
 	observe(project, :pushBranch) do b
@@ -109,20 +53,113 @@ function BifPlot(project::Project)
 	end
 
 	observe(project, :pushSolution) do b,s
-		addToBranch(push!, B::BifPlot, b::Branch, s::Solution) end
+		addToBranch(push!, B, b, s) end
 
 	observe(project, :unshiftSolution) do b,s
-		addToBranch(unshift!, B::BifPlot, b::Branch, s::Solution) end
+		addToBranch(unshift!, B, b, s) end
 
 	observe(project, :popSolution) do b,s
-		# update plot
-	end
+		delFromBranch(pop!, B, b) end
 
 	observe(project, :shiftSolution) do b,s
-		# update plot
-	end
+		delFromBranch(shift!, B, b) end
+
+	observe(project, :delBranch) do b
+		delBranch(B, b) end
 
 	return B
+end
+
+
+
+
+function handlerPick(B::BifPlot, ev)
+	b = get(B.idxLineBranch, ev[:artist], Void)
+	b == Void && return Void
+	lock(lockProject) #TODO move locking in this case to setActiveSolution
+	try
+		i = ev[:ind][1]+1
+		setActiveSolution(project, b[i])
+	finally
+		unlock(lockProject)
+	end
+	return Void
+end
+
+function handlerKey(B::BifPlot, ev)
+	global tmp = ev #TODO asdf
+
+	figure(B.fig[:number])
+
+	#TODO implement dequeue style branch handling
+	#TODO stop fooling with project internals
+	#TODO make sure B.project is used, not global project
+	#TODO locking...
+
+	if ev[:key] == "delete"
+		!isa(B.project.activeSolution, Solution) && return Void
+		s,b = B.project.activeSolution, B.project.activeSolution.parent
+		length(b) > 1 && s==b[1] && setActiveSolution(B.project, b[2])
+		shift!(B.project.activeSolution.parent)
+	elseif ev[:key] == "backspace"
+		!isa(B.project.activeSolution, Solution) && return Void
+		s,b = B.project.activeSolution, B.project.activeSolution.parent
+		length(b) > 1 && s==b[end] && setActiveSolution(B.project, b[end-1])
+		pop!(B.project.activeSolution.parent)
+	elseif ev[:key] == "ctrl+delete" #TODO fix
+		!isa(B.project.activeSolution, Solution) && return Void
+		#delBranch(B, B.project.activeSolution.parent)
+		b = B.project.activeSolution.parent
+		deleteat!(B.project, findfirst(B.project, b)) #TODO fix
+		delBranch(B, b)
+	elseif ev[:key] == "r"
+		ax = subplot(121)
+		ax[:relim]()
+		autoscale()
+	elseif ev[:key] == "ctrl+r"
+		clf()
+		empty!(B.idxBranchLines)
+		empty!(B.idxLineBranch)
+		map(b -> pushBranch(B,b), B.project)
+	elseif ev[:key] == "ctrl+l"
+		!isa(B.project.activeSolution, Solution) && return Void
+		b = B.project.activeSolution.parent
+		for l in B.idxBranchLines[b]
+			if l[:get_picker]() != 5
+				l[:set_picker](5)
+				l[:set_marker](".")
+			else
+				l[:set_picker](0)
+				l[:set_marker]("None")
+			end
+		end
+	elseif ev[:key] == "ctrl+L"
+		for l in keys(B.idxLineBranch)
+			l[:set_picker](5)
+			l[:set_marker](".")
+		end
+	elseif ev[:key] == "ctrl+alt+L"
+		for l in keys(B.idxLineBranch)
+			l[:set_picker](0)
+			l[:set_marker]("None")
+		end
+	elseif ev[:key] in [ "$(i)" for i in 0:9 ]
+		const colMap = Dict(
+			"0" => "#000000", "1" => "#FF0000",
+			"2" => "#00FF00", "3" => "#0000FF",
+			"4" => "#00FFFF", "5" => "#FF00FF",
+			"6" => "#FFFF00", "7" => "#800000",
+			"8" => "#008000", "9" => "#000080"
+			)
+		if typeof(project.activeSolution) == Solution
+			for l in B.idxBranchLines[project.activeSolution.parent]
+				l[:set_color](colMap[ev[:key]])
+			end
+		end
+	end
+
+	PyPlot.draw()
+	return Void
 end
 
 
@@ -162,8 +199,16 @@ function addToBranch(op, B::BifPlot, b::Branch, s::Solution)
 	return Void
 end
 
-function delFromBranch(op, B::BifPlot, b::Branch, s::Solution)
-	error("asdfasdfasdf")
+function delFromBranch(op, B::BifPlot, b::Branch)
+	for l in B.idxBranchLines[b]
+		x,y = l[:get_xdata](), l[:get_ydata]()
+		op(x); op(y)
+		l[:set_xdata](x); l[:set_ydata](y)
+	end
+
+	figure(B.fig[:number])
+	PyPlot.draw()
+	return Void
 end
 
 
@@ -175,7 +220,7 @@ function plotSolution(B::BifPlot, V::Vector{Float64})
 	try B.activeSolutionMark[:remove]() end
 	x = V[end]
 	y = projection(V)
-	B.activeSolutionMark = scatter(fill(x, size(y)), y, color="r")
+	B.activeSolutionMark = scatter(fill(x, size(y)), y, facecolors="None", edgecolors="k", marker="o")
 
 	subplot(122, projection="3d")
 	t = linspace(0, 2pi, length(V)÷3 * 8)
@@ -183,6 +228,18 @@ function plotSolution(B::BifPlot, V::Vector{Float64})
 	p2 = plot(v[:,1], v[:,2], v[:,3], color="k")
 
 	PyPlot.draw()
-
 	return Void
+end
+
+
+function delBranch(B::BifPlot, b::Branch)
+	lines = B.idxBranchLines[b]
+	delete!(B.idxBranchLines, b)
+	map(lines) do l
+		l[:remove]()
+		delete!(B.idxLineBranch, l)
+	end
+
+	figure(B.fig[:number])
+	PyPlot.draw()
 end

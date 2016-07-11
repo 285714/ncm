@@ -29,8 +29,11 @@ function unobserveall(O::Observer, s)
 end
 
 #TODO DRYS
+#TODO try... used this way for debugging
+
 function notify(O::Observer, s, v...)
 	for cb in get(O.D, s, [])
+		# cb(v...)
 		try cb(v...) catch e; println(e, "\nSymbol: $s.") end
 	end
 	return Void
@@ -38,7 +41,8 @@ end
 
 function notify(O::Observer, s)
 	for cb in get(O.D, s, [])
-			try cb() catch e; println(e, "\nSymbol: $s.") end
+		# cb()
+		try cb() catch e; println(e, "\nSymbol: $s.") end
 	end
 	return Void
 end

@@ -19,7 +19,7 @@ function pcGUI()
 		("κ", Float64, .4, .0:1e-3:1.0),
 		("δ", Float64, .5, .0:1e-2:5.0),
 		("α", Float64, 10.0, .0:.1:90.0),
-		("Perturb", Float64, .0, -1e-2:1e-4:1e-2, )
+		("Perturb", Float64, .0, -1e-3:1e-4:1e-3)
 	])
 	g[1:2,2] = gridPC
 
@@ -47,7 +47,7 @@ function pcGUI()
 				lock(lockProject)
 				try goSingleStep(dataPC)
 				finally unlock(lockProject) end
-				yield()
+				sleep(.05)
 			end
 		end
 	end
@@ -63,7 +63,7 @@ function goSingleStep(D)
 	local B
 	if typeof(V) == Solution && (V == V.parent[1] || V == V.parent[end])
 		B = V.parent
-	else
+	else # internal, single or orphaned solution
 		B = Branch(project)
 		V = Solution(V, B)
 		B.solutions = Solution[V]
@@ -71,9 +71,9 @@ function goSingleStep(D)
 	end
 
 	htmp = get!(h, V, 1.0)
-	V!=B[1] && (htmp=-htmp)
+	V==B[1] && length(B)>1 && (htmp=-htmp)
 
-	Htmp = V -> H(V) + D["Perturb"]
+	Htmp = D["Perturb"]==0 ? H : V -> H(V) + D["Perturb"] #maybe prevent call overhead
 	W,htmp = continuationStep(Htmp, J, V.data, htmp, D["ϵ"], D["κ"], D["δ"], D["α"]) #TODO fetch...
 
 	W = Solution(W, B)
@@ -118,9 +118,6 @@ end
 		abs(h) ≤ 1e-8 && error("h≈0 !") #TODO remove
 	end
 
-	println("step!")
-
 	v₁ = newton(H, J, v₁, predEps(ϵ) ∧ predCount(25)) #TODO integrate max count
-
 	return v₁, h
 end

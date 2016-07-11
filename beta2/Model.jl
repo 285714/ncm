@@ -41,7 +41,7 @@ type Solution
 	data::Vector{Float64}
 	parent # ::Branch # circular type dependency...
 	Solution(d::Vector{Float64}, p) = new(d,p)
-	Solution(s::Solution, p) = new(deepcopy(s.data, p))
+	Solution(s::Solution, p) = new(deepcopy(s.data), p)
 end
 @relay(Solution, :data)
 
@@ -58,6 +58,8 @@ type Branch
 end
 @relay(Branch, :solutions)
 
+#TODO IMPORTANT: handle case of activeSolution::Solution
+
 function Base.push!(B::Branch, sols...)
 	P = B.parent
 	for s in sols
@@ -70,7 +72,7 @@ end
 function Base.unshift!(B::Branch, sols...)
 	P = B.parent
 	for s in sols
-		push!(B.solutions, s)
+		unshift!(B.solutions, s)
 		mbObserve.notify(P, :unshiftSolution, B, s)
 	end
 	return P
@@ -79,14 +81,30 @@ end
 function Base.pop!(B::Branch)
 	P = B.parent
 	s = pop!(B.solutions)
-	mbObserve.notify(P, :popSolution, B, s)
+	s == P.activeSolution && (P.activeSolution=s.data)
+	if length(B) == 1
+		deleteat!(P, findfirst(P, B))
+		# deleteat!(P.branches, findfirst(P, B))
+		# B[1] == P.activeSolution && setActiveSolution(P, B[1].data)
+		# mbObserve.notify(P, :delBranch, B)
+	else
+		mbObserve.notify(P, :popSolution, B, s)
+	end
 	return s
 end
 
 function Base.shift!(B::Branch)
 	P = B.parent
 	s = shift!(B.solutions)
-	mbObserve.notify(P, :shiftSolution, B, s)
+	s == P.activeSolution && (P.activeSolution=s.data)
+	if length(B.solutions) == 1
+		deleteat!(P, findfirst(P, B))
+		# deleteat!(P.branches, findfirst(P, B))
+		# B[1] == P.activeSolution && setActiveSolution(P, B[1].data)
+		# mbObserve.notify(P, :delBranch, B)
+	else
+		mbObserve.notify(P, :shiftSolution, B, s)
+	end
 	return s
 end
 
@@ -118,6 +136,13 @@ function Base.push!(P::Project, branches...)
 	return P
 end
 
+function Base.deleteat!(P::Project, i::Int)
+	B = P[i]
+	P.activeSolution in B && setActiveSolution(P, P.activeSolution.data)
+	deleteat!(P.branches, i)
+	mbObserve.notify(P, :delBranch, B)
+end
+
 function setActiveSolution(P::Project, V::Vector{Float64})
 	P.activeSolution = V
 	mbObserve.notify(P, :activeSolutionChanged)
@@ -130,12 +155,4 @@ function setActiveSolution(P::Project, S::Solution)
 	P.activeSolution = S
 	mbObserve.notify(P, :activeSolutionChanged)
 	return Void
-end
-
-function findSolution(P::Project, S::Vector{Float64})
-	for i in 1:length(P.branches)
-		j = findfirst(x -> x == S, P.branches[i].solutions)
-		j > 0 && return i,j
-	end
-	return 0,0
 end
