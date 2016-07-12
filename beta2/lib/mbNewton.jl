@@ -47,22 +47,25 @@ function centralDifference(H::Function, v::Vector{Float64}; ϵ::Float64=1e-4)
 	end
 	return reduce(hcat, J)
 end
+centralDifference(H::Function; ϵ=1e-4) = v -> centralDifference(H, v; ϵ)
 
 function forwardDifference(H::Function, v::Vector{Float64}; ϵ::Float64=1e-4)
 	local J = cell(length(v))
 	local w = deepcopy(v)
 	local tmpH = H(v)
 	for i in 1:length(v)
-	  w[i] = v[i]+ϵ;	J[i] = (H(w) - tmpH) / ϵ
+	  w[i] = v[i]+ϵ;	J[i] = (H(w) - tmpH) ./ ϵ
 	  w[i] = v[i]
 	end
 	return reduce(hcat, J)
 end
+forwardDifference(H::Function; ϵ=1e-4) = v -> forwardDifference(H, v; ϵ)
 
 
 # WARNING inefficient, H is evaluated which is not necessary (at least in Newton context...
 #		asymptotic behavior is unchanged though) however, this allows to construct a pseudo-
 #		Jacobian with the usual one-parameter-signature, instead of requiring to adapt any functions.
+# can be countered through rudimentary caching in H
 # WARNING mind that this function has an internal state depending on the preceding
 #		evaluations. the 'Jacobian' at a point is thus not well defined.
 # TODO sequence of evaluation not optimal

@@ -1,7 +1,4 @@
 using Gtk.ShortNames
-using mbNewton
-include("../lib/ncmprojMKCONTROLGRID.jl")
-# include("../lib/ncmprojLOGGER.jl")
 
 function pcGUI()
 	win = @Window("Continuation Controls", 256, 256, false)
@@ -19,7 +16,7 @@ function pcGUI()
 		("κ", Float64, .4, .0:1e-3:1.0),
 		("δ", Float64, .5, .0:1e-2:5.0),
 		("α", Float64, 10.0, .0:.1:90.0),
-		("Perturb", Float64, .0, -1e-3:1e-4:1e-3)
+		("Perturb", Float64, .0, -1e-3:1e-6:1e-3)
 	])
 	g[1:2,2] = gridPC
 

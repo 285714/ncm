@@ -17,13 +17,13 @@ function galerkinGUI()
 
 	dataGal = Dict{AbstractString, Any}()
 	gridGalerkin[1:2,1] = mkControlGrid(dataGal, [
-		("Trans. Iterations", Int, 2000, 0:1000:1e8),
-		("Trans. StepSize", Float64, .1, .0:.01:1.0),
-		("SS StepSize", Float64, .1, 0:.001:1.0),
+		("Trans. Iterations", Int, 2000, 1000:1000:1e8),
+		("Trans. StepSize", Float64, .1, 1e-3:.001:1.0),
+		("SS StepSize", Float64, .1, 1e-3:.001:1.0),
 		("Max. period", Int, 30, 1:128),
 		("Intersections", Int, 120, 1:128),
 		("m", Int, 64, 8:4096),
-		("c₀", Float64, 4.0, .0:.1:100.0)
+		("c₀", Float64, .0, -500:.01:500)
 	])
 
 	buttonFindInitialValue = @Button("Find Initial Solution")

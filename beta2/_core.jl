@@ -17,6 +17,7 @@ push!(LOAD_PATH, "$(pwd())/lib")
 using Gtk.ShortNames
 @everywhere using mbNewton, mbPred, mbUtil, mbInterpolate, mbObserve
 @everywhere include("Model.jl")
+include("lib/ncmprojMKCONTROLGRID.jl")
 
 #(do menu stuff, other global GUI stuff, saving, ...)
 
@@ -31,8 +32,11 @@ load(filename) = (global project = open(deserialize, "save/$(filename)"))
 # include(open_dialog("Select continuation method.", Gtk.GtkNullContainer(), ASCIIString[]))
 # include(open_dialog("Select system.", Gtk.GtkNullContainer(), ASCIIString[]))
 
-#DEBUG prevent loading screens
-@everywhere include("system/roessler.jl")
+# @everywhere include("system/roessler.jl")
+@everywhere include("system/lorenz.jl")
+
+include("lib/ncmprojBIFPLOT.jl") #needs thread 1
+B = BifPlot(project)
 
 @everywhere include("continuation/PC.jl")
 pcGUI()
@@ -40,22 +44,19 @@ pcGUI()
 @everywhere include("lib/ncmprojGALERKIN.jl")
 galerkinGUI()
 
-include("lib/ncmprojBIFPLOT.jl") #needs thread 1
-B = BifPlot(project)
 
 
 #TODO-2DAY:
 #	choose branch ✓
 #	select solution ✓
 #	add branch ✓
-#	modify solution
-#	delete branches
+#	modify solution ✓
+#	delete branches ✓
 #	plot thread... not working... forget that... pyplot needs thread 1... Gtk might work...
-#	singular branches...
+#	singular branches... ✓ (not existing)
 
 #	abstraction: plotting ✓, galerkin, continuation, project (! - for access, sync, sanity, ...)
 #		lock
-#		branch: dequeue only
 #		project: all operations
 #	howto associate additional info with solutions/branches? transparent, general...
 #		projects must be method agnostic...
@@ -85,3 +86,16 @@ B = BifPlot(project)
 #	color ✓
 #	lock branch (make unselectable, how to unlock?, how switch branches efficiently?)
 #	rebuild completely as observable
+
+
+#winkel pred
+#speichern
+# lorenz
+#roessler bif
+
+#mark perturb branches
+#auto new branch
+#singleton perturb branch?
+#new panel?
+#special perturb mode?
+#change perturb style... make factor for rand

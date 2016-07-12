@@ -76,7 +76,7 @@ function findCyclePoincare(
 		transientIterations :: Int = 2000,
 		transientStepSize :: Float64 = 0.1,
 		steadyStateStepSize :: Float64 = 0.1)
-	
+
 	dim = length(y₀)
 	y₁ = ode(F, y₀, transientStepSize, (y, i, t, V) -> i < transientIterations)
 
@@ -147,10 +147,9 @@ function ode(f, y, h, pred)
 		for j=1:s-1
 			k[:,j+1] = f( t + h * sum(RK[j,:]), y + h * k * RK[j,:]' );
 		end
-		
+
 		k * RK[s,:]';
 	end
-
 
 	i = 0
 	while pred(y, i, t, V) !== false
@@ -163,3 +162,14 @@ function ode(f, y, h, pred)
 end
 
 
+# y = rand(3)
+# T = zeros(0,3)
+# y = ode((t,v)->f(t,[v;350]), y, .01, (y, i, t, V) -> begin
+# 	global T = [T; y']
+# 	return i < 1000
+# end); println(y)
+#
+# f = figure()
+# gca(projection="3d")
+# plot(T[:,1], T[:,2], T[:,3])
+# f[:show]()
