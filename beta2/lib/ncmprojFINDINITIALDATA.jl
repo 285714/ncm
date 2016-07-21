@@ -78,7 +78,15 @@ function findCyclePoincare(
 		steadyStateStepSize :: Float64 = 0.1)
 
 	dim = length(y₀)
-	y₁ = ode(F, y₀, transientStepSize, (y, i, t, V) -> i < transientIterations)
+	flagIntersected = false
+	y⁻ = y₀
+	y₁ = ode(F, y₀, transientStepSize, function (y, i, t, V)
+		plane(y⁻) ≤ 0 ≤ plane(y) && (flagIntersected = true)
+		y⁻ = y
+		return i < transientIterations
+	end)
+
+	flagIntersected || error("No Intersection.")
 
 	# generate intersections with plane
 	h = steadyStateStepSize
@@ -93,6 +101,7 @@ function findCyclePoincare(
 			intersections = [intersections [y′; t+h′]]
 		end
 		y⁻ = y
+		i > 100transientIterations && error("Something is wrong...")
 		nIntersections > size(intersections, 2)
 	end)
 
@@ -118,15 +127,20 @@ function findCyclePoincare(
 	end
 	period = indmin(ratings)
 
+	println("asdf")
+
 	# cut out steady state trajectory
 	y₂ = intersections[1:dim,1]
 	T = intersections[dim+1,1+period] - intersections[dim+1,1]
 	dataSteadyState = zeros(0,dim)
-	h = T / sampleSize
-	k = h ÷ steadyStateStepSize + 1
-	ode(F, y₂, h/k, (y, i, t, V) -> begin
-		mod(i,k) == 0 && (dataSteadyState = [dataSteadyState; y'])
-		size(dataSteadyState,1) < sampleSize
+	k = T/sampleSize
+	tmp = Inf
+	ode(F, y₂, steadyStateStepSize/2, (y, i, t, V) -> begin
+		tmpt = mod(t,k)
+		tmpt < tmp && (dataSteadyState = [dataSteadyState; y'])
+		tmp = tmpt
+		t > 2T && error("Something is wrong...")
+		return size(dataSteadyState,1) < sampleSize
 	end)
 
 	dataSteadyState, period, 2π/T

@@ -12,10 +12,12 @@ using PyCall
 pygui(:tk) #prevent conflict with gtk
 using PyPlot
 D = PyCall.PyDict(matplotlib["rcParams"])
-D["keymap.back"] =  deleteat!(
+try
+	D["keymap.back"] =  deleteat!(
 	D["keymap.back"],
 	findfirst(D["keymap.back"], "backspace")
 	)
+end
 ioff()
 
 type BifPlot

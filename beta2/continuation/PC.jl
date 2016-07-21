@@ -1,27 +1,29 @@
 using Gtk.ShortNames
 
 function pcGUI()
-	win = @Window("Continuation Controls", 256, 256, false)
+	win = @Window("Continuation Controls", 256, 100, false)
 	# setproperty!(win, :resizable, false)
 
-	g = @Grid()
+	g = @Grid() #TODO obsolete
 	push!(win, g)
 
 	# global L = Logger() #TODO encapsulate
 	# g[1:2,1] = L.w
 
+	buttonStep = @Button("Step")
+	buttonRun = @ToggleButton("Run")
+
 	dataPC = Dict{AbstractString, Any}()
-	gridPC = mkControlGrid(dataPC, [
-		("ϵ", Float64, 1e-4, 1e-6:1e-8:1e-2),
-		("κ", Float64, .4, .0:1e-3:1.0),
-		("δ", Float64, .5, .0:1e-2:5.0),
-		("α", Float64, 10.0, .0:.1:90.0),
-		("Perturb", Float64, .0, -1e-3:1e-6:1e-3)
+	gridPC = mkControlGrid(dataPC, Array[
+		#[ ("ϵ", Float64, 1e-4, 1e-6:1e-8:1e-2), Void ],
+		[ ("κ", Float64, .4, .0:1e-3:1.0) ],
+		[ ("δ", Float64, .5, .0:1e-2:5.0) ],
+		[ ("α", Float64, 10.0, .0:.1:90.0) ],
+		[ ("Perturb", Float64, .0, -1e-3:1e-6:1e-3) ],
+		[ buttonStep, buttonRun ]
 	])
 	g[1:2,2] = gridPC
 
-	buttonStep = @Button("Step")
-	g[1,3] = buttonStep
 	signal_connect(buttonStep, "clicked") do w
 		@schedule begin
 			project.activeSolution == Void && return Void
@@ -36,15 +38,13 @@ function pcGUI()
 		end
 	end
 
-	buttonRun = @ToggleButton("Run")
-	g[2,3] = buttonRun
 	signal_connect(buttonRun, "toggled") do w
 		if getproperty(w, :active, Bool)
 			@schedule while getproperty(w, :active, Bool)
 				lock(lockProject)
 				try goSingleStep(dataPC)
 				finally unlock(lockProject) end
-				sleep(.05)
+				sleep(.1)
 			end
 		end
 	end
@@ -71,7 +71,7 @@ function goSingleStep(D)
 	V==B[1] && length(B)>1 && (htmp=-htmp)
 
 	Htmp = D["Perturb"]==0 ? H : V -> H(V) + D["Perturb"] #maybe prevent call overhead
-	W,htmp = continuationStep(Htmp, J, V.data, htmp, D["ϵ"], D["κ"], D["δ"], D["α"]) #TODO fetch...
+	W,htmp = continuationStep(Htmp, J, V.data, htmp, 1e-4, D["κ"], D["δ"], D["α"]) #TODO fetch...
 
 	W = Solution(W, B)
 	h[W] = abs(htmp)
@@ -97,7 +97,8 @@ end
 
 	local v₁, Hv₁
 	while true
-		v₀ = V + h * tang(J(V))
+		tJV = tang(J(V))
+		v₀ = V + h * tJV
 
 		# step size control
 		Hv₀, Jv₀, Δv₀ = Δ(v₀)
@@ -106,7 +107,7 @@ end
 		v₁ = v₁ - Δv₁
 		κ′ = norm(Δv₁) / norm(Δv₀)
 		δ′ = norm(Δv₀)
-		α′ = acos( dot(tang(Jv₁), tang(Jv₀)) )
+		α′ = acos( dot(tJV, tang(Jv₀)) )
 
 		f = clamp(max(sqrt(κ′/κ), sqrt(δ′/δ), α′/α), .5, 2.0)
 		h /= f

@@ -6,7 +6,7 @@ include("$(pwd())/lib/ncmprojFINDINITIALDATA.jl")
 include("$(pwd())/lib/ncmprojMKCONTROLGRID.jl")
 
 function galerkinGUI()
-	windowGalerkin = @Window("Galerkin Controls", 256, 256, false, true)
+	windowGalerkin = @Window("Galerkin Controls", 256, 100, false, true)
 	setproperty!(windowGalerkin, :resizable, false)
 	# setproperty!(windowGalerkin, :type_hint, Gtk.GdkWindowTypeHint.TOOLBAR)
 
@@ -15,30 +15,27 @@ function galerkinGUI()
 	setproperty!(gridGalerkin, :row_spacing, 5)
 	push!(windowGalerkin, gridGalerkin)
 
+	buttonFindInitial = @ToggleButton("Find Initial")
+	local taskInitial
+	signal_connect(buttonFindInitial, "toggled") do w
+		if getproperty(w, :active, Bool)
+			taskInitial = @schedule try handlerFindInitialData(w, dataGal)
+				finally @schedule setproperty!(w, :active, false) end
+		else
+			isa(taskInitial, Task) && !istaskdone(taskInitial) && schedule(taskInitial, InterruptException(); error=true)
+		end
+	end
+
 	dataGal = Dict{AbstractString, Any}()
-	gridGalerkin[1:2,1] = mkControlGrid(dataGal, [
-		("Trans. Iterations", Int, 2000, 1000:1000:1e8),
-		("Trans. StepSize", Float64, .1, 1e-3:.001:1.0),
-		("SS StepSize", Float64, .1, 1e-3:.001:1.0),
-		("Max. period", Int, 30, 1:128),
-		("Intersections", Int, 120, 1:128),
-		("m", Int, 64, 8:4096),
-		("c₀", Float64, .0, -500:.01:500)
+	gridGalerkin[1:2,1] = mkControlGrid(dataGal, Array[
+		[ ("Trans. Iterations", Int, 4000, 1000:1000:1e8), Void, Void ],
+		[ ("Trans. StepSize", Float64, .1, 1e-3:.001:1.0), ("SS StepSize", Float64, .1, 1e-3:.001:1.0) ],
+		[ ("Max. period", Int, 30, 1:128), ("Intersections", Int, 120, 1:128) ],
+		[ ("c₀", Float64, .0, -500:.01:500), ("m", Int, 64, 8:4096) ],
+		[ buttonFindInitial ],
+		[ ("Samples", Int, 64, 8:4096), ("Factor", Float64, 1.0, .0:.1:8.0) ],
+		[ button(w->handlerResample(w, dataGal), "Process") ]
 	])
-
-	buttonFindInitialValue = @Button("Find Initial Solution")
-	setproperty!(buttonFindInitialValue, :expand, false)
-	signal_connect(w -> @async(handlerFindInitialData(w, dataGal)), buttonFindInitialValue, "clicked")
-	gridGalerkin[1:2,2] = buttonFindInitialValue
-
-	gridGalerkin[1:2,3] = mkControlGrid(dataGal, [
-		("Samples", Int, 64, 8:4096),
-		("Crop", Float64, 1.0, .0:.1:8.0)
-	])
-	buttonResample = @Button("Process")
-	setproperty!(buttonResample, :expand, false)
-	signal_connect(w -> @async(handlerResample(w, dataGal)), buttonResample, "clicked")
-	gridGalerkin[1:2,4] = buttonResample
 
 	showall(windowGalerkin)
 end
@@ -53,8 +50,8 @@ function handlerResample(w, D)
 		V = reshape(project.activeSolution[1:end-2], 2m+1, 3)
 		V = complex(V[1:m+1,:], [zeros(1, size(V,2)); V[m+2:end,:]])
 
-		C = resample(V, D["Samples"], D["Crop"])
-		C = [vec(vcat(real(C), imag(C[2:end,:]))); ω/D["Crop"]]
+		C = resample(V, D["Samples"], D["Factor"])
+		C = [vec(vcat(real(C), imag(C[2:end,:]))); ω/D["Factor"]]
 
 		Htmp(V) = H([V; ℵ])
 		Jtmp(V) = J([V; ℵ])[:, 1:end-1]
@@ -70,9 +67,6 @@ end
 
 
 function handlerFindInitialData(w, dataGal)
-	setproperty!(w, :sensitive, false)
-	lock(project)
-
 	try
 		#TODO function/macro bringIntoScope(D::Dict)
 		# TIters, SSIters, TStepSize, SSStepSize, Periods, m, c₀ = map(x->dataGal[x], ["Trans. Iterations", "SS Iterations", "Trans. StepSize", "SS StepSize", "Periods", "m", "c₀"])
@@ -89,15 +83,17 @@ function handlerFindInitialData(w, dataGal)
 			C = resample(rfft(cyc, [1]), m)
 			C = [vec(vcat(real(C), imag(C[2:end,:]))); ω]
 
-			Htmp(V) = H([V; c₀]) # R^N -> R^N system
-			Jtmp(V) = J([V; c₀])[:, 1:end-1] # R^N -> R^(NxN) system
+
+			Htmp(V) = H([V; c₀])
+			Jtmp(V) = J([V; c₀])[:, 1:end-1]
 			return newton(Htmp, Jtmp, C, predCount(10) ∧ predEps(1e-10))
 		end
 
+		lock(project)
 		setActiveSolution(project, [tmp; c₀])
-	finally
 		unlock(project)
-		setproperty!(w, :sensitive, true)
+	catch e
+		println(e) #TODO
 	end
 	return Void
 end

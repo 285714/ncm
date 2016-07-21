@@ -1,5 +1,17 @@
 global a = .1, b = .1
-roessler(t,v) = [-v[2] - v[3]; v[1] + a*v[2]; b + v[3]*(v[1]-v[4])]
+roessler(t,v) = [
+	-v[2] - v[3]
+	v[1] + a*v[2]
+	b + v[3]*(v[1]-v[4])
+	]
+roessler(v) = roessler(0,v)
+
+roessler′(t,v) = [
+	0		-1		-1				0
+	1		a		0				0
+	v[3]	0		(v[1]-v[4])	 	-v[3]
+	]
+roessler′(v) = roessler′(0,v)
 
 function Hroessler(V::Vector{Float64})
 	local m = length(V-5)÷6
@@ -52,6 +64,8 @@ function Jroessler(V)
 	local D = ω*(1:m)
 
 	# Jacobian of circular convolution of coefficients of real functions in appropriate format.
+	# ∂/∂X cconv(X,Y) = ∂/∂X F(x⋅y) = rCCD(Y)
+	rCCD(C) = rCCD(real(C[1]), real(C[2:end]), imag(C[2:end]))
 	function rCCD(V₀,Vᵣ,Vᵢ)
 		local I1,I2,Wᵣ,Wᵢ
 		I1 = [ mod(i-j, 2m+1)+1 for i in 0:m, j in 0:m ]
@@ -136,4 +150,5 @@ function Jroessler(V)
 	]
 end
 
-f,H,J = roessler, Hroessler, Jroessler
+f,f′,H,J = roessler, roessler′, Hroessler, Jroessler
+# f, f′, H, J = roessler, roessler′, fToH(roessler), Jroessler

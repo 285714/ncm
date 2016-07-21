@@ -7,7 +7,8 @@ export mapi, standardize, trim, findPeaks, autocorrelation,
 	circulantMatrix,
 	bisection,
 	rows, columns,
-	∘, ⊕, ⊗
+	∘, ⊕, ⊗,
+	@cached
 
 # map with additional index
 # TODO add broadcasting?
@@ -88,10 +89,9 @@ circconv(x,y) = fft(ifft(x) .* ifft(y))
 # vectorize a function
 vectorize(f) = x -> map(f,x)
 
-# TODO inefficient
-function circulantMatrix(U)
-	local V = reverse(U)
-	return reduce(vcat, [ circshift(V,[i])' for i in 1:length(V) ])
+function circulantMatrix(C)
+	L = length(C)
+	return [ C[mod(j-i, L)+1] for i in 1:L, j in 1:L ]
 end
 
 function bisection(f,a,b; ϵ=1e-10)
@@ -121,5 +121,34 @@ varToIter(v...) = return v
 # 	end
 # end
 
-
+function busywait(p)
+	t = now()
+	l = Base.Dates.Second(p)
+	while now()-t < l
+		nothing
+	end
 end
+
+macro cached(m, f)
+	#_core = eval(f)
+	_name = f.args[1].args[1]
+	f.args[1].args[1] = :tmp
+	return quote
+	$(esc(_name)) = let _cache = Dict(), _core = $f
+		function $(esc(_name))(x...)
+			#NOTE typechecking is done on caching
+			return if haskey(_cache, x)
+				_cache[x]
+			else
+				while length(_cache) ≥ $m
+					delete!(_cache, keys(_cache)[1])
+				end
+				_cache[x] = _core(x...)
+			end
+		end
+	end
+	end
+end
+
+
+end #module
