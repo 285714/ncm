@@ -107,7 +107,7 @@ end
 		v₁ = v₁ - Δv₁
 		κ′ = norm(Δv₁) / norm(Δv₀)
 		δ′ = norm(Δv₀)
-		α′ = acos( dot(tJV, tang(Jv₀)) )
+		α′ = acos( clamp(dot(tJV, tang(Jv₀)), -1, 1) ) #prevent domain exception through numerical error
 
 		f = clamp(max(sqrt(κ′/κ), sqrt(δ′/δ), α′/α), .5, 2.0)
 		h /= f

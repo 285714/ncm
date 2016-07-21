@@ -127,8 +127,6 @@ function findCyclePoincare(
 	end
 	period = indmin(ratings)
 
-	println("asdf")
-
 	# cut out steady state trajectory
 	y₂ = intersections[1:dim,1]
 	T = intersections[dim+1,1+period] - intersections[dim+1,1]

@@ -83,7 +83,6 @@ function handlerFindInitialData(w, dataGal)
 			C = resample(rfft(cyc, [1]), m)
 			C = [vec(vcat(real(C), imag(C[2:end,:]))); ω]
 
-
 			Htmp(V) = H([V; c₀])
 			Jtmp(V) = J([V; c₀])[:, 1:end-1]
 			return newton(Htmp, Jtmp, C, predCount(10) ∧ predEps(1e-10))

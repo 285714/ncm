@@ -59,7 +59,7 @@ function forwardDifference(H::Function, v::Vector{Float64}; ϵ::Float64=1e-4)
 	end
 	return reduce(hcat, J)
 end
-forwardDifference(H::Function; ϵ=1e-4) = v -> forwardDifference(H, v; ϵ)
+forwardDifference(H::Function; ϵ=1e-4) = v -> forwardDifference(H, v; ϵ=ϵ)
 
 
 # WARNING inefficient, H is evaluated which is not necessary (at least in Newton context...

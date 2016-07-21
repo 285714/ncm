@@ -55,7 +55,7 @@ end
 # ∂/∂X cconv(X,Y) = ∂/∂X F(x⋅y) = rCCD(Y)
 rCCD(C) = rCCD(real(C[1]), real(C[2:end]), imag(C[2:end]))
 function rCCD(V₀,Vᵣ,Vᵢ)
-	local I1,I2,Wᵣ,Wᵢ
+	m = length(Vᵣ)
 	I1 = [ mod(i-j, 2m+1)+1 for i in 0:m, j in 0:m ]
 	I2 = [ mod(i+j, 2m+1)+1 for i in 0:m, j in 0:m ]
 	Wᵣ = [V₀; Vᵣ; Vᵣ[end:-1:1]]
@@ -65,6 +65,6 @@ function rCCD(V₀,Vᵣ,Vᵢ)
 		(Wᵣ[I1]+Wᵣ[I2])					(-Wᵢ[I1]+Wᵢ[I2])[:,2:end]
 		(Wᵢ[I1]+Wᵢ[I2])[2:end,:]		(Wᵣ[I1]-Wᵣ[I2])[2:end,2:end]
 	] / (2m)
-	rtn[:,1] /= 2.0
+	rtn[:,1] /= 2
 	return rtn
 end

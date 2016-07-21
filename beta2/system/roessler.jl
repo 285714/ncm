@@ -150,5 +150,5 @@ function Jroessler(V)
 	]
 end
 
-f,f′,H,J = roessler, roessler′, Hroessler, Jroessler
-# f, f′, H, J = roessler, roessler′, fToH(roessler), Jroessler
+# f,f′,H,J = roessler, roessler′, Hroessler, Jroessler
+f, f′, H, J = roessler, roessler′, fToH(roessler), f′ToJ(roessler′)
