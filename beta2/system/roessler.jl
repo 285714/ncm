@@ -4,14 +4,12 @@ roessler(t,v) = [
 	v[1] + a*v[2]
 	b + v[3]*(v[1]-v[4])
 	]
-roessler(v) = roessler(0,v)
 
 roessler′(t,v) = [
 	0		-1		-1				0
 	1		a		0				0
 	v[3]	0		(v[1]-v[4])	 	-v[3]
 	]
-roessler′(v) = roessler′(0,v)
 
 function Hroessler(V::Vector{Float64})
 	local m = length(V-5)÷6
@@ -149,6 +147,3 @@ function Jroessler(V)
 		LbyX LbyY LbyZ Lbyω Lbyℵ
 	]
 end
-
-# f,f′,H,J = roessler, roessler′, Hroessler, Jroessler
-f, f′, H, J = roessler, roessler′, fToH(roessler), f′ToJ(roessler′)

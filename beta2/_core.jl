@@ -9,79 +9,65 @@
 
 #	this file specifies the whole interface...
 
+#TODO overarching  Session  type, encapsulating Project, SystemCore, Continuation, Visualization
+#	make activeSolution a property of session? removes dependency between SystemCore and Project
+
 #TODO ifft for trigoninterp
 
 addprocs(1)
 
 push!(LOAD_PATH, "$(pwd())/lib")
-using Gtk.ShortNames
-@everywhere using mbNewton, mbPred, mbUtil, mbInterpolate, mbObserve
-@everywhere include("Model.jl")
-include("lib/ncmprojMKCONTROLGRID.jl")
+@everywhere using Gtk.ShortNames, mbNewton, mbPred, mbUtil, mbInterpolate, mbObserve
+@everywhere map(include, [
+	"lib/ncmprojMKCONTROLGRID.jl"; "lib/ncmprojRelay.jl";
+	"type/Solution.jl"; "type/Branch.jl"; "type/Project.jl";
+	"type/SystemCore.jl"; "type/ContinuationMethod.jl"; "type/Visualization.jl";
+	"type/Session.jl";
+	"type/PC.jl"; "type/Galerkin.jl"; "type/GalerkinViz.jl"
+	])
 
 #(do menu stuff, other global GUI stuff, saving, ...)
 
-#create empty project: vector of branches of solutions
-global project = Project()
-global lockProject = ReentrantLock()
+create() = begin
+	P = Project()
+	core = Galerkin(P,lorenz,lorenz′)
+	cont = PC(P, core)
+	viz = GalerkinViz(P,core)
+	show(cont); show(core); show(viz)
+	return Session(P,core,cont,viz)
+end
 
-save(filename; overwrite=false) = if !isfile("save/$(filename)") || overwrite
-	open("save/$(filename)", "w") do f serialize(f, project) end
-else error("File already exists. Use  overwrite=true  .") end
-load(filename) = open(deserialize, "save/$(filename)")
+save(filename, S::Session; overwrite=false) = begin
+	if !isfile("save/$(filename)") || overwrite; open("save/$(filename)", "w") do f serialize(f, S) end
+	else error("File already exists. Use  overwrite=true  .")end
+	return Void
+end
+
+#TODO restore non-serializable stuff (figures, observer)
+load(filename) = begin
+	S = open(deserialize, "save/$(filename)")
+	for b in S.P; length(b) < 2 && deleteat!(S.P, findfirst(S.P, b)) end
+	S.P.O = Observer()
+	S.core = Galerkin(S.P, lorenz, lorenz′)
+	S.cont = PC(S.P, S.core)
+	S.viz = GalerkinViz(S.P, S.core)
+	show(S.cont); show(S.core); show(S.viz)
+	return S
+end
 
 #select continuation method, select system
 # include(open_dialog("Select continuation method.", Gtk.GtkNullContainer(), ASCIIString[]))
 # include(open_dialog("Select system.", Gtk.GtkNullContainer(), ASCIIString[]))
 
 @everywhere include("system/lorenz.jl")
-# @everywhere include("system/roessler.jl")
-
-include("lib/ncmprojBIFPLOT.jl") #needs thread 1
-@schedule B = BifPlot(project)
-
-@everywhere include("continuation/PC.jl")
-@schedule pcGUI()
-
-@everywhere include("lib/ncmprojGALERKIN.jl")
-@schedule galerkinGUI()
+@everywhere include("system/roessler.jl")
 
 
-#TODO-2DAY:
-#	abstraction: plotting ✓, galerkin, continuation, project (! - for access, sync, sanity, ...)
-#		lock
-#		project: all operations
-#	howto associate additional info with solutions/branches? transparent, general...
-#		projects must be method agnostic...
-#		plots, projection, stepsize, ...
-#		encapsulate to simulate inheritance? serializability?
-
-# (perturbation)
-# bug: stepsize is associated with branch, not correct on deletion... reset, make changeable, associate with solution
-# bug: apparently activeSoltion read from wrong (global) project...
-
-# poincare ✓
-# improv RK	?
-# perturbation ✓
-# lorenz
 
 #TODO keys: delete from here, delete till here
 #TODO h box, fix
 #TODO broyden
 #TODO mark current branch
-
-
-# plot:
-#	mark curr branch ✓
-#	color ✓
-#	lock branch (make unselectable, how to unlock?, how switch branches efficiently?)
-#	rebuild completely as observable
-
-
-# winkel pred ✓
-# speichern -> encapsulate galerkin, make serializable
-# lorenz
-# roessler bif
 
 #mark perturb branches
 #auto new branch
@@ -113,3 +99,21 @@ d = [100*rand(size(D,1)-2); 0; 0]
 
 s(x,r=Inf) = begin matshow(clamp(x,-r,r)); colorbar() end
 =#
+
+
+
+#operations
+#	find branch of solution
+#	add solution to branch
+#	del solution from branch
+# 	add/del branch
+#	iterate over solutions of branch
+#	iterate over branches
+#	find other solutions of branch (find branch, iterate over branch)
+#	manipulate solution? consider different solution? homo-/heterogeneous branches?
+#	associate information with solutions, branches... -> responsibility of other subsystems
+#		facilate through observer
+
+# minimum constraint for h?
+
+# for b in ses.P; length(b) < 2 && deleteat!(ses.P, findfirst(ses.P, b)) end
