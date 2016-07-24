@@ -11,19 +11,9 @@
 using PyCall
 pygui(:tk) #prevent conflict with gtk
 using PyPlot
-D = PyCall.PyDict(matplotlib["rcParams"])
-
-# try
-# 	D["keymap.back"] =  deleteat!(
-# 		D["keymap.back"],
-# 		findfirst(D["keymap.back"], "backspace")
-# 	)
-# end
-
 # remove all keybindings
-for k in keys(D)
-	contains(k, "keymap") && (D[k] = Any[])
-end
+D = PyCall.PyDict(matplotlib["rcParams"])
+for k in keys(D); contains(k, "keymap") && (D[k] = Any[]) end
 ioff()
 
 #####
@@ -33,22 +23,29 @@ ioff()
 type GalerkinViz <: Visualization
 	P::Project
 	G::Galerkin
-	fig
+	figBif
+	figSol
 	idxLineBranch::Dict
 	idxBranchLines::Dict
 	activeSolutionMark
 end
 
-Base.show(V::GalerkinViz) = V.fig["show"]()
+function Base.show(V::GalerkinViz)
+	V.figBif["show"]()
+	V.figSol["show"]()
+end
 
 function GalerkinViz(P::Project, G::Galerkin)
-	fig = figure()
-	fig["canvas"]["set_window_title"]("Bifurcation Plot")
+	figBif = figure()
+	figBif["canvas"]["set_window_title"]("Bifurcation Plot")
 
-	V = GalerkinViz(P, G, fig, Dict{Any,Any}(), Dict{Any,Any}(), Void)
+	figSol = figure()
+	figSol["canvas"]["set_window_title"]("Solution Plot")
 
-	fig["canvas"]["mpl_connect"]("pick_event", ev -> handlerPick(V,ev))
-	fig["canvas"]["mpl_connect"]("key_press_event", ev -> handlerKey(V,ev))
+	V = GalerkinViz(P, G, figBif, figSol, Dict{Any,Any}(), Dict{Any,Any}(), Void)
+
+	figBif["canvas"]["mpl_connect"]("pick_event", ev -> handlerPick(V,ev))
+	figBif["canvas"]["mpl_connect"]("key_press_event", ev -> handlerKey(V,ev))
 
 	#NOTE events bound to project, not Viz obj! -> cannot change project!!!
 	#connect to proj events
@@ -95,9 +92,7 @@ function handlerPick(V::GalerkinViz, ev)
 end
 
 function handlerKey(V::GalerkinViz, ev)
-	global tmp = ev #TODO asdf
-
-	figure(V.fig[:number])
+	figure(V.figBif[:number])
 
 	#TODO implement dequeue style branch handling
 	#TODO stop fooling with project internals
@@ -115,19 +110,19 @@ function handlerKey(V::GalerkinViz, ev)
 			pop!(V.P.activeSolution.parent)
 		elseif s==b[1]
 			setActiveSolution(V.P, b[2])
-			unshift!(V.P.activeSolution.parent)
+			shift!(V.P.activeSolution.parent)
 		end
 	elseif ev[:key] == "ctrl+delete" #TODO fix
 		!isa(V.P.activeSolution, Solution) && return Void
-		#delBranch(V, V.P.activeSolution.parent)
 		b = V.P.activeSolution.parent
 		delBranch(V, b)
 		deleteat!(V.P, findfirst(V.P, b)) #TODO fix
 	elseif ev[:key] == "r"
-		ax = subplot(121)
-		ax[:relim]()
+		figure(V.figBif[:number])
+		gca()[:relim]()
 		autoscale()
 	elseif ev[:key] == "ctrl+r"
+		figure(V.figBif[:number])
 		clf()
 		empty!(V.idxBranchLines)
 		empty!(V.idxLineBranch)
@@ -167,6 +162,8 @@ function handlerKey(V::GalerkinViz, ev)
 				l[:set_color](colMap[ev[:key]])
 			end
 		end
+	elseif ev[:key] == "b"
+		plotBranch(V, V.P.activeSolution.parent)
 	end
 
 	PyPlot.draw()
@@ -175,8 +172,7 @@ end
 
 
 function pushBranch(V::GalerkinViz, b::Branch)
-	figure(V.fig[:number])
-	subplot(121)
+	figure(V.figBif[:number])
 
 	x = map(last, b.solutions)
 	y = reduce(map(transpose∘projection, b.solutions)) do A,a
@@ -207,7 +203,7 @@ function addToBranch(op, V::GalerkinViz, b::Branch, s::Solution)
 		l[:set_ydata](op(l[:get_ydata](), y))
 	end
 
-	figure(V.fig[:number])
+	figure(V.figBif[:number])
 	PyPlot.draw()
 	return Void
 end
@@ -220,7 +216,7 @@ function delFromBranch(op, V::GalerkinViz, b::Branch)
 		l[:set_xdata](x); l[:set_ydata](y)
 	end
 
-	figure(V.fig[:number])
+	figure(V.figBif[:number])
 	PyPlot.draw()
 	return Void
 end
@@ -228,20 +224,21 @@ end
 
 # plotSolution(V::GalerkinViz, S::Solution) = plotSolution(B,S.data) # handled by convert? prob not..
 function plotSolution(V::GalerkinViz, v::Vector{Float64})
-	figure(V.fig[:number])
-
-	subplot(121)
+	figure(V.figBif[:number])
 	try V.activeSolutionMark[:remove]() end
 	x = v[end]
 	y = projection(v)
 	V.activeSolutionMark = scatter(fill(x, size(y)), y, facecolors="None", edgecolors="k", marker="o")
+	PyPlot.draw()
 
-	subplot(122, projection="3d")
+	figure(V.figSol[:number])
+	gca(projection="3d")
+	hold(false)
 	t = linspace(0, 2pi, length(v)÷3 * 8)
 	w = reduce(hcat, toTrajInterp(v, 3)(t))'
 	plot(w[:,1], w[:,2], w[:,3], color="k")
-
 	PyPlot.draw()
+
 	return Void
 end
 
@@ -255,6 +252,21 @@ function delBranch(V::GalerkinViz, b::Branch)
 		delete!(V.idxLineBranch, l)
 	end
 
-	figure(V.fig[:number])
+	figure(V.figSol[:number])
 	PyPlot.draw()
+end
+
+
+function plotBranch(V::GalerkinViz, B::Branch)
+	figure(V.figSol[:number])
+	clf()
+	gca(projection="3d")
+	hold(true)
+	for v in B
+		t = linspace(0, 2pi, length(v)÷3 * 8)
+		w = reduce(hcat, toTrajInterp(v, 3)(t))'
+		plot(w[:,1], w[:,2], w[:,3], color="k", alpha=.1)
+	end
+	PyPlot.draw()
+	return
 end

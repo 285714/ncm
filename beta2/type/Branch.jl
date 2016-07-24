@@ -35,9 +35,8 @@ function Base.pop!(B::Branch)
 	s == P.activeSolution && (P.activeSolution=s.data)
 	if length(B) == 1
 		deleteat!(P, findfirst(P, B))
-		# deleteat!(P.branches, findfirst(P, B))
-		# B[1] == P.activeSolution && setActiveSolution(P, B[1].data)
-		# mbObserve.notify(P, :delBranch, B)
+		B[1] == P.activeSolution && setActiveSolution(P, B[1].data)
+		mbObserve.notify(P, :delBranch, B)
 	else
 		mbObserve.notify(P, :popSolution, B, s)
 	end
@@ -50,9 +49,8 @@ function Base.shift!(B::Branch)
 	s == P.activeSolution && (P.activeSolution=s.data)
 	if length(B.solutions) == 1
 		deleteat!(P, findfirst(P, B))
-		# deleteat!(P.branches, findfirst(P, B))
-		# B[1] == P.activeSolution && setActiveSolution(P, B[1].data)
-		# mbObserve.notify(P, :delBranch, B)
+		B[1] == P.activeSolution && setActiveSolution(P, B[1].data)
+		mbObserve.notify(P, :delBranch, B)
 	else
 		mbObserve.notify(P, :shiftSolution, B, s)
 	end

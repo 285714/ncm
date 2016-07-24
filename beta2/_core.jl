@@ -14,10 +14,11 @@
 
 #TODO ifft for trigoninterp
 
-addprocs(1)
+# addprocs(1)
 
 push!(LOAD_PATH, "$(pwd())/lib")
-@everywhere using Gtk.ShortNames, mbNewton, mbPred, mbUtil, mbInterpolate, mbObserve
+using Gtk.ShortNames
+@everywhere using mbNewton, mbPred, mbUtil, mbInterpolate, mbObserve
 @everywhere map(include, [
 	"lib/ncmprojMKCONTROLGRID.jl"; "lib/ncmprojRelay.jl";
 	"type/Solution.jl"; "type/Branch.jl"; "type/Project.jl";
@@ -38,20 +39,21 @@ create() = begin
 end
 
 save(filename, S::Session; overwrite=false) = begin
-	if !isfile("save/$(filename)") || overwrite; open("save/$(filename)", "w") do f serialize(f, S) end
+	if !isfile("save/$(filename)") || overwrite; open("save/$(filename)", "w") do f serialize(f, S.P.branches) end
 	else error("File already exists. Use  overwrite=true  .")end
 	return Void
 end
 
 #TODO restore non-serializable stuff (figures, observer)
 load(filename) = begin
-	S = open(deserialize, "save/$(filename)")
-	for b in S.P; length(b) < 2 && deleteat!(S.P, findfirst(S.P, b)) end
-	S.P.O = Observer()
-	S.core = Galerkin(S.P, lorenz, lorenz′)
-	S.cont = PC(S.P, S.core)
-	S.viz = GalerkinViz(S.P, S.core)
-	show(S.cont); show(S.core); show(S.viz)
+	branches = open(deserialize, "save/$(filename)")
+	for b in branches; length(b) < 2 && deleteat!(branches, findfirst(branches, b)) end
+	P = Project()
+	P.branches = branches
+	core = Galerkin(P,lorenz,lorenz′)
+	cont = PC(P, core)
+	viz = GalerkinViz(P,core)
+	show(cont); show(core); show(viz)
 	return S
 end
 
