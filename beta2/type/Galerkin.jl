@@ -2,13 +2,13 @@ include("$(pwd())/lib/ncmprojFINDINITIALDATA.jl")
 include("$(pwd())/lib/ncmprojMKCONTROLGRID.jl")
 
 type Galerkin <: SystemCore
+	parent::Session
 	f::Function
 	f′::Function
 	H::Function #derived
 	J::Function #derived
-	P::Project
 	dataGUI::Dict{AbstractString, Any}
-	Galerkin(P,f,f′) = new(f,f′,fToH(f),f′ToJ(f′),P,Dict{AbstractString, Any}())
+	Galerkin(parent,f,f′) = new(parent,f,f′,fToH(f),f′ToJ(f′),Dict{AbstractString, Any}())
 end
 
 #TODO dimensions
@@ -53,10 +53,7 @@ end
 function handlerResample(w, G)
 	setproperty!(w, :sensitive, false)
 	try
-		ω,ℵ = G.P.activeSolution[end-1:end]
-		m = (length(G.P.activeSolution)-5)÷6
-		V = reshape(G.P.activeSolution[1:end-2], 2m+1, 3)
-		V = complex(V[1:m+1,:], [zeros(1, size(V,2)); V[m+2:end,:]])
+		V,ω,ℵ = unwrap(G.parent.P.activeSolution)
 
 		C = resample(V, G.dataGUI["Samples"], G.dataGUI["Factor"])
 		C = [vec(vcat(real(C), imag(C[2:end,:]))); ω/G.dataGUI["Factor"]]
@@ -65,7 +62,7 @@ function handlerResample(w, G)
 		Jtmp(V) = G.J([V; ℵ])[:, 1:end-1]
 		tmp = newton(Htmp, Jtmp, C, predCount(10) ∧ predEps(1e-10))
 
-		setActiveSolution(G.P, [tmp; ℵ])
+		setActiveSolution(G.parent.P, [tmp; ℵ])
 	finally
 		setproperty!(w, :sensitive, true)
 	end
@@ -93,14 +90,25 @@ function handlerFindInitialData(w, G)
 		Jtmp(V) = G.J([V; c₀])[:, 1:end-1]
 		tmp = newton(Htmp, Jtmp, C, predCount(10) ∧ predEps(1e-10))
 
-		setActiveSolution(G.P, [tmp; c₀])
+		setActiveSolution(G.parent.P, [tmp; c₀])
 	catch e
 		println(e)
 	end
 	return Void
 end
 
+function unwrap(V)
+	isa(V, Solution) && (V=V.data)
+	ω,ℵ = V[end-1:end]
+	m = (length(V)-5)÷6
+	W = reshape(V[1:end-2], 2m+1, 3)
+	W = complex(W[1:m+1,:], [zeros(1, size(W,2)); W[m+2:end,:]])
+	return W,ω,ℵ
+end
 
+function wrap(V,ω,ℵ)
+	return [vec(vcat(real(V), imag(V[2:end,:]))); ω; ℵ]
+end
 
 function toTrajInterp(V, d)
 	m = (length(V)-d-2)÷(2*d)
@@ -109,19 +117,20 @@ function toTrajInterp(V, d)
 end
 
 
-function projection(V)
-	f = toTrajInterp(V,3)
-	rtn = Float64[]
+#NOTE numerical problems can lead to f(0)≠f(2π)
+@noinline function projection(V)
+	W,ω,ℵ = unwrap(V)
+	m = size(W,1)-1
+	ftmp = [ interpolateTrigonometric(real(W[1,i]), 2*real(W[2:end,i]), -2*imag(W[2:end,i])) for i in 1:size(W,2) ]
+	f1(x) = ftmp[1](x) / (2m+1)
+	f2(x) = map(f->f(x) / (2m+1), ftmp)
+	t = linspace(-.1,2pi-.1,2m+1)
 
-	dt = 2pi/1025 #TODO ...
-	for t in .0:dt:2pi
-		if f(t)[1] ≤ .0 ≤ f(t+dt)[1]
-			x = mbUtil.bisection(x->f(x)[1], t, t+dt, ϵ=1e-4) #TODO precision
-			push!(rtn, norm(f(x)))
-		end
+	B = map(i -> f1(t[i]) ≤ 0, 1:2m+1)
+	B = map(i -> B[i]&&!B[i+1], 1:2m)
+	return map(find(B)) do i
+		mbUtil.bisection(first∘f1, t[i], t[i+1], ϵ=1e-4) |> f2
 	end
-
-	return rtn
 end
 
 

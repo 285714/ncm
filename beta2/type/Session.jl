@@ -3,4 +3,5 @@ type Session
 	core::SystemCore
 	cont::ContinuationMethod
 	viz::Visualization
+	Session() = new()
 end

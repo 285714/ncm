@@ -30,12 +30,13 @@ using Gtk.ShortNames
 #(do menu stuff, other global GUI stuff, saving, ...)
 
 create() = begin
-	P = Project()
-	core = Galerkin(P,lorenz,lorenz′)
-	cont = PC(P, core)
-	viz = GalerkinViz(P,core)
-	show(cont); show(core); show(viz)
-	return Session(P,core,cont,viz)
+	ses = Session()
+	ses.P = Project()
+	ses.core = Galerkin(ses,lorenz,lorenz′)
+	ses.cont = PC(ses)
+	ses.viz = GalerkinViz(ses)
+	show(ses.cont); show(ses.core); show(ses.viz)
+	return ses
 end
 
 save(filename, S::Session; overwrite=false) = begin
@@ -47,14 +48,18 @@ end
 #TODO restore non-serializable stuff (figures, observer)
 load(filename) = begin
 	branches = open(deserialize, "save/$(filename)")
-	for b in branches; length(b) < 2 && deleteat!(branches, findfirst(branches, b)) end
-	P = Project()
-	P.branches = branches
-	core = Galerkin(P,lorenz,lorenz′)
-	cont = PC(P, core)
-	viz = GalerkinViz(P,core)
-	show(cont); show(core); show(viz)
-	return S
+	ses = Session()
+	ses.P = Project()
+	for b in branches
+		b.parent = ses.P
+		length(b) < 2 && deleteat!(branches, findfirst(branches, b))
+	end
+	ses.P.branches = branches
+	ses.core = Galerkin(ses,lorenz,lorenz′)
+	ses.cont = PC(ses)
+	ses.viz = GalerkinViz(ses)
+	show(ses.cont); show(ses.core); show(ses.viz)
+	return ses
 end
 
 #select continuation method, select system

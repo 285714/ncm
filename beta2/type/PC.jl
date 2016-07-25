@@ -1,11 +1,10 @@
 #TODO deleting of solutions does not delete from h.
 
 type PC <: ContinuationMethod
-	P::Project
-	core::SystemCore
+	parent::Session
 	dataGUI::Dict{AbstractString, Any}
 	h::Dict{Any,Float64}
-	PC(P::Project, core::SystemCore) = new(P, core, Dict{AbstractString, Any}(), Dict{Any,Float64}())
+	PC(ses::Session) = new(ses, Dict{AbstractString, Any}(), Dict{Any,Float64}())
 end
 
 function Base.show(C::PC)
@@ -30,7 +29,7 @@ function Base.show(C::PC)
 
 	signal_connect(buttonStep, "clicked") do w
 		@schedule begin
-			C.P.activeSolution == Void && return Void
+			C.parent.P.activeSolution == Void && return Void
 			setproperty!(w, :sensitive, false)
 			try
 				step(C)
@@ -58,30 +57,30 @@ end
 
 # can throw error, eg when h=0
 function Base.step(C::PC)
-	V = C.P.activeSolution
+	V = C.parent.P.activeSolution
 	V == Void && return Void #TODO elaborate..
 
 	local B
 	if typeof(V) == Solution && (V == V.parent[1] || V == V.parent[end])
 		B = V.parent
 	else # internal, single or orphaned solution
-		B = Branch(C.P)
+		B = Branch(C.parent.P)
 		V = Solution(V, B)
 		B.solutions = Solution[V]
-		push!(C.P, B)
+		push!(C.parent.P, B)
 	end
 
 	htmp = get!(C.h, V, 1.0)
 	V==B[1] && length(B)>1 && (htmp=-htmp)
 
-	Htmp = C.dataGUI["Perturb"] ? V -> H(C.core)(V) + C.dataGUI["Strength"] : H(C.core)
-	W,htmp = @fetch continuationStep(Htmp, J(C.core), V.data, htmp, 1e-4, C.dataGUI["κ"], C.dataGUI["δ"], C.dataGUI["α"])
+	Htmp = C.dataGUI["Perturb"] ? V -> H(C.parent.core)(V) + C.dataGUI["Strength"] : H(C.parent.core)
+	W,htmp = @fetch continuationStep(Htmp, J(C.parent.core), V.data, htmp, 1e-4, C.dataGUI["κ"], C.dataGUI["δ"], C.dataGUI["α"])
 
 	W = Solution(W, B)
 	C.h[W] = abs(htmp)
 
 	(htmp>0?push!:unshift!)(B, W)
-	setActiveSolution(C.P, W)
+	setActiveSolution(C.parent.P, W)
 
 	return Void
 end

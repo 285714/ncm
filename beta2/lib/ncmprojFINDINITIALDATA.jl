@@ -86,7 +86,7 @@ function findCyclePoincare(
 		return i < transientIterations
 	end)
 
-	flagIntersected || error("No Intersection.")
+	flagIntersected || error("No intersection in transient phase.")
 
 	# generate intersections with plane
 	h = steadyStateStepSize
@@ -101,7 +101,7 @@ function findCyclePoincare(
 			intersections = [intersections [y′; t+h′]]
 		end
 		y⁻ = y
-		i > 100transientIterations && error("Something is wrong...")
+		i > 100transientIterations && error("No intersection in steady state phase.")
 		nIntersections > size(intersections, 2)
 	end)
 
@@ -109,23 +109,9 @@ function findCyclePoincare(
 
 	# find number of cycles s.t. rating is minimum
 	n = size(intersections, 2)
-	cyc = 1
-	ratings = zeros(maxCycles)
-	while cyc <= maxCycles
-		m = n ÷ cyc
-		rating = 0
-		for c = 1:cyc
-			cluster = zeros(dim, m)
-			for i = 0:m-1
-				cluster[:,i+1] = intersections[1:dim, c + cyc*i]
-			end
-			rating += mean(mapslices(clusterRating, cluster, 2))
-		end
-
-		ratings[cyc] = rating
-		cyc += 1
-	end
-	period = indmin(ratings)
+	period = indmin(map(1:maxCycles) do i
+		mean([ mean(var(intersections[:, j:i:n], [2])) for j in 1:i ])
+	end)
 
 	# cut out steady state trajectory
 	y₂ = intersections[1:dim,1]
