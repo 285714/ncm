@@ -1,13 +1,13 @@
-global a = .1, b = .1
+const α = .1, β = .1
 roessler(t,v) = [
 	-v[2] - v[3]
-	v[1] + a*v[2]
-	b + v[3]*(v[1]-v[4])
+	v[1] + α*v[2]
+	β + v[3]*(v[1]-v[4])
 	]
 
 roessler′(t,v) = [
 	0		-1		-1				0
-	1		a		0				0
+	1		α		0				0
 	v[3]	0		(v[1]-v[4])	 	-v[3]
 	]
 
@@ -33,11 +33,11 @@ function Hroessler(V::Vector{Float64})
 		-Yᵣ-Zᵣ+D.*Xᵢ
 		-Yᵢ-Zᵢ-D.*Xᵣ
 		#B
-		X₀+a*Y₀
-		Xᵣ+a*Yᵣ+D.*Yᵢ
-		Xᵢ+a*Yᵢ-D.*Yᵣ
+		X₀+α*Y₀
+		Xᵣ+α*Yᵣ+D.*Yᵢ
+		Xᵢ+α*Yᵢ-D.*Yᵣ
 		#C
-		-ℵ*Z₀+S₀+(2m+1)*b
+		-ℵ*Z₀+S₀+(2m+1)*β
 		-ℵ*Zᵣ+Sᵣ+D.*Zᵢ
 		-ℵ*Zᵢ+Sᵢ-D.*Zᵣ
 
@@ -95,9 +95,9 @@ function Jroessler(V)
 	BbyX = eye(2m+1)
 
 	BbyY = [
-		a					zeros(1,m)			zeros(1,m)
-		zeros(m)			a*eye(m)			diagm(D)
-		zeros(m)			diagm(-D)			a*eye(m)
+		α					zeros(1,m)			zeros(1,m)
+		zeros(m)			α*eye(m)			diagm(D)
+		zeros(m)			diagm(-D)			α*eye(m)
 	]
 
 	BbyZ = zeros(2m+1,2m+1)
@@ -146,4 +146,50 @@ function Jroessler(V)
 		CbyX CbyY CbyZ Cbyω Cbyℵ
 		LbyX LbyY LbyZ Lbyω Lbyℵ
 	]
+end
+
+
+
+function roesslerProjectionInternal(ftmp,ρ,N)
+	const p = 0.08872374069251765
+	T = linspace(-pi+p,pi+p,N)
+
+	pA(t) = ftmp[1](t)
+	# pB(t) = ftmp[1](t) + ftmp[2](t) - 2d
+	t₀ = T[end]
+	a₀ = pA(t₀)
+	# b₀ = pB(t₀)
+
+	ts,fs,ns = [],[],[]
+	for t in T
+		tmp = pA(t)
+		if a₀ ≤ 0 < tmp
+			push!(ts, bisection(pA, t₀, t))
+			push!(fs, map(g->g(ts[end]), ftmp))
+			push!(ns, norm(fs[end]))
+		end
+		a₀ = tmp
+
+		# tmp = pB(t)
+		# if b₀ ≤ 0 < tmp
+		# 	push!(ts, bisection(pB, t₀, t))
+		# 	push!(fs, map(g->g(ts[end]), ftmp))
+		# 	push!(ns, -norm(fs[end]-B))
+		# end
+		# b₀ = tmp
+
+		t₀ = t
+	end
+
+	global roesslerfs = fs, roesslerstart = map(f->f(0), ftmp)
+
+	return ts, fs, sort(ns)
+end
+
+
+roesslerProjection(v...) = roesslerProjectionInternal(v...)[3]
+function cbPlotSolution(v)
+	tmp = reduce(hcat, roesslerfs)'
+	scatter3D(tmp[:,1],tmp[:,2],tmp[:,3])
+	scatter3D(roesslerstart[1], roesslerstart[2], roesslerstart[3], c="r")
 end

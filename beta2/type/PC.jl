@@ -20,8 +20,8 @@ function Base.show(C::PC)
 	gridPC = mkControlGrid(C.dataGUI, Array[
 		#[ ("ϵ", Float64, 1e-4, 1e-6:1e-8:1e-2), Void ],
 		[ ("κ", Float64, .4, .0:1e-3:1.0) ],
-		[ ("δ", Float64, .5, .0:1e-2:5.0) ],
-		[ ("α", Float64, 10.0, .0:.1:90.0) ],
+		[ ("δ", Float64, .5, .0:1e-2:20.0) ],
+		[ ("α", Float64, 10.0, .0:.1:40.0) ],
 		[ ("Perturb", Bool, false); ("Strength", Float64, .0, -1:1e-3:1) ],
 		[ buttonStep, buttonRun ]
 	])
@@ -60,25 +60,26 @@ function Base.step(C::PC)
 	V = C.parent.P.activeSolution
 	V == Void && return Void #TODO elaborate..
 
-	local B
+	local B, flagNewBranch = false
 	if typeof(V) == Solution && (V == V.parent[1] || V == V.parent[end])
 		B = V.parent
 	else # internal, single or orphaned solution
+		flagNewBranch = true
 		B = Branch(C.parent.P)
 		V = Solution(V, B)
 		B.solutions = Solution[V]
-		push!(C.parent.P, B)
 	end
 
 	htmp = get!(C.h, V, 1.0)
 	V==B[1] && length(B)>1 && (htmp=-htmp)
 
 	Htmp = C.dataGUI["Perturb"] ? V -> H(C.parent.core)(V) + C.dataGUI["Strength"] : H(C.parent.core)
-	W,htmp = @fetch continuationStep(Htmp, J(C.parent.core), V.data, htmp, 1e-4, C.dataGUI["κ"], C.dataGUI["δ"], C.dataGUI["α"])
+	W,htmp = continuationStep(Htmp, J(C.parent.core), V.data, htmp, 1e-8, C.dataGUI["κ"], C.dataGUI["δ"], C.dataGUI["α"]) #fetch?
 
 	W = Solution(W, B)
 	C.h[W] = abs(htmp)
 
+	flagNewBranch && push!(C.parent.P, B) #NOTE no branch pushed in case of error in continuationStep
 	(htmp>0?push!:unshift!)(B, W)
 	setActiveSolution(C.parent.P, W)
 
@@ -89,7 +90,7 @@ end
 function continuationStep(H, J, V, h, ϵ, κ, δ, α)
 	# tangent-vector for matrix A
 	function tang(A)
-		t = nullspace(A)[:,1] #[A; ones(1,size(A,2))] \ [zeros(size(A,1)); 1]
+		t = [A; ones(1,size(A,2))] \ [zeros(size(A,1)); 1] # nullspace(A)[:,1] #takes up >90% processing time
 		flipsign(t / norm(t), det([A; t']))
 	end
 
@@ -125,6 +126,8 @@ function continuationStep(H, J, V, h, ϵ, κ, δ, α)
 		abs(h) ≤ 1e-8 && error("h≈0 !") #TODO remove?
 	end
 
-	v₁ = newton(H, J, v₁, predEps(ϵ) ∧ predCount(25)) #TODO integrate max count
+	its = 0
+	v₁ = newton(H, J, v₁, predEps(ϵ) ∧ predCount(50); callback=(H,J,v)-> (its+=1)) #TODO integrate max count
+	its ≥ 50 && warn("no convergence; error: ", norm(H(v₁)))
 	return v₁, h
 end

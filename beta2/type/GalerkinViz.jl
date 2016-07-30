@@ -1,6 +1,6 @@
 #TODO keep max/min, prevent relim
 
-##### Global stuff
+using Munkres
 using PyCall
 pygui(:tk) #prevent conflict with gtk
 using PyPlot
@@ -19,15 +19,17 @@ type GalerkinViz <: Visualization
 	figSol
 	idxLineBranch::Dict
 	idxBranchLines::Dict
+	color::Dict
 	activeSolutionMark
 end
 
 function Base.show(V::GalerkinViz)
 	figure(V.figBif[:number])
 	clf()
-	empty!(V.idxBranchLines)
-	empty!(V.idxLineBranch)
-	map(b -> pushBranch(V,b), V.parent.P)
+	PyPlot.draw()
+	V.idxBranchLines = Dict{Any,Any}()
+	V.idxLineBranch = Dict{Any,Any}()
+	map(b -> try pushBranch(V,b) end, V.parent.P)
 	V.figBif["show"]()
 	V.figSol["show"]()
 end
@@ -44,7 +46,7 @@ function GalerkinViz(parent::Session)
 	subplots_adjust(left=0.01, right=0.99, top=0.99, bottom=0.01)
 	figSol[:canvas][:toolbar][:pack_forget]()
 
-	V = GalerkinViz(parent, figBif, figSol, Dict{Any,Any}(), Dict{Any,Any}(), Void)
+	V = GalerkinViz(parent, figBif, figSol, Dict{Any,Any}(), Dict{Any,Any}(), Dict{Any,Any}(), Void)
 
 	figBif["canvas"]["mpl_connect"]("pick_event", ev -> handlerPick(V,ev))
 	figBif["canvas"]["mpl_connect"]("key_press_event", ev -> @schedule handlerKey(V,ev))
@@ -57,9 +59,8 @@ function GalerkinViz(parent::Session)
 
 	observe(P, :activeSolutionChanged) do
 		s = V.parent.P.activeSolution #TODO no direct access...
-		!isa(s, Solution) && !isa(s, Vector{Float64}) && return
-		isa(s, Solution) && (s = s.data)
-		plotSolution(V, s)
+		isa(s, Solution) && plotSolution(V, s.data)
+		isa(s, Vector{Float64}) && plotSolution(V, s)
 	end
 
 	observe(P, :pushSolution) do b,s
@@ -81,8 +82,9 @@ function GalerkinViz(parent::Session)
 end
 
 
-function handlerPick(V::GalerkinViz, ev)
-	b = get(V.idxLineBranch, ev[:artist], nothing)
+
+@noinline function handlerPick(V::GalerkinViz, ev) b = get(V.idxLineBranch, hash(ev[:artist]), nothing)
+	global tmp = V
 	b == nothing && return
 
 	try
@@ -94,15 +96,10 @@ function handlerPick(V::GalerkinViz, ev)
 	return Void
 end
 
-function handlerKey(V::GalerkinViz, ev)
+@noinline function handlerKey(V::GalerkinViz, ev)
 	# println(ev[:key]) #debug
 
 	figure(V.figBif[:number])
-
-	#TODO implement dequeue style branch handling
-	#TODO stop fooling with project internals
-	#TODO make sure V.project is used, not global project
-	#TODO locking...
 
 	if ev[:key] == "backspace"
 		!isa(V.parent.P.activeSolution, Solution) && return Void
@@ -127,11 +124,14 @@ function handlerKey(V::GalerkinViz, ev)
 		gca()[:relim]()
 		autoscale()
 	elseif ev[:key] == "ctrl+r"
-		figure(V.figBif[:number])
-		clf()
-		empty!(V.idxBranchLines)
-		empty!(V.idxLineBranch)
-		map(b -> pushBranch(V,b), V.parent.P)
+		# figure(V.figBif[:number])
+		# clf()
+		# PyPlot.draw()
+		# sleep(.1)
+		# V.idxBranchLines = Dict{Any,Any}()
+		# V.idxLineBranch = Dict{Any,Any}()
+		# map(b -> pushBranch(V,b), V.parent.P)
+		show(V)
 	elseif ev[:key] == "l"
 		!isa(V.parent.P.activeSolution, Solution) && return Void
 		b = V.parent.P.activeSolution.parent
@@ -145,14 +145,32 @@ function handlerKey(V::GalerkinViz, ev)
 			end
 		end
 	elseif ev[:key] == "ctrl+l"
-		for l in keys(V.idxLineBranch)
-			l[:set_picker](5)
-			l[:set_marker](".")
+		for L in values(V.idxBranchLines)
+			for l in L
+				l[:set_picker](0)
+				l[:set_marker]("None")
+			end
 		end
 	elseif ev[:key] == "ctrl+L"
-		for l in keys(V.idxLineBranch)
+		for L in values(V.idxBranchLines)
+			for l in L
+				l[:set_picker](5)
+				l[:set_marker](".")
+			end
+		end
+	elseif ev[:key] == "ctrl+h"
+		!isa(V.parent.P.activeSolution, Solution) && return Void
+		b = V.parent.P.activeSolution.parent
+		for l in V.idxBranchLines[b]
 			l[:set_picker](0)
-			l[:set_marker]("None")
+			l[:set_visible](false)
+		end
+	elseif ev[:key] == "ctrl+H"
+		for L in values(V.idxBranchLines)
+			for l in L
+				l[:set_picker](5)
+				l[:set_visible](true)
+			end
 		end
 	elseif ev[:key] in [ "$(i)" for i in 0:9 ]
 		const colMap = Dict(
@@ -164,6 +182,7 @@ function handlerKey(V::GalerkinViz, ev)
 			)
 		if typeof(V.parent.P.activeSolution) == Solution
 			for l in V.idxBranchLines[V.parent.P.activeSolution.parent]
+				V.color[V.parent.P.activeSolution.parent] = colMap[ev[:key]]
 				l[:set_color](colMap[ev[:key]])
 			end
 		end
@@ -194,6 +213,14 @@ function handlerKey(V::GalerkinViz, ev)
 		i = findfirst(b,s)-1
 		s′ = b[ mod( ev[:key] == "left" ? i-1 : i+1 , length(b)) + 1 ]
 		setActiveSolution(P, s′)
+	elseif ev[:key] == "d"
+		s = V.parent.P.activeSolution
+		isa(s, Solution) && plotSolution(V, s.data; split=false)
+		isa(s, Vector{Float64}) && plotSolution(V, s; split=false)
+	elseif ev[:key] == "D"
+		s = V.parent.P.activeSolution
+		isa(s, Solution) && plotSolution(V, s.data; split=true)
+		isa(s, Vector{Float64}) && plotSolution(V, s; split=true)
 	end
 
 	PyPlot.draw()
@@ -202,28 +229,34 @@ end
 
 
 function pushBranch(V::GalerkinViz, b::Branch)
-	#TODO catch empty
+	isempty(b) && error("empty branch")
+
 	x = map(last, b)
 
 	function reducer(A,a)
 		sA,sa = size(A,2), size(a,2)
+		sA ≠ sa && warn("in-branch change in number of projected points")
 		s = max(sA,sa)
-		return [
-			A[:,(0:s-1)%sA+1]
-			a[:,(0:s-1)%sa+1]
-			]
+		A,a = A[:,(0:s-1)%sA+1], a[:,(0:s-1)%sa+1]
+		# a = a[munkres([ norm(A[end,i]-a[1,j]) for i in 1:s, j in 1:s ])] sA != sa && println("changing number of projection points")
+
+		return vcat(A,a)
 	end
 
-	mapper(x) = map(norm, projection(x))'
+	function mapper(x)
+		tmp = projection(V.parent.core, x)
+		length(tmp) == 0 && warn("empty projection")
+		return tmp'
+	end
 
 	y = mapreduce(mapper, reducer, b)
 
 	figure(V.figBif[:number])
 	hold(true)
-	lines = plot(x, y, picker=5, color="k", marker=".", markersize=3)
+	lines = plot(x, y, picker=5, color=get(V.color, b, "k"), marker=".", markersize=3)
 	PyPlot.draw()
 
-	map(l -> (V.idxLineBranch[l]=b), lines)
+	map(l -> (V.idxLineBranch[hash(l)]=b), lines)
 	V.idxBranchLines[b] = lines
 
 	return lines
@@ -231,12 +264,11 @@ end
 
 
 function addToBranch(op, V::GalerkinViz, b::Branch, s::Solution)
-	x = last(s) #TODO extend relay?
-	Y = map(norm, projection(s)) #TODO broadcast to common size
-
 	!haskey(V.idxBranchLines, b) && error("branch missing")
-	# !haskey(V.idxBranchLines, b) && pushBranch(V,b)
 	lines = V.idxBranchLines[b]
+
+	x = last(s) #TODO extend relay?
+	Y = projection(V.parent.core, s)
 
 	for (l,y) in zip(lines, Y)
 		l[:set_xdata](op(l[:get_xdata](), x))
@@ -263,29 +295,31 @@ end
 
 
 # plotSolution(V::GalerkinViz, S::Solution) = plotSolution(B,S.data) # handled by convert? prob not..
-function plotSolution(V::GalerkinViz, v::Vector{Float64})
-	intersections = projection(v)
-
+function plotSolution(V::GalerkinViz, v::Vector{Float64}; split=false)
 	figure(V.figBif[:number])
 	hold(true)
 	try V.activeSolutionMark[:remove]() end
 	x = v[end]
-	y = map(norm, intersections)
-	V.activeSolutionMark = scatter(fill(x, size(y)), y; facecolors="None", edgecolors="k", marker="o")
+	y = projection(V.parent.core, v)
+	V.activeSolutionMark = scatter(fill(x, size(y)), y; facecolors="none", edgecolors="k", marker="o")
 	PyPlot.draw()
 
-	#TODO mark proj points
 
 	figure(V.figSol[:number])
 	cla()
 	gca(projection="3d")
+	axis("equal")
 	hold(false)
-	t = linspace(0, 2pi, length(v)÷3 * 8)
-	w = reduce(hcat, toTrajInterp(v, 3)(t))'
-	plot(w[:,1], w[:,2], w[:,3], color="k") #+ linspace(0, maximum(w[:,3]), length(w[:,3]))
-	u = reduce(hcat, intersections)
+	m = length(v)÷6
+	t = linspace(0, 2pi, 2m*4)
+	w = interp(unwrap(v)[1])(t)
+	split && (w[:,3] += linspace(0, maximum(w[:,3])-minimum(w[:,3]), length(w[:,3])))
+	plot(w[:,1], w[:,2], w[:,3], color="k")
+
 	hold(true)
-	scatter3D(u[1,:], u[2,:], u[3,:]; facecolors="None", edgecolors="k", marker="o")
+	try cbPlotSolution(v)
+	catch e; println(e) end
+
 	PyPlot.draw()
 
 	return Void
@@ -298,7 +332,7 @@ function delBranch(V::GalerkinViz, b::Branch)
 	delete!(V.idxBranchLines, b)
 	map(lines) do l
 		l[:remove]()
-		delete!(V.idxLineBranch, l)
+		delete!(V.idxLineBranch, hash(l))
 	end
 
 	figure(V.figSol[:number])
@@ -312,11 +346,189 @@ function plotBranch(V::GalerkinViz, B::Branch)
 	clf()
 	gca(projection="3d")
 	hold(true)
+
 	for v in B
-		t = linspace(0, 2pi, length(v)÷3 * 8)
-		w = reduce(hcat, toTrajInterp(v, 3)(t))'
+		t = linspace(0, 2pi, length(v)÷3 * 6)
+		w = interp(unwrap(v)[1])(t)
 		plot(w[:,1], w[:,2], w[:,3], color="k", alpha=.1)
 	end
+
+	v = B[1]
+	t = linspace(0, 2pi, length(v)÷3 * 6)
+	w = interp(unwrap(v)[1])(t)
+	plot(w[:,1], w[:,2], w[:,3], color="y")
+
+	v = B[end]
+	t = linspace(0, 2pi, length(v)÷3 * 6)
+	w = interp(unwrap(v)[1])(t)
+	plot(w[:,1], w[:,2], w[:,3], color="r")
+
 	PyPlot.draw()
 	return
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#=
+@noinline function hungarian(M)
+	#make square
+	addrows, addcols = 0,0
+	if size(M,2) < size(M,1)
+		addcols = size(M,1)-size(M,2)
+		M = hcat(M, fill(maximum(M), size(M,1), addcols))
+	elseif size(M,1) < size(M,2)
+		addrows = size(M,2)-size(M,1)
+		M = vcat(M, fill(maximum(M), addrows, size(M,2)))
+	end
+
+	L = size(M,1)
+
+	#subtract row/col minima
+	mapslices(c->c-minimum(c), M, [1])
+	mapslices(r->r-minimum(r), M, [2])
+
+	while true
+		println(0)
+
+		#count zeros
+		is,js = zeros(L),zeros(L)
+		zs = 0
+		for i in 1:L, j in 1:L
+			if M[i,j] == 0
+				is[i] += 1
+				js[j] += 1
+				zs += 1
+			end
+		end
+
+		#sorted idx
+		seqi, seqj = sortperm(is, rev=true), sortperm(js, rev=true)
+
+		println(1)
+
+		#mapping with definite candidates set
+		# mapping = zeros(Int64, L)
+		# for k in L:-1:1
+		# 	is[seqi[k]] == 1 && (mapping[seqi[k]] = findfirst(M[seqi[k],:], 0))
+		# 	js[seqj[k]] == 1 && (mapping[findfirst(M[seqj[k],:]], 0)] = k)
+		# 	is[seqi[k]] > 1 && js[seqj[k]] > 1 && break
+		# end
+		#
+		# #check for solution
+		# idx = find(x->x==0, mapping)
+		# opts = [ find(x->x==0, M[i,:]) for i in idx]
+		# K = length(opts)
+		# count = zeros(Int64, K)
+		# while true
+		# 	#construct candidate solution, check
+		# 	candidate = map((o,c)->o[c+1], opts, count)
+		# 	flagBadCandidate = false
+		# 	for c in 1:K
+		# 		for d in c+1:K
+		# 			candidate[c] == candidate[d] && (flagBadCandidate = true) && break
+		# 		end
+		# 		flagBadCandidate && break
+		# 	end
+		#
+		# 	#good solution found
+		# 	if !flagBadCandidate
+		# 		mapping[idx] = candidate
+		# 		return mapping
+		# 	end
+		#
+		# 	#prepare next candidate
+		# 	k = length(opts)
+		# 	while true
+		# 		count[k] = (count[k] + 1) % length(opts[k])
+		# 		count[k] ≠ 0 && break
+		# 		k -= 1
+		# 		k == 0 && break
+		# 	end
+		# 	k == 0 && break
+		# end
+
+		#construct lines through zeros
+		lis, ljs = [], []
+		while zs > 0
+			i,j = L,L
+			while is[seqi[i]] == 1
+				push!(lis, seqi[i])
+				push!(lis, seqi[i])
+			end
+			if is[i] ≥ js[j]
+				zs -= is[i]
+				is[i] = 0
+				seqi = circshift(seqi, [-1])
+				push!(lis, i)
+				for j in L:-1:1
+					M[i,seqj[j]] ≠ 0 && continue
+					js[seqj[j]] -= 1
+					while j < L && js[seqj[j]] < js[seqj[j+1]]
+						seqj[j],seqj[j+1] = seqj[j+1],seqj[j]
+						j += 1
+					end
+				end
+			else
+				zs -= js[j]
+				js[j] = 0
+				seqj = circshift(seqj, [-1])
+				push!(ljs, j)
+				for i in L:-1:1
+					M[seqi[i],j] ≠ 0 && continue
+					is[seqi[i]] -= 1
+					while i < L && is[seqi[i]] < is[seqi[i+1]]
+						seqi[i],seqi[i+1] = seqi[i+1],seqi[i]
+						i += 1
+					end
+				end
+			end
+		end
+
+		println(2, " length(lis)+length(ljs) > L : ", length(lis)+length(ljs) > L)
+
+		if length(lis)+length(ljs) == L
+			println(ceil(Integer, M))
+			opts = [ find(x->x==0, M[i,:]) for i in 1:L ]
+			cnt = ones(Int64, L)
+			for k in 1:prod(map(length, opts))
+				mapping = map(getindex, opts, cnt)
+				good = true
+				for i in 1:L, j in i+1:L; mapping[i] == mapping[j] && (good = false; break) end
+				good && return mapping[1:L-addcols]
+				for i in 1:L
+					cnt[i] = cnt[i] % length(opts[i]) + 1
+					cnt[i] ≠ 1 && break
+				end
+			end
+		end
+
+		println(3)
+
+		#prepare next round
+		minunc = minimum(M[setdiff(1:L, lis), setdiff(1:L, ljs)])
+		M[lis,:] += minunc
+		M[:,ljs] += minunc
+		M -= minunc
+
+		println(4)
+	end
+end
+hungarian(A,B) = hungarian([ norm(a-b) for a in A, b in B ])
+
+hungarian(rand(5,5))
+hungarian(rand(4,5))
+hungarian(rand(5,4))
+
+hungarian([1,4,4], [1,4])
+=#

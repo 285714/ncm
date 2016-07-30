@@ -73,6 +73,7 @@ outputConvert(deconstructor, V...) = outputConvert(deconstructor, V)
 rows(V) = [ V[i,:] for i in 1:size(V,1) ]
 columns(V) = [ V[:,i] for i in 1:size(V,2) ]
 
+
 # function composition...
 # TODO more arguments
 ∘(f...) = x -> foldr((a,A) -> a(A), x, f)
@@ -95,31 +96,17 @@ function circulantMatrix(C)
 end
 
 function bisection(f,a,b; ϵ=1e-10)
-	b < a && ((a,b) = (b,a))
-	while norm(a-b) > ϵ
-		local c = (a+b)/2
+	f(b) < f(a) && ((a,b) = (b,a))
+	while true
+		c = (a+b)/2
 		f(c) < 0 ? a=c : b=c
+		(b-a) < ϵ && return (a+b)/2
 	end
-	return a
 end
 
 
 #TODO expose?
 varToIter(v...) = return v
-
-# prefer the compact solution, plus stays in sync.
-# function bisection(f, x₋, x₊; ϵ=1e-10)
-# 	while true
-# 		x₀ = (x₋ + x₊) / 2
-# 		if f(x₀) == 0 || abs(x₋ - x₊) < ϵ
-# 			return x₀
-# 		elseif sign(f(x₀)) * sign(f(x₋)) < 0
-# 			x₊ = x₀
-# 		else
-# 			x₋ = x₀
-# 		end
-# 	end
-# end
 
 function busywait(p)
 	t = now()

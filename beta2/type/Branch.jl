@@ -1,7 +1,7 @@
 type Branch
 	solutions::Vector{Solution}	# ordered
 	parent # ::Project
-	Branch(V::Vector{Solution}) = new(V, Void)
+	Branch(V::Vector{Solution}) = new(V, nothing)
 	Branch(P) = Branch(Solution[], P) #TODO runtime typeassert bco circ type?
 	Branch(S,P) = new(S,P)
 end

@@ -25,7 +25,10 @@ interpolateLanczos(V, a::Integer, x) = interpolateLanczos(V,a)(x)
 # use with 2a,-2b and divide by 2m+1 to use with rfft coefficients.
 function interpolateTrigonometric(a₀, a, b)
 	return mbUtil.vectorize() do x
-		a₀ + sum(a.*cos(x*(1:length(a))) + b.*sin(x*(1:length(b))))
+		a₀ + reduce(0, 1:length(a)) do I,i
+			tmp = i*x
+			I + a[i]*cos(tmp) + b[i]*sin(tmp)
+		end
 	end
 end
 interpolateTrigonometric(a₀, a, b, x) = interpolateTrigonometric(a₀, a, b)(x)

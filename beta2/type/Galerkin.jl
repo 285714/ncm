@@ -4,11 +4,12 @@ include("$(pwd())/lib/ncmprojMKCONTROLGRID.jl")
 type Galerkin <: SystemCore
 	parent::Session
 	f::Function
-	f′::Function
+	projection::Function
 	H::Function #derived
 	J::Function #derived
 	dataGUI::Dict{AbstractString, Any}
-	Galerkin(parent,f,f′) = new(parent,f,f′,fToH(f),f′ToJ(f′),Dict{AbstractString, Any}())
+	Galerkin(parent,f,f′,projection) = new(parent,f,projection,fToH(f),f′ToJ(f′),Dict{AbstractString, Any}())
+	Galerkin(parent,f,H,J,projection) = new(parent,f,projection,H,J,Dict{AbstractString, Any}())
 end
 
 #TODO dimensions
@@ -53,14 +54,13 @@ end
 function handlerResample(w, G)
 	setproperty!(w, :sensitive, false)
 	try
-		V,ω,ℵ = unwrap(G.parent.P.activeSolution)
-
-		C = resample(V, G.dataGUI["Samples"], G.dataGUI["Factor"])
-		C = [vec(vcat(real(C), imag(C[2:end,:]))); ω/G.dataGUI["Factor"]]
+		#handle !isa Solution
+		C = resample(G.parent.P.activeSolution, G.dataGUI["Samples"], G.dataGUI["Factor"])
+		ω,ℵ = C[end-1:end]
 
 		Htmp(V) = G.H([V; ℵ])
 		Jtmp(V) = G.J([V; ℵ])[:, 1:end-1]
-		tmp = newton(Htmp, Jtmp, C, predCount(10) ∧ predEps(1e-10))
+		tmp = newton(Htmp, Jtmp, C[1:end-1], predCount(10) ∧ predEps(1e-10))
 
 		setActiveSolution(G.parent.P, [tmp; ℵ])
 	finally
@@ -83,14 +83,15 @@ function handlerFindInitialData(w, G)
 			transientIterations=TIters, transientStepSize=TStepSize,
 			steadyStateStepSize=SSStepSize)
 
-		C = resample(rfft(cyc, [1]), m)
-		C = [ vec(vcat(real(C), imag(C[2:end,:]))); ω ]
+		C = wrap(rfft(cyc, [1]), ω, c₀)
+		C = resample(C, m)
+		C = C[1:end-1]
 
 		Htmp(V) = G.H([V; c₀])
 		Jtmp(V) = G.J([V; c₀])[:, 1:end-1]
-		tmp = newton(Htmp, Jtmp, C, predCount(10) ∧ predEps(1e-10))
+		C = newton(Htmp, Jtmp, C, predCount(10) ∧ predEps(1e-10))
 
-		setActiveSolution(G.parent.P, [tmp; c₀])
+		setActiveSolution(G.parent.P, [C; c₀])
 	catch e
 		println(e)
 	end
@@ -110,43 +111,43 @@ function wrap(V,ω,ℵ)
 	return [vec(vcat(real(V), imag(V[2:end,:]))); ω; ℵ]
 end
 
-function toTrajInterp(V, d)
-	m = (length(V)-d-2)÷(2*d)
-	tmp = reshape(V[1:end-2], 2m+1, d)
-	return mbUtil.vectorize(x -> Float64[ mbInterpolate.interpolateTrigonometric(tmp[1,i], 2tmp[2:2+m-1,i], -2tmp[2+m:end,i])(x) / (2m+1) for i in 1:d ])
+# array of functions interpolating a component each
+function interps(W)
+	m = size(W,1)-1
+	fs = mapslices(W, [1]) do w
+		interpolateTrigonometric(real(w[1])/2m, real(w[2:end])/m, -imag(w[2:end])/m)
+	end
+	return vec(fs)
 end
 
+# complete vectorized interpolated trajectory
+#TODO this is trivially parallelizable...
+function interp(W)
+	fs = interps(W)
+	return t -> mapreduce(g -> g(t), hcat, fs)
+end
 
-#NOTE numerical problems can lead to f(0)≠f(2π)
-@noinline function projection(V)
+function projection(G::Galerkin, V)
 	W,ω,ℵ = unwrap(V)
 	m = size(W,1)-1
-	ftmp = [ interpolateTrigonometric(real(W[1,i]), 2*real(W[2:end,i]), -2*imag(W[2:end,i])) for i in 1:size(W,2) ]
-	f1(x) = ftmp[1](x) / (2m+1)
-	f2(x) = map(f->f(x) / (2m+1), ftmp)
-	t = linspace(-.1,2pi-.1,2m+1)
-
-	B = map(i -> f1(t[i]) ≤ 0, 1:2m+1)
-	B = map(i -> B[i]&&!B[i+1], 1:2m)
-	return map(find(B)) do i
-		mbUtil.bisection(first∘f1, t[i], t[i+1], ϵ=1e-4) |> f2
-	end
+	return G.projection(interps(W), ℵ, 2m)
 end
 
 
 # takes real F-coefficients  V  , returns resampled version
 function resample(V, m::Int, scale=1.0)
-	mapslices(V, [1]) do v
-		f(x) = mbInterpolate.interpolateTrigonometric(real(v[1]), 2*real(v[2:end]), -2*imag(v[2:end]))(x) / (2*length(v)-1)
-		rfft(f(linspace(.0,2pi*scale,2*m+2)[1:end-1]))
-	end
+	W,ω,ℵ = unwrap(V)
+	f = interp(W)
+	T = linspace(.0,2pi*scale,2*m+2)[1:end-1]
+	wrap(rfft(f(T),[1]), ω/scale, ℵ)
 end
 
 
 function fToH(f)
 	return function H(V::Vector{Float64})
 		m = length(V-5)÷6
-		anchor = sum(V[1:m+1])
+		anchor = sum(V[1:m+1]) #TODO hm...
+
 		ω,ρ = V[end-1:end]
 		V = reshape(V[1:end-2],2m+1,3)
 		V = complex(V[1:m+1,:], [zeros(3)'; V[m+2:end,:]])

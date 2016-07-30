@@ -101,30 +101,25 @@ function findCyclePoincare(
 			intersections = [intersections [y′; t+h′]]
 		end
 		y⁻ = y
-		i > 100transientIterations && error("No intersection in steady state phase.")
+		i > 100*transientStepSize/steadyStateStepSize*transientIterations && error("No intersection in steady state phase.")
 		nIntersections > size(intersections, 2)
 	end)
 
-	# scatter(intersections[2,:], intersections[3,:])
+	#scatter(intersections[2,:], intersections[3,:])
 
 	# find number of cycles s.t. rating is minimum
 	n = size(intersections, 2)
 	period = indmin(map(1:maxCycles) do i
-		mean([ mean(var(intersections[:, j:i:n], [2])) for j in 1:i ])
+		mean([ mean(std(intersections[1:end-1, j:i:n], [2])) for j in 1:i ])
 	end)
 
 	# cut out steady state trajectory
 	y₂ = intersections[1:dim,1]
 	T = intersections[dim+1,1+period] - intersections[dim+1,1]
 	dataSteadyState = zeros(0,dim)
-	k = T/sampleSize
-	tmp = Inf
-	ode(F, y₂, steadyStateStepSize/2, (y, i, t, V) -> begin
-		tmpt = mod(t,k)
-		tmpt < tmp && (dataSteadyState = [dataSteadyState; y'])
-		tmp = tmpt
-		t > 2T && error("Something is wrong...")
-		return size(dataSteadyState,1) < sampleSize
+	ode(F, y₂, steadyStateStepSize, (y, i, t, V) -> begin
+		dataSteadyState = [dataSteadyState; y']
+		return t < T
 	end)
 
 	dataSteadyState, period, 2π/T

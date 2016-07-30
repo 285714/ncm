@@ -18,109 +18,48 @@
 
 push!(LOAD_PATH, "$(pwd())/lib")
 using Gtk.ShortNames
-@everywhere using mbNewton, mbPred, mbUtil, mbInterpolate, mbObserve
-@everywhere map(include, [
+using mbNewton, mbPred, mbUtil, mbInterpolate, mbObserve
+map(include, [
 	"lib/ncmprojMKCONTROLGRID.jl"; "lib/ncmprojRelay.jl";
 	"type/Solution.jl"; "type/Branch.jl"; "type/Project.jl";
 	"type/SystemCore.jl"; "type/ContinuationMethod.jl"; "type/Visualization.jl";
 	"type/Session.jl";
 	"type/PC.jl"; "type/Galerkin.jl"; "type/GalerkinViz.jl"
+	"lib/ncmprojSAVEHELPER.jl"
 	])
 
 #(do menu stuff, other global GUI stuff, saving, ...)
-
-create() = begin
-	ses = Session()
-	ses.P = Project()
-	ses.core = Galerkin(ses,lorenz,lorenz′)
-	ses.cont = PC(ses)
-	ses.viz = GalerkinViz(ses)
-	show(ses.cont); show(ses.core); show(ses.viz)
-	return ses
-end
-
-save(filename, S::Session; overwrite=false) = begin
-	if !isfile("save/$(filename)") || overwrite; open("save/$(filename)", "w") do f serialize(f, S.P.branches) end
-	else error("File already exists. Use  overwrite=true  .")end
-	return Void
-end
-
-#TODO restore non-serializable stuff (figures, observer)
-load(filename) = begin
-	branches = open(deserialize, "save/$(filename)")
-	ses = Session()
-	ses.P = Project()
-	for b in branches
-		b.parent = ses.P
-		length(b) < 2 && deleteat!(branches, findfirst(branches, b))
-	end
-	ses.P.branches = branches
-	ses.core = Galerkin(ses,lorenz,lorenz′)
-	ses.cont = PC(ses)
-	ses.viz = GalerkinViz(ses)
-	show(ses.cont); show(ses.core); show(ses.viz)
-	return ses
-end
 
 #select continuation method, select system
 # include(open_dialog("Select continuation method.", Gtk.GtkNullContainer(), ASCIIString[]))
 # include(open_dialog("Select system.", Gtk.GtkNullContainer(), ASCIIString[]))
 
-@everywhere include("system/lorenz.jl")
+# @everywhere include("system/lorenz.jl")
 @everywhere include("system/roessler.jl")
 
-
-
-#TODO keys: delete from here, delete till here
-#TODO h box, fix
-#TODO broyden
-#TODO mark current branch
-
-#mark perturb branches
-#auto new branch
-#singleton perturb branch?
-#new panel?
-#special perturb mode?
-#change perturb style... make factor for rand
-
-#broyden pc, keep J per branch
-
+# ses = create(lorenz, lorenz′, lorenzProjection)
+# ses = load("lorenz350nodoublings", lorenz, lorenz′, lorenzProjection)
+# ses = load("...", roessler, Hroessler, Jroessler, roesslerProjection)
+# ses = load("roessler4612126", roessler, Hroessler, Jroessler, roesslerProjection)
+# save("roessler4612126", ses, overwrite=true)
 
 #=
-c = 350.0
-m = 64
-cyc, P, ω = findCyclePoincare((t,v)->f(t,[v;c]), rand(3),
-	nIntersections=120, maxCycles=30, sampleSize=m,
-	transientIterations=4000, transientStepSize=.01,
-	steadyStateStepSize=.01)
+using mbRK
+global data
+rk4((t,x)->ses.core.f(t,[x;12.6]), .0, 10rand(3), .01, predCount(10000), init=()->(global data=Array{Float64}(0,3)), callback=(t,y,f)->(global data = [data;y']))
 
-C = resample(rfft(cyc, [1]), m)
-C = [vec(vcat(real(C), imag(C[2:end,:]))); ω]
-
-D = [C;c]
-setActiveSolution(project, D)
-d = [100*rand(size(D,1)-2); 0; 0]
-@time newton(H, J, D, predCount(6), callback=(v,H,J)->println(norm(H)))
-@time newton(Hroessler, Jroessler, D, predCount(6), callback=(v,H,J)->println(norm(H)))
-@time newton(Hroessler, forwardDifference(Hroessler), D, predCount(6), callback=(v,H,J)->println(norm(H)))
-
-s(x,r=Inf) = begin matshow(clamp(x,-r,r)); colorbar() end
+ion()
+f = figure()
+axes(projection="3d")
+plot(data[end÷2:end,1], data[end÷2:end,2], data[end÷2:end,3])
 =#
 
 
-
-#operations
-#	find branch of solution
-#	add solution to branch
-#	del solution from branch
-# 	add/del branch
-#	iterate over solutions of branch
-#	iterate over branches
-#	find other solutions of branch (find branch, iterate over branch)
-#	manipulate solution? consider different solution? homo-/heterogeneous branches?
-#	associate information with solutions, branches... -> responsibility of other subsystems
-#		facilate through observer
-
-# minimum constraint for h?
-
-# for b in ses.P; length(b) < 2 && deleteat!(ses.P, findfirst(ses.P, b)) end
+#=
+using ProfileView
+Profile.clear()
+@profile for i in 1:10
+	step(ses.cont)
+end
+ProfileView.view()
+=#
