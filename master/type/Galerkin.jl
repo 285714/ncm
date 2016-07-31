@@ -40,7 +40,7 @@ function Base.show(G::Galerkin)
 
 	gridGalerkin[1:2,1] = mkControlGrid(G.dataGUI, Array[
 		[ ("Trans. Iterations", Int, 4000, 1000:1000:1e8), Void, Void ],
-		[ ("Trans. StepSize", Float64, .01, 1e-3:.01:1.0), ("SS StepSize", Float64, .01, 1e-3:.01:1.0) ],
+		[ ("Trans. StepSize", Float64, .01, 1e-3:1e-3:.1), ("SS StepSize", Float64, .01, 1e-3:1e-3:.1) ],
 		[ ("Max. period", Int, 30, 1:128), ("Intersections", Int, 120, 1:128) ],
 		[ ("c₀", Float64, 350, -500:.01:500), ("m", Int, 64, 8:4096) ],
 		[ buttonFindInitial ],
@@ -83,13 +83,17 @@ function handlerFindInitialData(w, G)
 			transientIterations=TIters, transientStepSize=TStepSize,
 			steadyStateStepSize=SSStepSize)
 
-		C = wrap(rfft(cyc, [1]), ω, c₀)
+		fs = mapslices(x->interpolateLanczos(x,3), cyc, [1])
+		T = linspace(1,size(cyc,1),2m)
+		cyc = reduce(hcat, map(f->rfft(f(T)), fs))
+
+		C = wrap(cyc, ω, c₀)
 		C = resample(C, m)
 		C = C[1:end-1]
 
 		Htmp(V) = G.H([V; c₀])
 		Jtmp(V) = G.J([V; c₀])[:, 1:end-1]
-		C = newton(Htmp, Jtmp, C, predCount(10) ∧ predEps(1e-10))
+		C = newton(Htmp, Jtmp, C, predCount(25) ∧ predEps(1e-8))
 
 		setActiveSolution(G.parent.P, [C; c₀])
 	catch e

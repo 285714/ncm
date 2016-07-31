@@ -96,7 +96,7 @@ function findCyclePoincare(
 		if (sign(plane(y)) > 0 &&  sign(plane(y⁻)) <= 0)
 			# find h′ ∈ [0,h] s.t. plane(y⁻ + h′⋅V(h′,y⁻)) = 0
 			step(h′) = y⁻ + h′*V(h′,y⁻)
-			h′ = mbUtil.bisection(h′ -> plane(step(h′)), 0, h, ϵ=0.00001)
+			h′ = mbUtil.bisection(h′ -> plane(step(h′)), 0, h, ϵ=1e-4)
 			y′ = step(h′)
 			intersections = [intersections [y′; t+h′]]
 		end
@@ -109,9 +109,23 @@ function findCyclePoincare(
 
 	# find number of cycles s.t. rating is minimum
 	n = size(intersections, 2)
-	period = indmin(map(1:maxCycles) do i
-		mean([ mean(std(intersections[1:end-1, j:i:n], [2])) for j in 1:i ])
-	end)
+	ratings = map(1:maxCycles) do i
+		mean( [ sum(var(intersections[1:end-1, j:i:n], [2])) for j in 1:i ] )
+	end
+
+	mn₁,m₁ = minimum(ratings), mean(ratings)
+	period = findfirst(1:maxCycles) do i
+		X = ratings[i:i:end]
+		# mn₂,m₂ = minimum(ratings), mean(ratings)
+		std(X)/mean(X) < .5 && all(X) do x
+			abs(x-mn₁)/m₁ < .5
+		end
+	end
+
+	if period == 0
+		period = 1
+		warn("A valid period could not be found.")
+	end
 
 	# cut out steady state trajectory
 	y₂ = intersections[1:dim,1]
