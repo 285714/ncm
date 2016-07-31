@@ -1,4 +1,4 @@
-const α = .1, β = .1
+const α = .1; const β = .1
 roessler(t,v) = [
 	-v[2] - v[3]
 	v[1] + α*v[2]

@@ -1,5 +1,8 @@
 #TODO deleting of solutions does not delete from h.
 
+"""
+a predictor-corrector-method with step-size adaption and GUI Controls
+"""
 type PC <: ContinuationMethod
 	parent::Session
 	dataGUI::Dict{AbstractString, Any}

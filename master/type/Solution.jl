@@ -1,3 +1,6 @@
+"""
+todo
+"""
 type Solution
 	data::Vector{Float64}
 	parent # ::Branch # circular type dependency...

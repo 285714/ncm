@@ -19,6 +19,9 @@ function complicateProject(V) #::Vector{Vector{Vector{Float64}}}
 	return P
 end
 
+"""
+    create(homotopy, jacobian, projection)
+"""
 create(v...) = begin
 	ses = Session()
 	ses.P = Project()
@@ -29,6 +32,9 @@ create(v...) = begin
 	return ses
 end
 
+"""
+    save(filename, session[, overwrite])
+"""
 save(filename, S::Session; overwrite=false) = begin
 	if !isfile("save/$(filename)") || overwrite; open("save/$(filename)", "w") do f serialize(f, simplifyProject(S.P)) end
 	else error("File already exists. Use  overwrite=true  .")end
@@ -36,6 +42,9 @@ save(filename, S::Session; overwrite=false) = begin
 end
 
 #TODO restore non-serializable stuff (figures, observer)
+"""
+    load(filename, homotopy, jacobian, projection)
+"""
 load(filename, v...) = begin
 	V = open(deserialize, "save/$(filename)")
 	ses = Session()

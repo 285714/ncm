@@ -4,6 +4,9 @@ module mbNewton
 export newton, centralDifference, forwardDifference, broyden, bisection
 
 # base function
+"""
+    newton(homotopy, jacobian, v₀, ...)
+"""
 function newton(H::Function, J::Function, v₀::Vector{Float64}, pred::Function;
 	init=Void, callback=Void, useOpt::Bool=false)
 
@@ -36,7 +39,10 @@ function newton(H::Function, J::Function, v₀::Vector{Float64}, pred::Function;
 end
 
 
-# numerical differentiation methods
+"""
+    centralDifference(homotopy, v, epsilon)
+numerical differentiation method
+"""
 function centralDifference(H::Function, v::Vector{Float64}; ϵ::Float64=1e-4)
 	local J = cell(length(v))
 	local w = deepcopy(v)
@@ -49,6 +55,10 @@ function centralDifference(H::Function, v::Vector{Float64}; ϵ::Float64=1e-4)
 end
 centralDifference(H::Function; ϵ=1e-4) = v -> centralDifference(H, v; ϵ)
 
+"""
+    forwardDifference(homotopy, v, epsilon)
+numerical differentiation method
+"""
 function forwardDifference(H::Function, v::Vector{Float64}; ϵ::Float64=1e-4)
 	local J = cell(length(v))
 	local w = deepcopy(v)
@@ -69,6 +79,9 @@ forwardDifference(H::Function; ϵ=1e-4) = v -> forwardDifference(H, v; ϵ=ϵ)
 # WARNING mind that this function has an internal state depending on the preceding
 #		evaluations. the 'Jacobian' at a point is thus not well defined.
 # TODO sequence of evaluation not optimal
+"""
+    broyden(homotopy, jacobian)
+"""
 function broyden(H, J)
 	local H₀,J₀,v₀							# closure
 	local init = true

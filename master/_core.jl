@@ -16,7 +16,8 @@
 
 # addprocs(1)
 
-push!(LOAD_PATH, "$(pwd())/lib")
+const MASTER = splitdir(@__FILE__())[1]
+push!(LOAD_PATH, "$MASTER/lib")
 using Gtk.ShortNames
 using mbNewton, mbPred, mbUtil, mbInterpolate, mbObserve
 map(include, [

@@ -1,6 +1,10 @@
-# continuation method implementations extend  ContinuationMethod
-#	and the corresponding  show  and  step  .
-# responsible for changing the project itself
+"""
+    ContinuationMethod..
+
+continuation method implementations extend  `ContinuationMethod`
+and the corresponding `show` and `step`.
+responsible for changing the project itself
+"""
 abstract ContinuationMethod
 
 # generic show function. usually displays a GUI

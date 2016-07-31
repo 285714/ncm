@@ -13,6 +13,9 @@ ioff()
 
 # this visualization module expects functions specific to Galerkin (projection)
 
+"""
+todo
+"""
 type GalerkinViz <: Visualization
 	parent::Session
 	figBif

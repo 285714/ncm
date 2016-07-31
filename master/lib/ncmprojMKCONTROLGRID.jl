@@ -1,7 +1,10 @@
 #TODO convert to real MVC, unify interface, plugin style, fix grid interface
 #TODO additional abstraction layer encapsulating an element plus data and handler
 
-# Tuple (name::String, ::Type, init, v...)
+"""
+    ctrl(D, x)
+Tuple (name::String, ::Type, init, v...)
+"""
 function ctrl(D::Dict{AbstractString, Any}, x)
 	local tmp = Void
 	if x[2] == Int
@@ -49,8 +52,12 @@ function button(handler::Function, label::AbstractString)
 end
 
 
-# creates a grid of controls with labels, handlers and encapsulated storage
-# c in C is Tuple (name::String, ::Type, init, v...)
+"""
+    mkControlGrid(D, C)
+
+creates a grid of controls with labels, handlers and encapsulated storage
+`c` in `C` is Tuple (name::String, ::Type, init, v...)
+"""
 function mkControlGrid(D::Dict{AbstractString, Any}, C)
 	Control = map(C) do X
 		reduce([], X) do A,a
