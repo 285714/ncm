@@ -1,4 +1,5 @@
-const α = .1; const β = .1
+const α = .1
+const β = .1
 roessler(t,v) = [
 	-v[2] - v[3]
 	v[1] + α*v[2]
@@ -181,7 +182,7 @@ function roesslerProjectionInternal(ftmp,ρ,N)
 		t₀ = t
 	end
 
-	global roesslerfs = fs, roesslerstart = map(f->f(0), ftmp)
+	global roesslerfs = fs, roesslerstart = map(f->f(.0), ftmp)
 
 	return ts, fs, sort(ns)
 end

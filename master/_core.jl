@@ -36,10 +36,13 @@ map(include, [
 # include(open_dialog("Select system.", Gtk.GtkNullContainer(), ASCIIString[]))
 
 # @everywhere include("system/lorenz.jl")
-@everywhere include("system/roessler.jl")
+# sesL = create(lorenz, lorenz′, lorenzProjection)
+# sesL = load("lorenz350nodoublings", lorenz, lorenz′, lorenzProjection)
+# save("lorenz", sesL, overwrite=true)
 
-# ses = create(lorenz, lorenz′, lorenzProjection)
-# ses = load("lorenz350nodoublings", lorenz, lorenz′, lorenzProjection)
+@everywhere include("system/roessler.jl")
+# ses = create(roessler, Hroessler, Jroessler, roesslerProjection)
+# ses = create(roessler, roessler′, roesslerProjection)
 # ses = load("...", roessler, Hroessler, Jroessler, roesslerProjection)
 # ses = load("roessler4612126", roessler, Hroessler, Jroessler, roesslerProjection)
 # save("roessler4612126", ses, overwrite=true)
@@ -47,7 +50,7 @@ map(include, [
 #=
 using mbRK
 global data
-rk4((t,x)->ses.core.f(t,[x;12.6]), .0, 10rand(3), .01, predCount(10000), init=()->(global data=Array{Float64}(0,3)), callback=(t,y,f)->(global data = [data;y']))
+rk4((t,x)->ses.core.f(t,[x;100.5]), .0, rand(3), .01, predCount(10000), init=()->(global data=Array{Float64}(0,3)), callback=(t,y,f)->(global data = [data;y']))
 
 ion()
 f = figure()

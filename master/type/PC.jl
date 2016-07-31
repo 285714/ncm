@@ -22,10 +22,10 @@ function Base.show(C::PC)
 
 	gridPC = mkControlGrid(C.dataGUI, Array[
 		#[ ("ϵ", Float64, 1e-4, 1e-6:1e-8:1e-2), Void ],
-		[ ("κ", Float64, .4, .0:1e-3:1.0) ],
-		[ ("δ", Float64, .5, .0:1e-2:20.0) ],
-		[ ("α", Float64, 10.0, .0:.1:40.0) ],
-		[ ("Perturb", Bool, false); ("Strength", Float64, .0, -1:1e-3:1) ],
+		[ ("κ", Float64, .4, 1e-3:1e-3:1.0) ],
+		[ ("δ", Float64, .5, 1e-2:1e-2:20.0) ],
+		[ ("α", Float64, 10.0, .1:.1:40.0) ],
+		[ ("Perturb", Bool, false); ("Strength", Float64, .0, -.1:1e-3:.1) ],
 		[ buttonStep, buttonRun ]
 	])
 	g[1:2,2] = gridPC

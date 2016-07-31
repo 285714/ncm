@@ -12,8 +12,8 @@ simple periodic (!) Lanczos interpolation
 """
 function interpolateLanczos(V,a::Integer)
 	return mbUtil.vectorize() do y
-		local sum = zero(V[1])
-		local N = length(V)
+		sum = zero(V[1])
+		N = length(V)
 		for i in floor(Integer,y)+(-a+1:a)
 			local tmp = y-i
 			sum += sinc(tmp)*sinc(tmp/a)*V[mod(i-1,N) + 1]

@@ -87,7 +87,6 @@ end
 
 
 @noinline function handlerPick(V::GalerkinViz, ev) b = get(V.idxLineBranch, hash(ev[:artist]), nothing)
-	global tmp = V
 	b == nothing && return
 
 	try
