@@ -3,6 +3,10 @@ using mbPred
 using mbUtil
 
 # procedure usually underestimates length of period
+"""
+    findCycle(H, t0, y0, transientIterations, transientStepSize,
+	    steadyStateIterations, steadyStateStepSize)
+"""
 function findCycle(
 	H::Function, t₀::Float64, y₀::Vector,
 	TransientIterations::Integer, TransientStepSize::Float64,
@@ -43,7 +47,11 @@ function findCycle(
 end
 
 
-# cut single cycle of length P*fac from data, resample, shift s.t. X(0)≈0, Fourier transform.
+"""
+    prepareCycle(data, h, P[, fac])
+
+cut single cycle of length P*fac from data, resample, shift s.t. X(0)≈0, Fourier transform.
+"""
 function prepareCycle(data::Array{Float64}, h::Float64, P::Integer; fac::Integer=1)
 	local ω, cyc, y
 
@@ -65,6 +73,14 @@ function prepareCycle(data::Array{Float64}, h::Float64, P::Integer; fac::Integer
 end
 
 
+"""
+    findCyclePoincare(F, y[, plane, clusterRating, nIntersections,
+	    maxCycles, sampleSize, transientIterations, transientStepSize,
+		steadyStateStepSize])
+
+extracts a single cycle of the steady state of ode `F` using poincare cuts through
+the `plane`.
+"""
 function findCyclePoincare(
 		F :: Function,
 		y₀ :: Vector;

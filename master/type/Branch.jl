@@ -1,3 +1,8 @@
+
+
+"""
+a series of `Solution`s
+"""
 type Branch
 	solutions::Vector{Solution}	# ordered
 	parent # ::Project

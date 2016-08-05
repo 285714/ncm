@@ -1,4 +1,7 @@
 # responsible for the interpretation of solutions
+"""
+todo
+"""
 abstract SystemCore
 
 # usually displays a GUI

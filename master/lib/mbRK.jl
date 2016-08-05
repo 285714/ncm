@@ -13,6 +13,16 @@ end
 
 length(BT::ButcherTableau) = length(BT.b)
 
+"""
+	rk(butcherTableau)
+
+returns a runge-kutta method using the respective tableau:
+
+    function(f, t0, y0, h, pred[, init, callback])
+
+e.g. `rk1`, or `rk4`. Examines the ode `f` starting from `t0`, `y0` with fixed stepsize
+`h` until `pred` evalutes to `false`.
+"""
 function rk(BT::ButcherTableau)
 	return function rk(f::Function, t₀::Float64, y₀::Vector{Float64}, h::Float64, pred::Function;
 		init=Void, callback=Void)

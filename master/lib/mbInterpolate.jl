@@ -5,7 +5,11 @@ export interpolateLanczos, interpolateTrigonometric
 
 using mbUtil
 
-# simple periodic (!) Lanczos interpolation
+"""
+    interpolateLanczos(V, a::Integer)
+
+simple periodic (!) Lanczos interpolation
+"""
 function interpolateLanczos(V,a::Integer)
 	return mbUtil.vectorize() do y
 		sum = zero(V[1])
@@ -21,8 +25,11 @@ interpolateLanczos(V, a::Integer, x) = interpolateLanczos(V,a)(x)
 
 
 
-# returns trigonometric polynomial.
-# use with 2a,-2b and divide by 2m+1 to use with rfft coefficients.
+"""
+    interpolateTrigonometric(a₀, a, b)
+returns trigonometric polynomial.
+use with 2a,-2b and divide by 2m+1 to use with rfft coefficients.
+"""
 function interpolateTrigonometric(a₀, a, b)
 	return mbUtil.vectorize() do x
 		a₀ + reduce(0, 1:length(a)) do I,i

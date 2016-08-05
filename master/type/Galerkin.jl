@@ -1,6 +1,9 @@
-include("$(pwd())/lib/ncmprojFINDINITIALDATA.jl")
-include("$(pwd())/lib/ncmprojMKCONTROLGRID.jl")
+include("$MASTER/lib/ncmprojFINDINITIALDATA.jl")
+include("$MASTER/lib/ncmprojMKCONTROLGRID.jl")
 
+"""
+todo
+"""
 type Galerkin <: SystemCore
 	parent::Session
 	f::Function
