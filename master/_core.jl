@@ -39,7 +39,7 @@ map(include, [
 # sesL = load("lorenz350nodoublings", lorenz, lorenz′, lorenzProjection)
 # save("lorenz", sesL, overwrite=true)
 
-@everywhere include("system/roessler.jl")
+# @everywhere include("system/roessler.jl")
 # ses = create(roessler, Hroessler, Jroessler, roesslerProjection)
 # ses = create(roessler, roessler′, roesslerProjection)
 # ses = load("...", roessler, Hroessler, Jroessler, roesslerProjection)
@@ -66,3 +66,8 @@ Profile.clear()
 end
 ProfileView.view()
 =#
+
+# homokline orbits
+# thompsen steward
+# index fixpoint -> permutation
+# proj T

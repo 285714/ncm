@@ -1,6 +1,6 @@
-function plotintersect(S::Session, c)
+function plotintersect(S::Session, c; its=20000, h=.05)
 	local data
-	rk4((t,x)->ses.core.f(t,[x;c]), .0, 10rand(3), .05, predCount(40000), init=()->(data=Array{Float64}(0,3)), callback=(t,y,f)->(data = [data;y']))
+	rk4((t,x)->S.core.f(t,[x;c]), .0, 10rand(3), h, predCount(its), init=()->(data=Array{Float64}(0,3)), callback=(t,y,f)->(data = [data;y']))
 
 	f = figure()
 	axes(projection="3d")
@@ -26,6 +26,3 @@ function plotintersect(S::Session, c)
 	end
 	PyPlot.draw()
 end
-
-
-plotintersect(ses, 12)
