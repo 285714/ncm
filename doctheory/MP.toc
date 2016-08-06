@@ -1,0 +1,4 @@
+\select@language {USenglish}
+\contentsline {section}{\numberline {1}Introduction}{3}
+\contentsline {section}{\numberline {2}Finding Periodic Solutions, Galerkin's Method}{4}
+\contentsline {section}{\numberline {3}Tracing Periodic Solutions, Predictor-Corrector Continuation}{5}
