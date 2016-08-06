@@ -237,10 +237,36 @@ function pushBranch(V::GalerkinViz, b::Branch)
 
 	function reducer(A,a)
 		sA,sa = size(A,2), size(a,2)
-		sA ≠ sa && warn("in-branch change in number of projected points")
-		s = max(sA,sa)
-		A,a = A[:,(0:s-1)%sA+1], a[:,(0:s-1)%sa+1]
-		# a = a[munkres([ norm(A[end,i]-a[1,j]) for i in 1:s, j in 1:s ])] sA != sa && println("changing number of projection points")
+
+		if sA ≠ sa
+			warn("in-branch change in number of projected points")
+			tA,ta = vec(A[end,:]), vec(a)
+
+			# find repetitions of elements of A s.t. norm(A[is]-B) is minimal
+			function align(A,B)
+				m,n = length(A), length(B)
+				@assert m < n
+				d(a,b) = norm(a-b)
+				M = fill(Inf,m,n)
+				M[1,1] = d(A[1],B[1])
+				for j in 2:n-m+1 M[1,j] = M[1,j-1] + d(A[1],B[j]) end
+				for i in 2:m, j in i:n-m+i
+					M[i,j] = min(M[i-1,j-1], M[i,j-1]) + d(A[i],B[j])
+				end
+				is = [m]
+				for j in n-1:-1:1
+					i = is[1]
+					unshift!(is, i ≠ 1 ? M[i-1,j] ≤ M[i,j] ? i-1 : i : 1)
+				end
+				return is
+			end
+
+			if sA>sa
+				a = ta[align(ta,tA)]'
+			else
+				A = A[:,align(tA,ta)]
+			end
+		end
 
 		return vcat(A,a)
 	end
@@ -368,9 +394,6 @@ function plotBranch(V::GalerkinViz, B::Branch)
 	PyPlot.draw()
 	return
 end
-
-
-
 
 
 

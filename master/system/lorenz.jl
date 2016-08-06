@@ -21,7 +21,7 @@ lorenz′(t,v) = [
 	d = sqrt(β*(ρ-1))
 	scatter3D([d;-d], [d;-d], ρ-1, edgecolors="none", c="r")
 
-	ts,fs,ns = lorenzProjectionInternal(interps(unwrap(v)[1]),ρ,length(v)÷6*2)
+	ts,fs,ns = lorenzProjectionInternal(v)
 	tmp = transpose(reduce(hcat, fs))
 	scatter3D(tmp[:,1],tmp[:,2],tmp[:,3])
 end
@@ -30,17 +30,21 @@ end
 # takes 2π-periodic functions, n > Nyquist rate
 # returns set of scalars to distinguish solutions
 #TODO oversampling?
-@noinline function lorenzProjectionInternal(ftmp,ρ,N)
+@noinline function lorenzProjectionInternal(V)
+	W,ω,ρ = unwrap(V)
+	m = size(W,1)-1
+	ftmp,N = interps(W), 2m
+
 	d = sqrt(β*(ρ-1))
 	A,B = [d;d;ρ-1],[-d;-d;ρ-1]
 	const p = 0.08872374069251765
 	T = linspace(-pi+p,pi+p,2N)
 
-	pA(t) = ftmp[1](t) + ftmp[2](t) + 2d #ftmp[1](t) - ftmp[2](t) #ftmp[3](t) - ρ + 1 ... interesting
-	pB(t) = ftmp[1](t) + ftmp[2](t) - 2d
+	pA(t) = ftmp[3](t) - (ρ+7) #ftmp[1](t) + ftmp[2](t) + 2d #ftmp[1](t) - ftmp[2](t) #ftmp[3](t) - ρ + 1 ... interesting
+	# pB(t) = ftmp[1](t) + ftmp[2](t) - 2d
 	t₀ = T[1]
 	a₀ = pA(T[1])
-	b₀ = pB(T[1])
+	# b₀ = pB(T[1])
 
 	ts,fs,ns = [],[],[]
 	for t in T[2:end]
@@ -52,13 +56,13 @@ end
 		end
 		a₀ = tmp
 
-		tmp = pB(t)
-		if b₀ ≤ 0 < tmp
-			push!(ts, bisection(pB, t₀, t))
-			push!(fs, map(g->g(ts[end]), ftmp))
-			push!(ns, -norm(fs[end]-B))
-		end
-		b₀ = tmp
+		# tmp = pB(t)
+		# if b₀ ≤ 0 < tmp
+		# 	push!(ts, bisection(pB, t₀, t))
+		# 	push!(fs, map(g->g(ts[end]), ftmp))
+		# 	push!(ns, -norm(fs[end]-B))
+		# end
+		# b₀ = tmp
 
 		t₀ = t
 	end
@@ -66,7 +70,8 @@ end
 	return ts, fs, sort(ns)
 end
 
-@noinline lorenzProjection(ftmp,ρ,N) = lorenzProjectionInternal(ftmp,ρ,N)[3]
+@noinline lorenzProjection(V) = lorenzProjectionInternal(V)[3]
+#@noinline lorenzProjection(V) = [V[end-1]]
 
 
 #=

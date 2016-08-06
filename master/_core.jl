@@ -70,5 +70,5 @@ ProfileView.view()
 
 # homokline orbits
 # thompsen steward
-# index fixpoint -> permutation
+# index fixpoint -> perturbation
 # proj T

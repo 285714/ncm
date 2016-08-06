@@ -135,9 +135,10 @@ function interp(W)
 end
 
 function projection(G::Galerkin, V)
-	W,ω,ℵ = unwrap(V)
-	m = size(W,1)-1
-	return G.projection(interps(W), ℵ, 2m)
+	# W,ω,ℵ = unwrap(V)
+	# m = size(W,1)-1
+	# return G.projection(interps(W), ℵ, 2m)
+	G.projection(V)
 end
 
 
