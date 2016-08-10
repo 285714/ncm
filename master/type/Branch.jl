@@ -1,7 +1,8 @@
 
 
 """
-a series of `Solution`s
+A series of `Solution`s. One can `push`, `unshift`, `pop`, and `shift` new/old `Solution`s
+to/from it.
 """
 type Branch
 	solutions::Vector{Solution}	# ordered

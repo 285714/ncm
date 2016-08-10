@@ -6,6 +6,10 @@ using mbUtil
 """
     findCycle(H, t0, y0, transientIterations, transientStepSize,
 	    steadyStateIterations, steadyStateStepSize)
+Returns all points from the `transientIterations`-times numerical integration of `H` with
+fixed step-size `transientStepSize`, and all points from the `steadyStateIterations`-times
+integration with fixed step-size `steadyStateStepSize` (assuming it hit the steady state
+part), and the periodicity of the found cycle.
 """
 function findCycle(
 	H::Function, t₀::Float64, y₀::Vector,
@@ -49,8 +53,7 @@ end
 
 """
     prepareCycle(data, h, P[, fac])
-
-cut single cycle of length P*fac from data, resample, shift s.t. X(0)≈0, Fourier transform.
+cut single cycle of length `P*fac` from data, resample, shift s.t. `X(0)≈0`, Fourier transform.
 """
 function prepareCycle(data::Array{Float64}, h::Float64, P::Integer; fac::Integer=1)
 	local ω, cyc, y
@@ -77,7 +80,6 @@ end
     findCyclePoincare(F, y[, plane, clusterRating, nIntersections,
 	    maxCycles, sampleSize, transientIterations, transientStepSize,
 		steadyStateStepSize])
-
 extracts a single cycle of the steady state of ode `F` using poincare cuts through
 the `plane`.
 """

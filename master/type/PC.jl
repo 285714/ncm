@@ -1,7 +1,8 @@
 #TODO deleting of solutions does not delete from h.
 
 """
-a predictor-corrector-method with step-size adaption and GUI Controls
+An "implementation" of a `ContinuationMethod` using a predictor-corrector-method with
+step-size adaption. Look up the theoretical documentation for more details.
 """
 type PC <: ContinuationMethod
 	parent::Session

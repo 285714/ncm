@@ -15,6 +15,7 @@ ContinuationMethod
 PC
 SystemCore
 Galerkin
+Project
 Session
 ```
 
@@ -24,9 +25,13 @@ Session
 ### Differentiation
 
 ```@docs
-centralDifference
 forwardDifference
+centralDifference
 broyden
+```
+
+all jacobians can be used in
+```@docs
 newton
 ```
 
@@ -43,8 +48,8 @@ interpolateTrigonometric
 ### GUI
 
 ```@docs
-ctrl
 mkControlGrid
+ctrl
 ```
 
 ### Session Control
@@ -60,14 +65,6 @@ load
 ```@docs
 mbRK.rk
 ```
-
-
-## Examples
-
-### Roessler
-
-### Lorenz
-
 
 
 ## Index
