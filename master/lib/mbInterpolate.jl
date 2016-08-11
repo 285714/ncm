@@ -27,8 +27,8 @@ interpolateLanczos(V, a::Integer, x) = interpolateLanczos(V,a)(x)
 
 """
     interpolateTrigonometric(a₀, a, b)
-returns trigonometric polynomial.
-use with 2a,-2b and divide by 2m+1 to use with rfft coefficients.
+Returns trigonometric polynomial.
+Use with 2a,-2b and divide by 2m+1 to use with rfft coefficients.
 """
 function interpolateTrigonometric(a₀, a, b)
 	return mbUtil.vectorize() do x

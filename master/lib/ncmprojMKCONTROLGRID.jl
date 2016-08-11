@@ -3,7 +3,7 @@
 
 """
     ctrl(D, x)
-Tuple (name::String, ::Type, init, v...)
+Dictionary `D`, Tuple `x=(name::String, ::DataType, init, v...)`; used by mkControlGrid
 """
 function ctrl(D::Dict{AbstractString, Any}, x)
 	local tmp = Void
@@ -54,9 +54,8 @@ end
 
 """
     mkControlGrid(D, C)
-
-creates a grid of controls with labels, handlers and encapsulated storage
-`c` in `C` is Tuple (name::String, ::Type, init, v...)
+Creates a grid of controls with labels, handlers and encapsulated storage (Dictionary `D`)
+`c` in `C` is Tuple `(name::String, ::DataType, init, v...)`
 """
 function mkControlGrid(D::Dict{AbstractString, Any}, C)
 	Control = map(C) do X

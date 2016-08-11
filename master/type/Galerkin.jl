@@ -2,7 +2,9 @@ include("$MASTER/lib/ncmprojFINDINITIALDATA.jl")
 include("$MASTER/lib/ncmprojMKCONTROLGRID.jl")
 
 """
-todo
+"Implementation" of `SystemCore`; Only requires the ode `f` and its derivative `f'`, the
+respective homotopy and its jacobian are derived. Again, look up the theoretical
+documentation for more detail.
 """
 type Galerkin <: SystemCore
 	parent::Session

@@ -5,7 +5,8 @@ export newton, centralDifference, forwardDifference, broyden, bisection
 
 # base function
 """
-    newton(homotopy, jacobian, v₀, ...)
+    newton(homotopy, jacobian, v₀, pred[, init, callback, useOpt])
+Newton's method. For example: `v1 = newton(H, J, v0, predEps(0.001))`.
 """
 function newton(H::Function, J::Function, v₀::Vector{Float64}, pred::Function;
 	init=Void, callback=Void, useOpt::Bool=false)
@@ -41,7 +42,8 @@ end
 
 """
     centralDifference(homotopy, v, epsilon)
-numerical differentiation method
+	centralDifference(homotopy, epsilon)
+Same as `forwardDifference`, but with the symmetric difference quotient.
 """
 function centralDifference(H::Function, v::Vector{Float64}; ϵ::Float64=1e-4)
 	local J = cell(length(v))
@@ -57,7 +59,8 @@ centralDifference(H::Function; ϵ=1e-4) = v -> centralDifference(H, v; ϵ)
 
 """
     forwardDifference(homotopy, v, epsilon)
-numerical differentiation method
+	forwardDifference(homotopy, epsilon)
+Returns the difference quotient in `v` or an approximate jacobian using this method.
 """
 function forwardDifference(H::Function, v::Vector{Float64}; ϵ::Float64=1e-4)
 	local J = cell(length(v))
@@ -81,6 +84,8 @@ forwardDifference(H::Function; ϵ=1e-4) = v -> forwardDifference(H, v; ϵ=ϵ)
 # TODO sequence of evaluation not optimal
 """
     broyden(homotopy, jacobian)
+Creates an approximate jacobian based on broyden-updates and maintainance of an internal
+state. Consider this for performance improvements.
 """
 function broyden(H, J)
 	local H₀,J₀,v₀							# closure

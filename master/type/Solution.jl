@@ -1,5 +1,5 @@
 """
-todo
+A `Solution` comprises a single solution vector and its parent
 """
 type Solution
 	data::Vector{Float64}

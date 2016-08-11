@@ -1,6 +1,7 @@
 # responsible for the interpretation of solutions
 """
-todo
+An abstract type that requires to implement the basic functions needed for path following:
+Homotopy `H`, its jacobian `J` (and `show` to display a GUI)
 """
 abstract SystemCore
 

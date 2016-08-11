@@ -1,5 +1,5 @@
 """
-todo
+Contains all found `Branch`es
 """
 type Project
 	branches::Vector{Branch}	# unordered

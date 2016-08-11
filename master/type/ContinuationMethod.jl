@@ -1,9 +1,7 @@
 """
-    ContinuationMethod..
-
-continuation method implementations extend  `ContinuationMethod`
+Continuation method implementations extend  `ContinuationMethod`
 and the corresponding `show` and `step`.
-responsible for changing the project itself
+Responsible for changing the project itself
 """
 abstract ContinuationMethod
 

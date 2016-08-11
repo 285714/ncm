@@ -11,9 +11,6 @@
         - [GUI](index.md#GUI-1)
         - [Session Control](index.md#Session-Control-1)
         - [ODE](index.md#ODE-1)
-    - [Examples](index.md#Examples-1)
-        - [Roessler](index.md#Roessler-1)
-        - [Lorenz](index.md#Lorenz-1)
     - [Index](index.md#Index-1)
 
 
@@ -26,53 +23,56 @@
 
 
 
-a series of `Solution`s
+A series of `Solution`s. One can `push`, `unshift`, `pop`, and `shift` new/old `Solution`s to/from it.
 
 <a id='Main.Solution' href='#Main.Solution'>#</a>
 **`Main.Solution`** &mdash; *Type*.
 
 
 
-todo
+A `Solution` comprises a single solution vector and its parent
 
 <a id='Main.ContinuationMethod' href='#Main.ContinuationMethod'>#</a>
 **`Main.ContinuationMethod`** &mdash; *Type*.
 
 
 
-```
-ContinuationMethod..
-```
-
-continuation method implementations extend  `ContinuationMethod` and the corresponding `show` and `step`. responsible for changing the project itself
+Continuation method implementations extend  `ContinuationMethod` and the corresponding `show` and `step`. Responsible for changing the project itself
 
 <a id='Main.PC' href='#Main.PC'>#</a>
 **`Main.PC`** &mdash; *Type*.
 
 
 
-a predictor-corrector-method with step-size adaption and GUI Controls
+An "implementation" of a `ContinuationMethod` using a predictor-corrector-method with step-size adaption. Look up the theoretical documentation for more details.
 
 <a id='Main.SystemCore' href='#Main.SystemCore'>#</a>
 **`Main.SystemCore`** &mdash; *Type*.
 
 
 
-todo
+An abstract type that requires to implement the basic functions needed for path following: Homotopy `H`, its jacobian `J` (and `show` to display a GUI)
 
 <a id='Main.Galerkin' href='#Main.Galerkin'>#</a>
 **`Main.Galerkin`** &mdash; *Type*.
 
 
 
-todo
+"Implementation" of `SystemCore`; Only requires the ode `f` and its derivative `f'`, the respective homotopy and its jacobian are derived. Again, look up the theoretical documentation for more detail.
+
+<a id='Main.Project' href='#Main.Project'>#</a>
+**`Main.Project`** &mdash; *Type*.
+
+
+
+Contains all found `Branch`es
 
 <a id='Main.Session' href='#Main.Session'>#</a>
 **`Main.Session`** &mdash; *Type*.
 
 
 
-todo
+Comprises everything needed for path following: `Project`, `SystemCore`, `ContinuationMethod`, and `Visualization`. Sessions can be managed via `create`, `save`, and `load`.
 
 
 <a id='Utility-Functions-1'></a>
@@ -84,17 +84,6 @@ todo
 
 ### Differentiation
 
-<a id='mbNewton.centralDifference' href='#mbNewton.centralDifference'>#</a>
-**`mbNewton.centralDifference`** &mdash; *Function*.
-
-
-
-```
-centralDifference(homotopy, v, epsilon)
-```
-
-numerical differentiation method
-
 <a id='mbNewton.forwardDifference' href='#mbNewton.forwardDifference'>#</a>
 **`mbNewton.forwardDifference`** &mdash; *Function*.
 
@@ -102,9 +91,22 @@ numerical differentiation method
 
 ```
 forwardDifference(homotopy, v, epsilon)
+forwardDifference(homotopy, epsilon)
 ```
 
-numerical differentiation method
+Returns the difference quotient in `v` or an approximate jacobian using this method.
+
+<a id='mbNewton.centralDifference' href='#mbNewton.centralDifference'>#</a>
+**`mbNewton.centralDifference`** &mdash; *Function*.
+
+
+
+```
+centralDifference(homotopy, v, epsilon)
+centralDifference(homotopy, epsilon)
+```
+
+Same as `forwardDifference`, but with the symmetric difference quotient.
 
 <a id='mbNewton.broyden' href='#mbNewton.broyden'>#</a>
 **`mbNewton.broyden`** &mdash; *Function*.
@@ -115,14 +117,21 @@ numerical differentiation method
 broyden(homotopy, jacobian)
 ```
 
+Creates an approximate jacobian based on broyden-updates and maintainance of an internal state. Consider this for performance improvements.
+
+
+all jacobians can be used in
+
 <a id='mbNewton.newton' href='#mbNewton.newton'>#</a>
 **`mbNewton.newton`** &mdash; *Function*.
 
 
 
 ```
-newton(homotopy, jacobian, v₀, ...)
+newton(homotopy, jacobian, v₀, pred[, init, callback, useOpt])
 ```
+
+Newton's method. For example: `v1 = newton(H, J, v0, predEps(0.001))`.
 
 
 <a id='Galerkin-1'></a>
@@ -138,6 +147,8 @@ newton(homotopy, jacobian, v₀, ...)
 findCycle(H, t0, y0, transientIterations, transientStepSize,
     steadyStateIterations, steadyStateStepSize)
 ```
+
+Returns all points from the `transientIterations`-times numerical integration of `H` with fixed step-size `transientStepSize`, and all points from the `steadyStateIterations`-times integration with fixed step-size `steadyStateStepSize` (assuming it hit the steady state part), and the periodicity of the found cycle.
 
 <a id='Main.findCyclePoincare' href='#Main.findCyclePoincare'>#</a>
 **`Main.findCyclePoincare`** &mdash; *Function*.
@@ -161,7 +172,7 @@ extracts a single cycle of the steady state of ode `F` using poincare cuts throu
 prepareCycle(data, h, P[, fac])
 ```
 
-cut single cycle of length P*fac from data, resample, shift s.t. X(0)≈0, Fourier transform.
+cut single cycle of length `P*fac` from data, resample, shift s.t. `X(0)≈0`, Fourier transform.
 
 <a id='mbInterpolate.interpolateLanczos' href='#mbInterpolate.interpolateLanczos'>#</a>
 **`mbInterpolate.interpolateLanczos`** &mdash; *Function*.
@@ -183,23 +194,12 @@ simple periodic (!) Lanczos interpolation
 interpolateTrigonometric(a₀, a, b)
 ```
 
-returns trigonometric polynomial. use with 2a,-2b and divide by 2m+1 to use with rfft coefficients.
+Returns trigonometric polynomial. Use with 2a,-2b and divide by 2m+1 to use with rfft coefficients.
 
 
 <a id='GUI-1'></a>
 
 ### GUI
-
-<a id='Main.ctrl' href='#Main.ctrl'>#</a>
-**`Main.ctrl`** &mdash; *Function*.
-
-
-
-```
-ctrl(D, x)
-```
-
-Tuple (name::String, ::Type, init, v...)
 
 <a id='Main.mkControlGrid' href='#Main.mkControlGrid'>#</a>
 **`Main.mkControlGrid`** &mdash; *Function*.
@@ -210,7 +210,18 @@ Tuple (name::String, ::Type, init, v...)
 mkControlGrid(D, C)
 ```
 
-creates a grid of controls with labels, handlers and encapsulated storage `c` in `C` is Tuple (name::String, ::Type, init, v...)
+Creates a grid of controls with labels, handlers and encapsulated storage (Dictionary `D`) `c` in `C` is Tuple `(name::String, ::DataType, init, v...)`
+
+<a id='Main.ctrl' href='#Main.ctrl'>#</a>
+**`Main.ctrl`** &mdash; *Function*.
+
+
+
+```
+ctrl(D, x)
+```
+
+Dictionary `D`, Tuple `x=(name::String, ::DataType, init, v...)`; used by mkControlGrid
 
 
 <a id='Session-Control-1'></a>
@@ -267,21 +278,6 @@ function(f, t0, y0, h, pred[, init, callback])
 e.g. `rk1`, or `rk4`. Examines the ode `f` starting from `t0`, `y0` with fixed stepsize `h` until `pred` evalutes to `false`.
 
 
-<a id='Examples-1'></a>
-
-## Examples
-
-
-<a id='Roessler-1'></a>
-
-### Roessler
-
-
-<a id='Lorenz-1'></a>
-
-### Lorenz
-
-
 <a id='Index-1'></a>
 
 ## Index
@@ -290,6 +286,7 @@ e.g. `rk1`, or `rk4`. Examines the ode `f` starting from `t0`, `y0` with fixed s
 - [`Main.ContinuationMethod`](index.md#Main.ContinuationMethod)
 - [`Main.Galerkin`](index.md#Main.Galerkin)
 - [`Main.PC`](index.md#Main.PC)
+- [`Main.Project`](index.md#Main.Project)
 - [`Main.Session`](index.md#Main.Session)
 - [`Main.Solution`](index.md#Main.Solution)
 - [`Main.SystemCore`](index.md#Main.SystemCore)
