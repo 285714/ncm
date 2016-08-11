@@ -104,152 +104,21 @@
 
 
 
-\section{Introduction}
-% problem statement
-% motivation
-% general approach
-% (outlook on results)
+\input{intro}
 
-%conventions: lower-scalar, lower,bold-vector, upper,bold-matrix
+\input{modeling}
 
+\input{galerkin}
 
-\section{Modeling Generic Periodic Solutions}
+\input{initial}
 
+\input{continuation}
 
-\section{An Optimality Criterion for Periodic Solutions, Galerkin's Method}
+\input{lorenz}
 
-%stationary?
-Given a system of $n \in \N$ real valued, possibly non-linear, stationary, ordinary, coupled, first-order differential equations $\textbf{x}$
-\[
-	\textbf{x}^\prime = \textbf{f}(t, \textbf{x}) \text{, }
-\]
-we are interested in numerically computed, periodic solutions.
-That is, solutions $\textbf{y}: \R \to \R^n$ which obey $\textbf{y}(t) = \textbf{y}(t+T)$ for all $t \in \R$ and some period $T \in \R$.
-This is the general case, as differential equations of any degree can be converted to a system of degree-$1$ differential equations.
+\input{rössler}
 
-\paragraph{Model} Solution candidates need to be modeled in a certain way.
-The periodicity constraint suggests using a trigonometric polynomial of degree $m \in \N$
-\[
-	\textbf{y} \coloneqq \sum_{k = -m}^m \textbf{y}_k \exp\left(i \omega k t\right) \text{,}
-\]
-where $y_k \in \C$, $y_{-k} = y_k^*$ for $k \in \N$, $-m \le k \le m$, $\omega = \frac{2\pi}T$.
-Solution candidates of this form satisfy $\textbf{y}(t) = \textbf{y}(t+T)$ by definition.
-A function of this form is defined solely by its $m+1$ unique coefficients $\textbf{y}_k$ for $0 \le k \le m$.
-
-\paragraph{Optimality Criterion} Finding good solutions, that is, solutions which at least approximate $\textbf{y}^\prime = \textbf{f}(t, \textbf{y})$, requires a measure of fit of the solution.
-In this case, Galerkin's method takes this role.
-A useful property of the trigonometric polynomial is, that it can be trivially differentiated
-\[
-	\textbf{y}^\prime = \sum_{k = -m}^m i \omega k \textbf{y}_k \exp\left(i \omega k t\right) \text.
-\]
-Employing this property in the definition of the differential equation system yields
-\begin{align*}
-		& \textbf{y}^\prime = \textbf{f}(t,\textbf{y})\\
-	\Leftrightarrow\ & \textbf{f}(t,\textbf{y}) - \textbf{y}^\prime = 0\\
-	\Leftrightarrow\ & \textbf{f}(t,\textbf{y}) - \sum_{k = -m}^m i \omega k \textbf{y}_k \exp\left(i \omega k t\right) = 0 \text.
-\end{align*}
-
-The difference between these two functions is called the \emph{residual} $\textbf{r}(t) \coloneqq \textbf{f}(t,\textbf{y}) - \textbf{y}^\prime$.
-Checking for $\textbf{r}(t) = 0$ would require comparing the two functions at infinitely many points.
-Galerkin's method relaxes the equality requirement such that only projections on a set of so called \emph{trial vectors}, needs to be zero.
-This is equivalent to requiring a projection of $\textbf{r}(t)$ onto the subspace spanned by the trial vectors to be zero.
-Choosing the complex oscillations as a basis for the subspace is again a solid choice: The residual is periodic as well, because of they are orthogonal, many terms can cancel each other out, and it allows us to employ the FFT for many of these operations.
-
-\paragraph{System of Equations} Because we are only interested in real systems, this yields $m+1$ equations, one for each trial vector $v = \exp\left( i \omega k t \right)$ for $0 \le k \le m$
-\[
-	\langle r , v \rangle = \langle \textbf{f}(t,\textbf{y}), v \rangle - i \omega k \textbf{y}_k \text.
-\]
-However, there are $m+2$ variables: $m+1$ unique coefficients and $\omega$.
-This represents the situation, that at this point there is still one degree of freedom: Each phase shifted version of a solution is still a solution.
-We thus introduce another generic equation called the \emph{anchor} equation, which basically chooses one of these solutions.
-In this case $\textbf{y}_1(0) = 0$ is used:
-For $t = 0$, the solution needs to intersect the hyperplane defined by being zero in the first component.
-This can be formulated by requiring the corresponding coefficients to sum up to zero.
-The anchor equation needs to be adapted to the system considered: If there are no intersections with this plane, another equation needs to be chosen.
-
-
-
-
-
-
-\section{Finding Periodic Solutions}
-
-A separate problem from evaluating, optimizing and continuing periodic solutions is finding an initial candidate solution.
-Because continuation is a crucial part of this project, having just one single periodic solution might enable to find many others, through tracing and switching solution branches.
-Because the systems considered in this work have stable periodic solutions, we focus on this case.
-When this is not the case, as mentioned in the section about continuation methods (\autoref{sec:cont}), a homotopy between a trivial system and the target system, combined with continuation methods, might be a promising approach.
-
-Starting from a point in the periodic solution's basin of attraction, one can simply forward integrate such a system.
-There are several possible problems involved:
-\begin{itemize}
-	\item Forward integration can accumulate errors.
-	\item Even if the starting point would lie exactly on the periodic trajectory the sampling interval would probably not be an integer fraction of the period of the periodic trajectory.
-		Thus, periodicity in the sequence of points does not immediately aid in finding periodicity in the system.
-	\item Given the nature of the project, it is very likely that period doubling bifurcations are encountered.
-		These provoke situations where two periodic solutions exist (though probably not both stable) which are difficult to distinguish.
-	\item \textbf{TODO} fix %TODO fix
-\end{itemize}
-Forward integration gives us a sequence of points in phase space $(\textbf{s}_i)_{i \in \N}$.
-
-To obtain more manageable data only intersections of the trajectory with a hyperplane $p(\textbf{x}) = \langle \textbf{n}, \textbf{x}_0 - \textbf{x} \rangle = 0$ in a single direction are considered (so called Poincaré sections).
-For that, $\textbf{s}_i, \textbf{s}_{i+1} = \textbf{s}_i + h_0 \cdot \textbf{f}(\textbf{s}_i)$ with $p(s_i) \le 0 < p(s_{i+1})$ are searched.
-Because of continuity, there needs to exists $h \in [0,h_0]$ such that $p(\textbf{s}_i + h \cdot \textbf{f}(\textbf{s}_i)) = 0$, which is found via bisection.
-Let $(\textbf{u}_i)_{i \in \N}$ be the sequence of intersections.
-
-To find the number of intersections per period, the intersections are partitioned into $k \in \N$ disjoint clusters $V_{k,i} = \{ \textbf{u}_m\ |\ m \in k\N+i \}$ for $i \in \N$, $i \le k$.
-The relative quality of the $i$-th cluster can then be assessed using the within-cluster variance $\sum_{v \in V_{k,i} } ||v - \E(V_{k,i})||^2$.
-The correct number $k_{\text{min}} \in \N$ of intersections in one period is then taken to be the one minimizing the sum of within-cluster variances:
-\[
-	k_\text{min} \coloneqq \argmin_{k \in \N} \sum_{i = 1}^k \sum_{v \in V_{k,i} } ||v - \E(V_{k,i})||^2 \text.
-\]
-For further information on these measures see \cite{halkidi2001clustering}. %TODO measure...
-
-In this form the criterion might at best work if the intersection sequence is infinite.
-When dealing with finite sequences increasing the number of clusters inevitably leads to lower total within-cluster variances.
-It is thus necessary to constrain the available values for $k$ and discourage the method of overestimating the number of clusters.
-Trivially an upper limit for $k$ needs to be introduced.
-Furthermore, the minimality criterion needs to be relaxed: Suppose there are $k_\text{min}$ intersections per period, then all possible choices for $k \in k_\text{min}\N$ yield equal or lower ratings.
-One thus wants to choose the minimum $k$ which is in some sense still almost optimal.
-
-
-
-
-
-
-\section{Tracing Periodic Solutions, Predictor-Corrector Continuation}
-\label{sec:cont}
-
-A central part of this project are numerical continuation methods.
-Being a large topic, the details are out of the scope of this work, we thus concentrate on conveying a general idea of the concepts.
-This is especially true for the wealth of methods from other fields, numerical continuation draws upon.
-Among the things required in the following are basic knowledge of Newton's method in multiple dimensions, forward integrating differential equations (Runge-Kutta methods) and basic vector calculus (Jacobian matrix).
-For a more thorough introduction to the topic, please refer to~\cite{allgower1990numerical}, on which the continuation part of project and this section of this document is based.
-
-The base of numerical continuation is formed by the fact that in the vicinity of a solution of an underdetermined continuous system, there are almost always other, similar solutions.
-Iterative application of this, in the context of systems having one constraint less than unknowns, yields that solutions of the system form a curve (which might be closed).
-Continuation methods provide means to trace these curves, and thus to derive infinitely many other solutions from a single given solution.
-A very central use-case of such a method is being able to numerically solve a system without requiring an otherwise needed good starting value.
-This works by continuously blending two systems with equal numbers of unknowns and equations using a homotopy, which adds one degree of freedom.
-This way, a known solution from a system can be traced to one of the harder system.
-However, in the context of this work, where the underdetermination occurs naturally, we are not interested in single solutions but rather in obtaining the whole continua of solutions.
-
-This project uses a single continuation method: The predictor-corrector method.
-As the name suggests, it continues the solution curves, by predicting the next point on the curve through linearization at the current point, and afterwards correct it, to compensate for the non-linear influences.
-
-
-%implicit function theorem
-
-
-\section{Case Study: Lorenz System}
-
-
-\section{Case Study: Rössler System}
-
-
-\section{Outlook}
-
-Test \cite{allgower1990numerical}
-
+\input{outro}
 
 
 

@@ -1,0 +1,50 @@
+\section{An Optimality Criterion for Periodic Solutions, Galerkin's Method}
+
+%stationary?
+Given a system of $n \in \N$ real valued, possibly non-linear, stationary, ordinary, coupled, first-order differential equations $\textbf{x}$
+\[
+	\textbf{x}^\prime = \textbf{f}(t, \textbf{x}) \text{, }
+\]
+we are interested in numerically computed, periodic solutions.
+That is, solutions $\textbf{y}: \R \to \R^n$ which obey $\textbf{y}(t) = \textbf{y}(t+T)$ for all $t \in \R$ and some period $T \in \R$.
+This is the general case, as differential equations of any degree can be converted to a system of degree-$1$ differential equations.
+
+\paragraph{Model} Solution candidates need to be modeled in a certain way.
+The periodicity constraint suggests using a trigonometric polynomial of degree $m \in \N$
+\[
+	\textbf{y} \coloneqq \sum_{k = -m}^m \textbf{y}_k \exp\left(i \omega k t\right) \text{,}
+\]
+where $y_k \in \C$, $y_{-k} = y_k^*$ for $k \in \N$, $-m \le k \le m$, $\omega = \frac{2\pi}T$.
+Solution candidates of this form satisfy $\textbf{y}(t) = \textbf{y}(t+T)$ by definition.
+A function of this form is defined solely by its $m+1$ unique coefficients $\textbf{y}_k$ for $0 \le k \le m$.
+
+\paragraph{Optimality Criterion} Finding good solutions, that is, solutions which at least approximate $\textbf{y}^\prime = \textbf{f}(t, \textbf{y})$, requires a measure of fit of the solution.
+In this case, Galerkin's method takes this role.
+A useful property of the trigonometric polynomial is, that it can be trivially differentiated
+\[
+	\textbf{y}^\prime = \sum_{k = -m}^m i \omega k \textbf{y}_k \exp\left(i \omega k t\right) \text.
+\]
+Employing this property in the definition of the differential equation system yields
+\begin{align*}
+		& \textbf{y}^\prime = \textbf{f}(t,\textbf{y})\\
+	\Leftrightarrow\ & \textbf{f}(t,\textbf{y}) - \textbf{y}^\prime = 0\\
+	\Leftrightarrow\ & \textbf{f}(t,\textbf{y}) - \sum_{k = -m}^m i \omega k \textbf{y}_k \exp\left(i \omega k t\right) = 0 \text.
+\end{align*}
+
+The difference between these two functions is called the \emph{residual} $\textbf{r}(t) \coloneqq \textbf{f}(t,\textbf{y}) - \textbf{y}^\prime$.
+Checking for $\textbf{r}(t) = 0$ would require comparing the two functions at infinitely many points.
+Galerkin's method relaxes the equality requirement such that only projections on a set of so called \emph{trial vectors}, needs to be zero.
+This is equivalent to requiring a projection of $\textbf{r}(t)$ onto the subspace spanned by the trial vectors to be zero.
+Choosing the complex oscillations as a basis for the subspace is again a solid choice: The residual is periodic as well, because of they are orthogonal, many terms can cancel each other out, and it allows us to employ the FFT for many of these operations.
+
+\paragraph{System of Equations} Because we are only interested in real systems, this yields $m+1$ equations, one for each trial vector $v = \exp\left( i \omega k t \right)$ for $0 \le k \le m$
+\[
+	\langle r , v \rangle = \langle \textbf{f}(t,\textbf{y}), v \rangle - i \omega k \textbf{y}_k \text.
+\]
+However, there are $m+2$ variables: $m+1$ unique coefficients and $\omega$.
+This represents the situation, that at this point there is still one degree of freedom: Each phase shifted version of a solution is still a solution.
+We thus introduce another generic equation called the \emph{anchor} equation, which basically chooses one of these solutions.
+In this case $\textbf{y}_1(0) = 0$ is used:
+For $t = 0$, the solution needs to intersect the hyperplane defined by being zero in the first component.
+This can be formulated by requiring the corresponding coefficients to sum up to zero.
+The anchor equation needs to be adapted to the system considered: If there are no intersections with this plane, another equation needs to be chosen.

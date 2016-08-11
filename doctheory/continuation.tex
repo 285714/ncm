@@ -1,0 +1,22 @@
+\section{Tracing Periodic Solutions, Predictor-Corrector Continuation}
+\label{sec:cont}
+
+A central part of this project are numerical continuation methods.
+Being a large topic, the details are out of the scope of this work, we thus concentrate on conveying a general idea of the concepts.
+This is especially true for the wealth of methods from other fields, numerical continuation draws upon.
+Among the things required in the following are basic knowledge of Newton's method in multiple dimensions, forward integrating differential equations (Runge-Kutta methods) and basic vector calculus (Jacobian matrix).
+For a more thorough introduction to the topic, please refer to~\cite{allgower1990numerical}, on which the continuation part of project and this section of this document is based.
+
+The base of numerical continuation is formed by the fact that in the vicinity of a solution of an underdetermined continuous system, there are almost always other, similar solutions.
+Iterative application of this, in the context of systems having one constraint less than unknowns, yields that solutions of the system form a curve (which might be closed).
+Continuation methods provide means to trace these curves, and thus to derive infinitely many other solutions from a single given solution.
+A very central use-case of such a method is being able to numerically solve a system without requiring an otherwise needed good starting value.
+This works by continuously blending two systems with equal numbers of unknowns and equations using a homotopy, which adds one degree of freedom.
+This way, a known solution from a system can be traced to one of the harder system.
+However, in the context of this work, where the underdetermination occurs naturally, we are not interested in single solutions but rather in obtaining the whole continua of solutions.
+
+This project uses a single continuation method: The predictor-corrector method.
+As the name suggests, it continues the solution curves, by predicting the next point on the curve through linearization at the current point, and afterwards correct it, to compensate for the non-linear influences.
+
+
+%implicit function theorem
