@@ -35,7 +35,7 @@ The difference between these two functions is called the \emph{residual} $\textb
 Checking for $\textbf{r}(t) = 0$ would require comparing the two functions at infinitely many points.
 Galerkin's method relaxes the equality requirement such that only projections on a set of so called \emph{trial vectors}, needs to be zero.
 This is equivalent to requiring a projection of $\textbf{r}(t)$ onto the subspace spanned by the trial vectors to be zero.
-Choosing the complex oscillations as a basis for the subspace is again a solid choice: The residual is periodic as well, because of they are orthogonal, many terms can cancel each other out, and it allows us to employ the FFT for many of these operations.
+Choosing the complex oscillations as a basis for the subspace again is a solid choice: The residual is periodic as well, because of orthogonality, many terms can cancel each other out, and it allows us to employ the FFT for many of the operations.
 
 \paragraph{System of Equations} Because we are only interested in real systems, this yields $m+1$ equations, one for each trial vector $v = \exp\left( i \omega k t \right)$ for $0 \le k \le m$
 \[

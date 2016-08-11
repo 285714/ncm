@@ -1,14 +1,19 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{}
 
-\bibitem{allgower1990numerical}
-Eugene~L. Allgower and Kurt Georg.
+\bibitem[Allgower and Georg, 1990]{allgower1990numerical}
+Allgower, E.~L. and Georg, K. (1990).
 \newblock {\em Numerical Continuation Methods: An Introduction}.
-\newblock Springer Verlag Berlin Heidelberg, 1990.
+\newblock Springer Verlag Berlin Heidelberg.
 
-\bibitem{halkidi2001clustering}
-Maria Halkidi, Yannis Batistakis, and Michalis Vazirgiannis.
+\bibitem[Davidenko, 1953]{davidenko1953new}
+Davidenko, D. (1953).
+\newblock On a new method of numerical solution of systems of nonlinear
+  equations.
+\newblock In {\em Dokl. Akad. Nauk SSSR}, volume~88, pages 601--602.
+
+\bibitem[Halkidi et~al., 2001]{halkidi2001clustering}
+Halkidi, M., Batistakis, Y., and Vazirgiannis, M. (2001).
 \newblock On clustering validation techniques.
-\newblock {\em Journal of intelligent information systems}, 17(2-3):107--145,
-  2001.
+\newblock {\em Journal of intelligent information systems}, 17(2-3):107--145.
 
 \end{thebibliography}

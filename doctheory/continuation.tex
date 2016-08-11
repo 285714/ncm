@@ -1,13 +1,16 @@
 \section{Tracing Periodic Solutions, Predictor-Corrector Continuation}
 \label{sec:cont}
 
+%TODO bold convention
+
 A central part of this project are numerical continuation methods.
 Being a large topic, the details are out of the scope of this work, we thus concentrate on conveying a general idea of the concepts.
 This is especially true for the wealth of methods from other fields, numerical continuation draws upon.
 Among the things required in the following are basic knowledge of Newton's method in multiple dimensions, forward integrating differential equations (Runge-Kutta methods) and basic vector calculus (Jacobian matrix).
 For a more thorough introduction to the topic, please refer to~\cite{allgower1990numerical}, on which the continuation part of project and this section of this document is based.
+The following is a reduced introduction of the concepts used for this project. %TODO too much, reformulate
 
-The base of numerical continuation is formed by the fact that in the vicinity of a solution of an underdetermined continuous system, there are almost always other, similar solutions.
+The base of numerical continuation is formed by the fact that in the vicinity of a solution of an underdetermined continuous system, there are almost always other, similar solutions. %almost? always?
 Iterative application of this, in the context of systems having one constraint less than unknowns, yields that solutions of the system form a curve (which might be closed).
 Continuation methods provide means to trace these curves, and thus to derive infinitely many other solutions from a single given solution.
 A very central use-case of such a method is being able to numerically solve a system without requiring an otherwise needed good starting value.
@@ -16,7 +19,48 @@ This way, a known solution from a system can be traced to one of the harder syst
 However, in the context of this work, where the underdetermination occurs naturally, we are not interested in single solutions but rather in obtaining the whole continua of solutions.
 
 This project uses a single continuation method: The predictor-corrector method.
-As the name suggests, it continues the solution curves, by predicting the next point on the curve through linearization at the current point, and afterwards correct it, to compensate for the non-linear influences.
+As the name suggests, it continues the solution curves, by predicting the next point on the curve through linearization at the current point, and afterwards correcting it, to compensate for the non-linear influences.
+
+For a matrix $A \in \R^{N \times (N+1)}$ with full rank, let $\tang(A) \in \R^{N+1}$ denote its \emph{tangent}, that is the unique vector with
+	\begin{itemize}
+		\item $\displaystyle A \cdot \tang(A) = 0$
+		\item $\displaystyle ||\tang(A)|| = 1$
+		\item $\displaystyle \det \begin{pmatrix}
+			A\\
+			\tang(A)^T
+		\end{pmatrix} > 0$
+	\end{itemize}
+For a given function $H: \R^{N+1} \to \R^N$ for $N \in \N$, let $J: \R^{N+1} \to \R^{N \times (N+1)}$ denote its Jacobian.
+The tangent can be used to define an initial value problem specific to $H$, the Davidenko equation (\cite{davidenko1953new}): %TODO spacing?!
+	\begin{itemize}
+		\item $\displaystyle \dot c = \tang(J(c))$ %TODO scrap dot notation for consistency?
+		\item $\displaystyle c(0) = c_0 \in \R^{N+1}$
+	\end{itemize}
+Solutions $c: \R \to \R^{N+1}$ to this problem satisfy $H(c(t)) = \text{const}$ for all $t \in \R$, as can be seen on
+	\[
+		\frac{d}{dt} H(c(t)) = J(c(t)) \cdot \dot c(t) = J(c(t)) \cdot t(J(c(t))) = 0 \text.
+	\]
+
+From a theoretical perspective, the Davidenko equation is the sole thing needed for continuation.
+Tracing solutions becomes a matter of finding a solution for the differential equation.
+In a practical setting, this also includes the same numerical obstacles, and ignores that the underlying functions $H$ and $J$ are known.
+Numerically integrating the Davidenko equation is the prediction part as indicated earlier.
+It introduces errors, such that the constancy is no longer guaranteed.
+However, since $H$ and $J$ are known, we are able to find a point close to the predicted trajectory, and correct it, such that a genuinely constant curve can be found.
+
+The correction part of the method uses a variant of Newton's method, working in multiple dimensions and with non-square Jacobians.
+Finding roots using Newton's method in multiple dimensions works similar to the single dimensional case: A function is linearized, and the root of the linear problem is considered a good approximation of a root of the more complex problem.
+In non-degenerate cases, iterating this procedure quickly converges to a root, the fixed points of this iteration.
+
+First we consider function $H: \R^N \to \R^N$ with square Jacobian $J: \R^N \to \R^{N \times N}$.
+In point $x_i \in \R^N$ the next point $x_{i+1} \in \R^N$ is defined as the root of the linearization in $x_i$, $x \mapsto H(x_i) + J(x_i) \cdot (x - x_i) \stackrel!= 0$, which becomes
+	\[
+		x_{i+1} \coloneqq x_i - H(x_i) J^{-1}(x_i) \text.
+	\]
+
+Generalizing the method to non-square Jacobians involves finding a substitute for inverting the Jacobian, which is not defined for non-square matrices.
+This can be done using \emph{Moore-Penrose} pseudoinverse.
+
 
 
 %implicit function theorem
