@@ -17,8 +17,8 @@ Class=LaTeXView
 Document=MP.tex
 
 [Frame0_View0,0]
-TopLine=65
-Cursor=3898
+TopLine=175
+Cursor=11139
 
 [SessionInfo]
 FrameCount=1

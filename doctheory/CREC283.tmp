@@ -1,0 +1,156 @@
+\documentclass[a4paper,oneside,10pt]{article}
+
+\usepackage[USenglish]{babel} %francais, polish, spanish, ...
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\usepackage{lmodern} %Type1-font for non-english texts and characters
+\usepackage{graphicx} %%For loading graphic files
+
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{mathtools}
+
+\usepackage{color}
+\definecolor{mygray}{rgb}{0.3,0.3,0.3}
+
+
+\usepackage{listings}
+\lstset{ %
+  basicstyle=\footnotesize,        % the size of the fonts that are used for the code
+  breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+  breaklines=false,                 % sets automatic line breaking
+  captionpos=b,                    % sets the caption-position to bottom
+  deletekeywords={...},            % if you want to delete keywords from the given language
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+  keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+  keywordstyle=\color{mygray},       % keyword style
+  language=C,      			           % the language of the code
+  otherkeywords={*,each,Start,Loop,until,Input,Output},           % if you want to add more keywords to the set
+  numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+  numbersep=5pt,                   % how far the line-numbers are from the code
+  numberstyle=\tiny\color{mygray}, % the style that is used for the line-numbers
+  rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+  showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+  showstringspaces=false,          % underline spaces within strings only
+  showtabs=false,                  % show tabs within strings adding particular underscores
+  stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
+  stringstyle=\color{mymauve},     % string literal style
+  tabsize=2,	                   % sets default tabsize to 2 spaces
+  title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+\renewcommand\lstlistingname{Algorithm}% Listing -> Algorithm
+\renewcommand\lstlistlistingname{List of \lstlistingname s}% List of Listings -> List of Algorithms
+
+
+\usepackage{caption}
+\DeclareCaptionFormat{myformat}{#1#2#3\hspace{.5mm}\color{mygray}\hrulefill}
+\captionsetup[figure]{format=myformat}
+\captionsetup[lstlisting]{format=myformat}
+
+\newcommand\note[1]{}
+\newcommand\R{\mathbb{R}}
+\newcommand\N{\mathbb{N}}
+\newcommand\C{\mathbb{C}}
+\newcommand\Z{\mathbb{Z}}
+\newcommand\Q{\mathbb{Q}}
+
+\newcommand\F{\mathcal{F}}
+\DeclareMathOperator*\argmin{arg\,min}
+\DeclareMathOperator*\argmax{arg\,max}
+
+\parskip.5\baselineskip
+\parindent0mm
+
+
+\let\oldsection\section
+\renewcommand\section{\clearpage\oldsection}
+
+
+%\usepackage{natbib}
+\usepackage{cite}
+
+
+
+
+\begin{document}
+
+
+\title{Using Numerical Continuation Methods and Galerkin's Method for Finding and Tracing Periodic Solutions in Nonlinear Dynamic Systems} %CITE
+\author{Fabian Späh \and Mats Bosshammer}
+\date{SS 2016}
+\maketitle
+\thispagestyle{empty} %No headings for the first pages.
+
+
+% abstract!
+
+\pagebreak
+
+\thispagestyle{empty} %No headings for the first pages.
+\raggedbottom
+\tableofcontents %Table of contents
+%\cleardoublepage %The first chapter should start on an odd page.
+
+\pagebreak
+\pagestyle{plain} %Now display headings: headings / fancy / ...
+\flushbottom
+
+
+
+\section{Introduction}
+% problem statement
+% motivation
+% general approach
+% (outlook on results)
+
+%conventions: lower-scalar, lower,bold-vector, upper,bold-matrix
+
+\section{Finding Periodic Solutions}
+
+
+\section{Modeling Generic Periodic Solutions}
+
+
+\section{An Optimality Criterion for Periodic Solutions, Galerkin's Method}
+
+Given a system of $n \in \N$ real valued, ordinary, possibly non-linear differential equations $x$ of degree $d \in \N$
+\[
+	\textbf{x}^{(d)} = f(t, \textbf{x}^{(0)},...,\textbf{x}^{(d-1)}) \text{, }
+\]
+we are interested in numerically computed, periodic solutions.
+That is, a solution $y: \R \to \R^n$ shall obey $y(t) = y(t+T)$ for all $t \in \R$ and some period $T \in \R$.
+
+For numerical optimization, solution candidates need to be modeled in a certain way.
+The periodicity constraint suggests using Fourier series
+\[
+	y \coloneqq \sum_{i = 0}^n y_i \exp(i \frac{2\pi}{n} i t)
+\]
+
+
+
+\section{Tracing Periodic Solutions, Predictor-Corrector Continuation}
+
+
+\section{Case Study: Lorenz System}
+
+
+\section{Case Study: Rössler System}
+
+
+\section{Outlook}
+
+Test \cite{allgower1990numerical}
+
+
+
+
+\bibliography{bibliography}{}
+\bibliographystyle{plain}
+
+
+
+
+\end{document}
