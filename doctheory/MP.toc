@@ -5,8 +5,8 @@
 \contentsline {paragraph}{Model}{5}{section*.2}
 \contentsline {paragraph}{Optimality Criterion}{5}{section*.3}
 \contentsline {paragraph}{System of Equations}{6}{section*.4}
-\contentsline {section}{\numberline {4}Finding Periodic Solutions}{7}{section.4}
-\contentsline {section}{\numberline {5}Tracing Periodic Solutions, Predictor-Corrector Continuation}{9}{section.5}
-\contentsline {section}{\numberline {6}Case Study: Lorenz System}{11}{section.6}
-\contentsline {section}{\numberline {7}Case Study: R\IeC {\"o}ssler System}{12}{section.7}
-\contentsline {section}{\numberline {8}Outlook}{13}{section.8}
+\contentsline {section}{\numberline {4}Finding Periodic Solutions}{8}{section.4}
+\contentsline {section}{\numberline {5}Tracing Periodic Solutions, Predictor-Corrector Continuation}{10}{section.5}
+\contentsline {section}{\numberline {6}Case Study: Lorenz System}{12}{section.6}
+\contentsline {section}{\numberline {7}Case Study: R\IeC {\"o}ssler System}{13}{section.7}
+\contentsline {section}{\numberline {8}Outlook}{14}{section.8}

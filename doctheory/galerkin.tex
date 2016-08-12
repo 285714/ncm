@@ -1,50 +1,106 @@
 \section{An Optimality Criterion for Periodic Solutions, Galerkin's Method}
 
-%stationary?
-Given a system of $n \in \N$ real valued, possibly non-linear, stationary, ordinary, coupled, first-order differential equations $\textbf{x}$
-\[
-	\textbf{x}^\prime = \textbf{f}(t, \textbf{x}) \text{, }
-\]
+%stationary? ordinary?
+Given a system of $n \in \N$ real valued, possibly non-linear, stationary, ordinary, coupled, first-order differential equations $\mathbf{x}$
+	\begin{equation} \label{eq:SDE}
+		\mathbf{x}^\prime = \mathbf{f}(t, \mathbf{x}) \text{, }
+	\end{equation}
 we are interested in numerically computed, periodic solutions.
-That is, solutions $\textbf{y}: \R \to \R^n$ which obey $\textbf{y}(t) = \textbf{y}(t+T)$ for all $t \in \R$ and some period $T \in \R$.
+That is, solutions $\mathbf{y}: \R \to \R^n$ which obey $\mathbf{y}(t) = \mathbf{y}(t+T)$ for all $t \in \R$ and some period $T \in \R$.
 This is the general case, as differential equations of any degree can be converted to a system of degree-$1$ differential equations.
 
 \paragraph{Model} Solution candidates need to be modeled in a certain way.
-The periodicity constraint suggests using a trigonometric polynomial of degree $m \in \N$
-\[
-	\textbf{y} \coloneqq \sum_{k = -m}^m \textbf{y}_k \exp\left(i \omega k t\right) \text{,}
-\]
-where $y_k \in \C$, $y_{-k} = y_k^*$ for $k \in \N$, $-m \le k \le m$, $\omega = \frac{2\pi}T$.
-Solution candidates of this form satisfy $\textbf{y}(t) = \textbf{y}(t+T)$ by definition.
-A function of this form is defined solely by its $m+1$ unique coefficients $\textbf{y}_k$ for $0 \le k \le m$.
+The periodicity constraint suggests using a multidimensional trigonometric polynomial of degree $m \in \N$
+	\[
+		\mathbf{y} \coloneqq \sum_{k = -m}^m \mathbf{y}_k \exp\left(i \omega k t\right) \text{,}
+	\]
+where $\mathbf{y}_k \in \C$, $\mathbf{y}_{-k} = \Re(\mathbf{y}_k) - i \Im(\mathbf{y}_k)$ for $k \in \N$, $-m \le k \le m$, $\omega = \frac{2\pi}T$.
+Solution candidates of this form satisfy $\mathbf{y}(t) = \mathbf{y}(t+T)$ by definition.
+A function of this form is defined solely by its $m+1$ unique coefficients $\mathbf{y}_k$ for $0 \le k \le m$.
 
-\paragraph{Optimality Criterion} Finding good solutions, that is, solutions which at least approximate $\textbf{y}^\prime = \textbf{f}(t, \textbf{y})$, requires a measure of fit of the solution.
+\paragraph{Optimality Criterion} Finding good solutions, that is, functions $\mathbf{y}$ which at least approximate $\mathbf{y}^\prime = \mathbf{f}(t, \mathbf{y})$, requires a measure of fit of the solution.
 In this case, Galerkin's method takes this role.
 A useful property of the trigonometric polynomial is, that it can be trivially differentiated
-\[
-	\textbf{y}^\prime = \sum_{k = -m}^m i \omega k \textbf{y}_k \exp\left(i \omega k t\right) \text.
-\]
+	\[
+		\mathbf{y}^\prime = \sum_{k = -m}^m i \omega k \mathbf{y}_k \exp\left(i \omega k t\right) \text.
+	\]
 Employing this property in the definition of the differential equation system yields
-\begin{align*}
-		& \textbf{y}^\prime = \textbf{f}(t,\textbf{y})\\
-	\Leftrightarrow\ & \textbf{f}(t,\textbf{y}) - \textbf{y}^\prime = 0\\
-	\Leftrightarrow\ & \textbf{f}(t,\textbf{y}) - \sum_{k = -m}^m i \omega k \textbf{y}_k \exp\left(i \omega k t\right) = 0 \text.
-\end{align*}
+	\begin{align*}
+			& \mathbf{y}^\prime = \mathbf{f}(t,\mathbf{y})\\
+		\Leftrightarrow\ & \mathbf{f}(t,\mathbf{y}) - \mathbf{y}^\prime = 0\\
+		\Leftrightarrow\ & \mathbf{f}(t,\mathbf{y}) - \sum_{k = -m}^m i \omega k \mathbf{y}_k \exp\left(i \omega k t\right) = 0 \text.
+	\end{align*}
 
-The difference between these two functions is called the \emph{residual} $\textbf{r}(t) \coloneqq \textbf{f}(t,\textbf{y}) - \textbf{y}^\prime$.
-Checking for $\textbf{r}(t) = 0$ would require comparing the two functions at infinitely many points.
+The difference between these two functions is called the \emph{residual} $\mathbf{r}(t) \coloneqq \mathbf{f}(t,\mathbf{y}) - \mathbf{y}^\prime$.
+Checking for $\mathbf{r}(t) = 0$ would require comparing the two functions at infinitely many points. %TODO fix... not changed by galerkin
 Galerkin's method relaxes the equality requirement such that only projections on a set of so called \emph{trial vectors}, needs to be zero.
-This is equivalent to requiring a projection of $\textbf{r}(t)$ onto the subspace spanned by the trial vectors to be zero.
-Choosing the complex oscillations as a basis for the subspace again is a solid choice: The residual is periodic as well, because of orthogonality, many terms can cancel each other out, and it allows us to employ the FFT for many of the operations.
+This is equivalent to requiring a projection of $\mathbf{r}(t)$ onto the subspace spanned by the trial vectors to be zero.
+Choosing the complex oscillations as a basis for the subspace again is a solid choice: The residual is periodic as well, because of orthogonality many terms can cancel each other out, it allows us to employ the FFT for many operations, and the resulting system of equations is almost balanced.
 
-\paragraph{System of Equations} Because we are only interested in real systems, this yields $m+1$ equations, one for each trial vector $v = \exp\left( i \omega k t \right)$ for $0 \le k \le m$
-\[
-	\langle r , v \rangle = \langle \textbf{f}(t,\textbf{y}), v \rangle - i \omega k \textbf{y}_k \text.
-\]
+\paragraph{System of Equations} Because we are only interested in real systems, this yields $m+1$ equations, one for each trial vector $\mathbf{v}_k = \exp\left( i \omega k t \right)$ for $0 \le k \le m$
+% = 0
+	\begin{align*}
+		& \langle \mathbf{r} , \mathbf{v}_k \rangle \\
+		=\ & \langle \mathbf{f}(t,\mathbf{y}), \mathbf{v}_k \rangle - \langle \mathbf{y}^\prime, \mathbf{v}_k \rangle \\
+		=\ & \langle \mathbf{f}(t,\mathbf{y}), \mathbf{v}_k \rangle - i \omega k \mathbf{y}_k \text.
+	\end{align*}
+The last step exploits that there is always exactly one component of the candidate function which is not orthogonal to the trial vectors.
 However, there are $m+2$ variables: $m+1$ unique coefficients and $\omega$.
 This represents the situation, that at this point there is still one degree of freedom: Each phase shifted version of a solution is still a solution.
 We thus introduce another generic equation called the \emph{anchor} equation, which basically chooses one of these solutions.
-In this case $\textbf{y}_1(0) = 0$ is used:
+In this case $\langle \mathbf{y}(0), (\delta_{1i})_{i \in \N_n} \rangle = 0$ is used:
 For $t = 0$, the solution needs to intersect the hyperplane defined by being zero in the first component.
 This can be formulated by requiring the corresponding coefficients to sum up to zero.
 The anchor equation needs to be adapted to the system considered: If there are no intersections with this plane, another equation needs to be chosen.
+
+%motivation tedious, error prone
+When transferring these theoretical constructs to a practical setting, the main change is that solutions $\mathbf{y}$ are not considered as functions of continuous time, but as vectors representing discrete time.
+Let $N = 2m+1$, then
+	\[
+		\mathbf{\mathbf{y}} = \left( \sum_{k=-m}^m \mathbf{y}_k \exp\left(i \frac{2\pi}{N} j k\right) \right)_{0 \le j \le N} \text.
+	\]
+This is no real restriction at that point, as solution candidates are band limited by construction.
+Define the \emph{DFT matrix} $\mathbf F \in \R^{N \times N}$ and the coefficient vector $\mathbf Y \in \left(\C^n\right)^N$
+	\begin{align*}
+		\mathbf{F} &\coloneqq N^{-\frac12} \left( \exp\left(-i \frac{2\pi}{N} j k \right) \right)_{-m \le j,k \le m} \\
+		\mathbf{Y} &\coloneqq \left(\mathbf{y}_k\right)_{0 \le k \le N} \text.
+	\end{align*}
+Note that in this form $\mathbf{F}^{-1} = \mathbf{F}^*$, the DFT matrix is unitary.
+$\mathbf Y$ is a vector of vectors, while somewhat unusual, allows for more concise notation.
+Using these constructs allows us to reformulate
+	\[
+			\mathbf{y} = \mathbf{F^{-1}} \mathbf{Y} \text.
+	\]
+Considering only the equations from Galerkin's method and considering $\omega$ to be known.
+Let $\mathbf K \in \R^{N \times N}$ be the diagonal matrix with entries going from $-m$ to $m$, the system of equations becomes
+	\[
+		\mathbf{F} \mathbf{\tilde f}(\mathbf F^{-1} \mathbf{Y}) - i \omega \mathbf K \mathbf Y = 0\text,
+	\]
+where $\mathbf{\tilde f}: (\R^n)^N \mapsto (\R^n)^N$ simply row wise applies $\mathbf{f}$, the function defining the system of differential equations, see \autoref{eq:SDE}.
+
+Introducing these new constructs might at first glance appear unnecessarily complicated, because the system of equations was already known, and could be used in the state it was in.
+However, an implementation in the basic form would have required different treatment for each dynamic system, while this reworked form is only trivially dependent of the system and the degree of the trigonometric polynomial.
+That is, the auxiliary vectors and matrices are trivially constructed, as is $\mathbf{\tilde f}$ from $\mathbf f$.
+While knowing the system of equations is important, the core task of finding a good solution requires the Jacobian of the system.
+The by far largest advantage is thus, that from this form the Jacobian of the system can be derived easily
+	\begin{align*}
+			& \frac{d}{d \mathbf Y} \left( \mathbf{F} \mathbf{\tilde f}(\mathbf{F}^{-1} \mathbf{Y}) - i \omega \mathbf K \mathbf Y \right) \\
+		=\ & \mathbf{F} \frac{d}{d\mathbf Y}\mathbf{\tilde f}(\mathbf{F}^{-1} \mathbf{Y}) - i \omega \mathbf K \\ 
+		=\ & \mathbf{F} \frac{d\mathbf{\tilde f}}{d\mathbf x}(\mathbf{F}^{-1} \mathbf{Y}) \mathbf{F}^{-1} - i \omega \mathbf K \text.
+	\end{align*}
+The term $\frac{d\mathbf{\tilde f}}{d\mathbf x}$ is a vector-by-vector derivative, which yields a matrix.
+However, because both vector's elements are vectors themselves, the entries of the matrix are again vector-by-vector derivatives.
+The result is thus a diagonal matrix of matrices
+	\[
+		\left(\frac{d\mathbf{\tilde f}}{d\mathbf x}\right)_i^j = \frac{d}{d\mathbf x_j} \mathbf f (\mathbf x_i) = \delta_{ij} \frac{d \mathbf f}{d\mathbf x}(\mathbf x_i) \text,
+	\]
+where $\frac{d \mathbf f}{d\mathbf x}$ is the Jacobian of $\mathbf f$.
+Because of the diagonal structure of the matrix, the term $\frac{d\mathbf{\tilde f}}{d\mathbf x}(\mathbf{F}^{-1} \mathbf{Y}) \mathbf{F}^{-1}$ is essentially a multiplication of each row of $\mathbf F^{-1}$ with a constant.
+This can also be seen as an element wise multiplication of two column vectors, a constant one defined by the diagonal of $\frac{d\mathbf{\tilde f}}{d\mathbf x}(\mathbf{F}^{-1} \mathbf{Y})$ and a column of $\mathbf F^{-1}$.
+Define thus the vector $\mathbf d \coloneqq \frac{d\mathbf{\tilde f}}{d\mathbf x}(\mathbf{F}^{-1} \mathbf{Y}) \cdot (1)_{i \in \N_N}$.
+The columns of $\mathbf F^{-1}$ are $\mathbf c_k = \left(\exp\left(i\frac{2\pi}{N} j k\right)\right)_{-m \le k \le m}$.
+A column of $\mathbf{F} \frac{d\mathbf{\tilde f}}{d\mathbf x}(\mathbf{F}^{-1} \mathbf{Y}) \mathbf{F}^{-1}$ is then the transform of the product of two signals $\mathcal F(\mathbf d \cdot \mathbf c_k)$.
+Because of the structure of $\mathbf c_k$, this corresponds to a simple periodic shift of the discrete signal $\mathbf d$ by $k$ steps
+	\[
+			\mathbf{F} \frac{d\mathbf{\tilde f}}{d\mathbf x}(\mathbf{F}^{-1} \mathbf{Y}) \mathbf{F}^{-1} = \left( \mathbf d_{((i+j))_N} \right)_{0 \le i,j \le N} 
+	\]
