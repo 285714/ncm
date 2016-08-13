@@ -9,4 +9,4 @@
 \contentsline {section}{\numberline {5}Tracing Periodic Solutions, Predictor-Corrector Continuation}{11}{section.5}
 \contentsline {section}{\numberline {6}Case Study: Lorenz System}{13}{section.6}
 \contentsline {section}{\numberline {7}Case Study: R\IeC {\"o}ssler System}{14}{section.7}
-\contentsline {section}{\numberline {8}Outlook}{15}{section.8}
+\contentsline {section}{\numberline {8}Outlook}{16}{section.8}
