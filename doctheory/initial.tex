@@ -9,16 +9,15 @@ Starting from a point in the periodic solution's basin of attraction, one can si
 There are several possible problems involved:
 \begin{itemize}
 	\item Forward integration can accumulate errors.
-	\item Even if the starting point would lie exactly on the periodic trajectory the sampling interval would probably not be an integer fraction of the period of the periodic trajectory.
-		Thus, periodicity in the sequence of points does not immediately aid in finding periodicity in the system.
+	\item Even if the starting point lies exactly on the periodic trajectory, the sampling interval would probably not be an integer fraction of the period of the periodic trajectory.
+		Periodicity in the sequence of points are not directly related to periodicity in the continuous system.
 	\item Given the nature of the project, it is very likely that period doubling bifurcations are encountered.
-		These provoke situations where two periodic solutions exist (though probably not both stable) which are difficult to distinguish.
-	\item \textbf{TODO} fix %TODO fix
+		These provoke situations where two periodic solutions exist which are difficult to distinguish.
 \end{itemize}
-Forward integration gives us a sequence of points in phase space $(\textbf{s}_i)_{i \in \N}$.
 
-To obtain more manageable data only intersections of the trajectory with a hyperplane $p(\textbf{x}) = \langle \textbf{n}, \textbf{x}_0 - \textbf{x} \rangle = 0$ in a single direction are considered (so called Poincaré sections).
-For that, $\textbf{s}_i, \textbf{s}_{i+1} = \textbf{s}_i + h_0 \cdot \textbf{f}(\textbf{s}_i)$ with $p(s_i) \le 0 < p(s_{i+1})$ are searched.
+Forward integration yields a sequence of points in phase space $(\textbf{s}_i)_{i \in \N}$.
+To obtain more manageable data only intersections of the trajectory with a hyperplane $p(\textbf{x}) = \langle \textbf{n}, \textbf{x}-\textbf{x}_0 \rangle = 0$ in a single direction are considered (so called Poincaré sections).
+To find these, $\textbf{s}_i, \textbf{s}_{i+1} = \textbf{s}_i + h_0 \cdot \textbf{f}(\textbf{s}_i)$ with $p(s_i) \le 0 < p(s_{i+1})$ are searched.
 Because of continuity, there needs to exists $h \in [0,h_0]$ such that $p(\textbf{s}_i + h \cdot \textbf{f}(\textbf{s}_i)) = 0$, which is found via bisection.
 Let $(\textbf{u}_i)_{i \in \N}$ be the sequence of intersections.
 
@@ -28,11 +27,11 @@ The correct number $k_{\text{min}} \in \N$ of intersections in one period is the
 \[
 	k_\text{min} \coloneqq \argmin_{k \in \N} \sum_{i = 1}^k \sum_{v \in V_{k,i} } ||v - \E(V_{k,i})||^2 \text.
 \]
-For further information on these measures see \cite{halkidi2001clustering}. %TODO measure...
+For further information about these measures see for example \cite{halkidi2001clustering}. %TODO measure...
 
 In this form the criterion might at best work if the intersection sequence is infinite.
 When dealing with finite sequences increasing the number of clusters inevitably leads to lower total within-cluster variances.
 It is thus necessary to constrain the available values for $k$ and discourage the method of overestimating the number of clusters.
 Trivially an upper limit for $k$ needs to be introduced.
-Furthermore, the minimality criterion needs to be relaxed: Suppose there are $k_\text{min}$ intersections per period, then all possible choices for $k \in k_\text{min}\N$ yield equal or lower ratings.
+Furthermore, the minimality criterion needs to be relaxed: Suppose there are $k_\text{min}$ intersections per period, then all multiples of $k_\text{min}$ yield equal or lower ratings.
 One thus wants to choose the minimum $k$ which is in some sense still almost optimal.
