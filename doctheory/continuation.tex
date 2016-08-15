@@ -7,7 +7,7 @@ A central part of this project are numerical continuation methods.
 Being a large topic, the details are out of the scope of this work, we thus concentrate on conveying a general idea of the concepts.
 This is especially true for the wealth of methods from other fields, numerical continuation draws upon.
 Among the things required in the following are basic knowledge of Newton's method in multiple dimensions, forward integrating differential equations (Runge-Kutta methods) and basic vector calculus (Jacobian matrix).
-For a more thorough introduction to the topic, please refer to~\cite{allgower1990numerical}, on which the continuation part of project and this section of this document is based.
+For a more thorough introduction to the topic, see \cite{allgower1990numerical}, on which the continuation part of project and this section of this document is based.
 The following is a reduced introduction of the concepts used for this project. %TODO too much, reformulate
 
 The base of numerical continuation is formed by the fact that in the vicinity of a solution of an underdetermined continuous system, there are almost always other, similar solutions. %almost? always?
@@ -16,7 +16,7 @@ Continuation methods provide means to trace these curves, and thus to derive inf
 A very central use-case of such a method is being able to numerically solve a system without requiring an otherwise needed good starting value.
 This works by continuously blending two systems with equal numbers of unknowns and equations using a homotopy, which adds one degree of freedom.
 This way, a known solution from a system can be traced to one of the harder system.
-However, in the context of this work, where the underdetermination occurs naturally, we are not interested in single solutions but rather in obtaining the whole continua of solutions.
+However, in the context of this work, where the underdetermination occurs naturally, we are not interested in single solutions, but rather in obtaining the whole continua of solutions.
 
 This project uses a single continuation method: The predictor-corrector method.
 As the name suggests, it continues the solution curves, by predicting the next point on the curve through linearization at the current point, and afterwards correcting it, to compensate for the non-linear influences.
@@ -46,10 +46,10 @@ Tracing solutions becomes a matter of finding a solution for the differential eq
 In a practical setting, this also includes the same numerical obstacles, and ignores that the underlying functions $H$ and $J$ are known.
 Numerically integrating the Davidenko equation is the prediction part as indicated earlier.
 It introduces errors, such that the constancy is no longer guaranteed.
-However, since $H$ and $J$ are known, we are able to find a point close to the predicted trajectory, and correct it, such that a genuinely constant curve can be found.
+However, since $H$ and $J$ are known, the point can be \emph{corrected} towards the constant solution curve.
 
 The correction part of the method uses a variant of Newton's method, working in multiple dimensions and with non-square Jacobians.
-Finding roots using Newton's method in multiple dimensions works similar to the single dimensional case: A function is linearized, and the root of the linear problem is considered a good approximation of a root of the more complex problem.
+Finding zeros using Newton's method in multiple dimensions works similar to the single dimensional case: A function is linearized, and the zero of the linear problem is considered a good approximation of a zeros of the more complex problem.
 In non-degenerate cases, iterating this procedure quickly converges to a root, the fixed points of this iteration.
 
 First we consider function $H: \R^N \to \R^N$ with square Jacobian $J: \R^N \to \R^{N \times N}$.
