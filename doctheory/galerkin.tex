@@ -1,13 +1,13 @@
-\section{An Optimality Criterion using Galerkin's Method}
+\section{Periodic Orbits as Solutions of System of Equations, the Galerkin Operator}
 
 %stationary? ordinary?
-Given a system of $n \in \N$ real valued, possibly non-linear, stationary, ordinary, coupled, first-order differential equations $\mathbf{x}$
+Given a system of $n \in \N$ possibly non-linear, autonomous, ordinary, first-order differential equations $\mathbf{x}$
 	\begin{equation} \label{eq:SDE}
-		\frac{d\mathbf{x}}{dt} = \mathbf{f}(t, \mathbf{x}) \text{, }
+		\frac{d\mathbf{x}}{dt} = \mathbf{f}(t, \mathbf{x}) \text,
 	\end{equation}
 we are interested in numerically computed, periodic solutions.
-That is, solutions $\mathbf{y}: \R \to \R^n$ which obey $\mathbf{y}(t) = \mathbf{y}(t+T)$ for all $t \in \R$ and some period $T \in \R$.
-This is the general case, as differential equations of any degree can be converted to a system of degree-$1$ differential equations.
+That is, solutions $\mathbf{y}: \R \to \C^n$ which obey $\mathbf{y}(t) = \mathbf{y}(t+T)$ for all $t \in \R$ and some period $T \in \R$.
+This is the general case, as differential equations of any degree can be converted to a system of first-order differential equations.
 
 \paragraph{Model} Solution candidates need to be modeled in a certain way.
 The periodicity constraint suggests using a multidimensional trigonometric polynomial of degree $m \in \N$
@@ -18,38 +18,40 @@ where $\mathbf{y}_k \in \C$, $\omega = \frac{2\pi}T$. %$\mathbf{y}_{-k} = \Re(\m
 Solution candidates of this form satisfy $\mathbf{y}(t) = \mathbf{y}(t+T)$ by definition.
 %A function of this form is defined solely by its $m+1$ unique coefficients $\mathbf{y}_k$ for $0 \le k \le m$.
 
-\paragraph{Optimality Criterion} Finding good solutions, that is, functions $\mathbf{y}$ which at least approximate $\mathbf{y}^\prime = \mathbf{f}(t, \mathbf{y})$, requires a measure of fit of the solution.
+\paragraph{Optimality Criterion} Finding good solutions, that is, functions $\mathbf{y}$ which at least approximate $\mathbf{y}^\prime = \mathbf{f}(t, \mathbf{y})$, requires a way of measuring the quality of a solution candidate.
 In this case, Galerkin's method takes this role.
 A useful property of the trigonometric polynomial is, that it can be trivially differentiated
-	\[
-		\frac{d\mathbf{y}}{dt} = \sum_{k = -m}^m i \omega k \mathbf{y}_k \exp\left(i \omega k t\right) \text.
-	\]
+	\begin{equation}
+			\frac{d\mathbf{y}}{dt} = \sum_{k = -m}^m i \omega k \mathbf{y}_k \exp\left(i \omega k t\right) \text.
+	\label{eq:trigondiff}
+	\end{equation}
 Employing this property in the definition of the differential equation system yields
 	\begin{align*}
 			& \frac{d\mathbf{y}}{dt} = \mathbf{f}(t,\mathbf{y})\\
 		\Leftrightarrow\ & \mathbf{f}(t,\mathbf{y}) - \frac{d\mathbf{y}}{dt} = 0\\
 		\Leftrightarrow\ & \mathbf{f}(t,\mathbf{y}) - \sum_{k = -m}^m i \omega k \mathbf{y}_k \exp\left(i \omega k t\right) = 0 \text.
 	\end{align*}
-
 The difference between these two functions is called the \emph{residual} $\mathbf{r}(t) \coloneqq \mathbf{f}(t,\mathbf{y}) - \frac{d\mathbf{y}}{dt}$.
-A candidate $\mathbf y$ is a solution iff $\mathbf r = 0$.
+A candidate $\mathbf y$ is a solution if and only if $\mathbf r = 0$.
 %Checking for $\mathbf{r}(t) = 0$ would require comparing the two functions at infinitely many points. %TODO fix... not changed by galerkin
-In general the solution of the system of differential equations will generally not be representable by a trigonometric polynomial.
+The solution of the system of differential equations will generally not be representable by a trigonometric polynomial.
 The residual can thus not genuinely equal zero.
-Galerkin's method relaxes the equality requirement such that only projections onto a set of so called \emph{trial vectors}, need to vanish.
-This is equivalent to requiring a projection of $\mathbf{r}(t)$ onto the subspace spanned by the trial vectors to be zero.
-Choosing the complex oscillations as a basis for the subspace as well is a solid choice.
+
+\paragraph{Galerkin's Method} Galerkin's method relaxes the equality requirement such that only projections onto a set of so called \emph{trial vectors}, need to vanish.
+This is equivalent to requiring a projection of $\mathbf{r}$ onto the subspace spanned by the trial vectors to be zero.
+Choosing the complex oscillations as a basis for this subspace as well is a solid choice.
 Basically the residual is approximated by a trigonometric polynomial and a solution is required to only minimize this representation.
 There are other factors supporting this choice: The residual is periodic as well, because of orthogonality many terms can cancel each other out, it allows us to employ the FFT for many operations, and the resulting system of equations is almost balanced.
 
-\paragraph{System of Equations} This yields $2m+1$ equations, one for each trial vector $\mathbf{v}_k = \exp\left( i \omega k t \right)$ for $-m \le k \le m$
-	\begin{align*}
-		& \langle \mathbf{r} , \mathbf{v}_k \rangle \\
-		=\ & \langle \mathbf{f}(t,\mathbf{y}), \mathbf{v}_k \rangle - \langle \mathbf{y}^\prime, \mathbf{v}_k \rangle \\
-		=\ & \langle \mathbf{f}(t,\mathbf{y}), \mathbf{v}_k \rangle - i \omega k \mathbf{y}_k \text.
-	\end{align*}
-The last step exploits that there is always exactly one component of the candidate function which is not orthogonal to the trial vectors.
-However, there are $2m+2$ variables: $2m+1$ unique coefficients and $\omega$.
+\paragraph{System of Equations} This yields $N = 2m+1$ equations, one for each trial vector $\mathbf{v}_k = \exp\left( i \omega k t \right)$ for $-m \le k \le m$
+	\begin{align}
+		& \langle \mathbf{r} , \mathbf{v}_k \rangle \nonumber \\
+		=\ & \langle \mathbf{f}(t,\mathbf{y}), \mathbf{v}_k \rangle - \left\langle \frac{d\mathbf{y}}{dt}, \mathbf{v}_k \right\rangle \nonumber \\
+		=\ & \langle \mathbf{f}(t,\mathbf{y}), \mathbf{v}_k \rangle - i \omega k \mathbf{y}_k \label{eq:innerprod} \text.
+	\end{align}
+The last step exploits that the complex exponential functions are orthonormal.
+%The last step exploits that there is always exactly one component in the candidate function' derivative which is not orthogonal to the trial vectors.
+For these $N$ equations, there are $N+1$ variables: $N$ unique coefficients and $\omega$.
 This represents the situation, that at this point there is still one degree of freedom: Each phase shifted version of a solution is still a solution.
 We thus introduce another generic equation called the \emph{anchor} equation, which basically chooses one of these solutions.
 In this case $\langle \mathbf{y}(0), (\delta_{1i})_{i \in \N_n} \rangle = 0$ is used:
@@ -58,8 +60,8 @@ This can be formulated by requiring the corresponding coefficients to sum up to 
 The anchor equation needs to be adapted to the system considered: If there are no intersections with this plane, another equation needs to be chosen.
 
 %motivation tedious, error prone
-When transferring these theoretical constructs to a practical setting, the main change is that solutions $\mathbf{y}$ are not considered to be functions of continuous time, but vectors representing discrete time.
-Let $N = 2m+1$, then
+\paragraph{Discretization} When transferring these theoretical constructs to a practical setting, the main change is that solutions $\mathbf{y}$ are not considered to be functions of continuous time, but vectors representing discrete time.
+Consequently, solution candidates are represented by linear combinations of discrete vectors as well
 	\[
 		\mathbf{\mathbf{y}} = \left( \sum_{k=0}^{N-1} \mathbf{y}_k \exp\left(i \frac{2\pi}{N} j k\right) \right)_{0 \le j \le N-1} \text.
 	\]
@@ -69,18 +71,23 @@ Define the \emph{DFT matrix} $\mathbf F \in \R^{N \times N}$ and the coefficient
 		\mathbf{F} &\coloneqq N^{-1} \left( \exp\left(-i \frac{2\pi}{N} j k \right) \right)_{0 \le j,k \le N-1} \\
 		\mathbf{Y} &\coloneqq \left(\mathbf{y}_k\right)_{0 \le k \le N-1} \text.
 	\end{align*}
-$\mathbf Y$ is a vector of vectors, while somewhat unusual, this allows for more concise notation than notation as a matrix.
+$\mathbf Y$ is a vector of vectors, while somewhat unusual, this allows for more concise notation later on, than notation as a matrix.
 Using these constructs allows us to reformulate
 	\[
 			\mathbf{y} = \mathbf{F^{-1}} \mathbf{Y} \text.
 	\]
 Let $\mathbf K = \diag\left( [0:m]\, ||\, [-m:1] \right)$, where $||$ represents concatenation and the $[a:b]$ notation is shorthand for an integer vector going from $a \in \N$ to $b \in \N$.
-Considering only the equations from projection onto a trial vector and considering $\omega$ to be known the system of equations becomes %TODO define
+Considering only the equations from projections onto trial vectors, and considering $\omega$ to be known the system of equations becomes %TODO define
 	\[
 		\mathbf{F} \mathbf{f}\{\mathbf F^{-1} \mathbf{Y}\} - i \omega \mathbf K \mathbf Y = 0\text,
 	\]
 %where $\mathbf{\tilde f}(\mathbf Y) = \mathbf f\{\mathbf Y\}$ simply row wise applies $\mathbf{f}$, the function defining the system of differential equations (see \autoref{eq:SDE}).
-where $\mathbf{f}$ defines the system of differential equations (see \autoref{eq:SDE})
+where $\mathbf{f}$ defines the system of differential equations (see \autoref{eq:SDE}).
+
+Compare this to \autoref{eq:innerprod}.
+Essentially, $\mathbf{f}\{\mathbf F^{-1} \mathbf{Y}\}$ is a sampled version of $\mathbf f(t,\mathbf y)$.
+Multiplication by $\mathbf F$ corresponds to calculating the inner products with the trial vectors, which are the rows of $\mathbf F$.
+The term $i \omega \mathbf K \mathbf Y$ corresponds to \autoref{eq:trigondiff}, focusing on the coefficients only.
 
 Introducing these new constructs might at first glance appear unnecessarily complicated, because the system of equations was already known, and could be used in the state it was in.
 However, an implementation in the basic form would have required different treatment for each dynamic system, while in this form, it is only trivially dependent of $\mathbf f$ and the degree of the trigonometric polynomial.
@@ -88,7 +95,7 @@ However, an implementation in the basic form would have required different treat
 While knowing the system of equations is important, the core task of finding a good solution requires the Jacobian of the system.
 The large advantage is, that from this form the system can be derived in a general way.
 
-Let $D$ denote a differential operator.
+\paragraph{Deriving the System} Let $D$ denote a differential operator.
 The only variable in the system is $\mathbf Y$, thus
 	\begin{align}
 		& D \left( \mathbf{F} \mathbf{f}\{\mathbf{F}^{-1} \mathbf{Y}\} - i \omega \mathbf K \mathbf Y \right) \nonumber \\

@@ -21,45 +21,69 @@ However, in the context of this work, where the underdetermination occurs natura
 This project uses a single continuation method: The predictor-corrector method.
 As the name suggests, it continues the solution curves, by predicting the next point on the curve through linearization at the current point, and afterwards correcting it, to compensate for the non-linear influences.
 
-For a matrix $A \in \R^{N \times (N+1)}$ with full rank, let $\tang(A) \in \R^{N+1}$ denote its \emph{tangent}, that is the unique vector with
+\paragraph{Davidenko Equation} For a matrix $\mathbf A \in \R^{N \times (N+1)}$ with full rank, let $\tang(\mathbf A) \in \R^{N+1}$ denote its \emph{tangent}, that is the unique vector with
 	\begin{gather*}
-		\displaystyle A \cdot \tang(A) = 0\\
-		\displaystyle ||\tang(A)|| = 1\\
-		\displaystyle \det \begin{pmatrix}
-			A\\
-			\tang(A)^T
+		\mathbf A \cdot \tang(\mathbf A) = 0\\
+		||\tang(\mathbf A)|| = 1\\
+		\det \begin{pmatrix}
+			\mathbf A\\
+			\tang(\mathbf A)^T
 		\end{pmatrix} > 0
 	\end{gather*}
-For a given function $H: \R^{N+1} \to \R^N$ for $N \in \N$, let $J: \R^{N+1} \to \R^{N \times (N+1)}$ denote its Jacobian.
-The tangent can be used to define an initial value problem specific to $H$, the Davidenko equation (\cite{davidenko1953new}): %TODO spacing?!
+For a given function $\mathbf h: \R^{N+1} \to \R^N$ for $N \in \N$, let $\mathbf J: \R^{N+1} \to \R^{N \times (N+1)}$ denote its Jacobian.
+The tangent can be used to define an initial value problem specific to $\mathbf H$, the Davidenko equation (\cite{davidenko1953new}): %TODO spacing?!
 	\begin{gather*}
-		\displaystyle \dot c = \tang(J(c))\\ %TODO scrap dot notation for consistency?
-		\displaystyle c(0) = c_0 \in \R^{N+1}
+		\frac{d}{dt}\mathbf c = \tang(\mathbf J(\mathbf c))\\
+		\mathbf c(0) = \mathbf c_0 \text,
 	\end{gather*}
-Solutions $c: \R \to \R^{N+1}$ to this problem satisfy $H(c(t)) = \text{const}$ for all $t \in \R$, as can be seen on
+for a given $\mathbf c_0 \in \R^{N+1}$.
+Solutions $\mathbf c: \R \to \R^{N+1}$ to this problem satisfy $\mathbf h(\mathbf c(t)) = \text{const}$ for all $t \in \R$, as can be seen on
 	\[
-		\frac{d}{dt} H(c(t)) = J(c(t)) \cdot \dot c(t) = J(c(t)) \cdot t(J(c(t))) = 0 \text.
+		\frac{d}{dt} \mathbf h(\mathbf c) = \mathbf J(\mathbf c) \cdot \frac{d}{dt} \mathbf c = \mathbf J(\mathbf c) \cdot \tang(\mathbf J(\mathbf c)) = 0 \text.
 	\]
 
 From a theoretical perspective, the Davidenko equation is the sole thing needed for continuation.
 Tracing solutions becomes a matter of finding a solution for the differential equation.
-In a practical setting, this also includes the same numerical obstacles, and ignores that the underlying functions $H$ and $J$ are known.
+In a practical setting, this also includes the same numerical obstacles, and ignores that the underlying functions $\mathbf h$ and $\mathbf J$ are known.
 Numerically integrating the Davidenko equation is the prediction part as indicated earlier.
 It introduces errors, such that the constancy is no longer guaranteed.
-However, since $H$ and $J$ are known, the point can be \emph{corrected} towards the constant solution curve.
+However, since $\mathbf h$ and $\mathbf J$ are known, the point can be \emph{corrected} towards the constant solution curve.
 
-The correction part of the method uses a variant of Newton's method, working in multiple dimensions and with non-square Jacobians.
+\paragraph{Newton's Method} The correction part of the method uses a variant of Newton's method, working in multiple dimensions and with non-square Jacobians.
 Finding zeros using Newton's method in multiple dimensions works similar to the single dimensional case: A function is linearized, and the zero of the linear problem is considered a good approximation of a zero of the more complex problem.
 In non-degenerate cases, iterating this procedure quickly converges to a zero, the fixed points of this iteration.
 
-First we consider function $H: \R^N \to \R^N$ with square Jacobian $J: \R^N \to \R^{N \times N}$.
-In point $x_i \in \R^N$ the next point $x_{i+1} \in \R^N$ is defined as the root of the linearization in $x_i$, $x \mapsto H(x_i) + J(x_i) \cdot (x - x_i) \stackrel!= 0$, which becomes
+First we consider function $\mathbf h: \R^N \to \R^N$ with square Jacobian $\mathbf J: \R^N \to \R^{N \times N}$.
+In point $\mathbf x_i \in \R^N$ the next point $\mathbf x_{i+1} \in \R^N$ is defined as the root of the linearization in $\mathbf x_i$, $\mathbf x \mapsto \mathbf H(\mathbf x_i) + \mathbf J(\mathbf x_i) \cdot (\mathbf x - \mathbf x_i)$, which yields
 	\[
-		x_{i+1} \coloneqq x_i - H(x_i) J^{-1}(x_i) \text.
+		\mathbf x_{i+1} \coloneqq \mathbf x_i - \mathbf J^{-1}(\mathbf x_i) \mathbf H(\mathbf x_i) \text.
 	\]
 
-Generalizing the method to non-square Jacobians involves finding a substitute for inverting the Jacobian, which is not defined for non-square matrices.
-This can be done using \emph{Moore-Penrose} pseudoinverse.
+Generalizing the method to $N \times (N+1)$ Jacobians involves finding a substitute for inverting the Jacobian, which is not defined for non-square matrices.
+This can be done using \emph{Moore-Penrose} pseudoinverse for a matrix $\mathbf A \in \R^{N \times (N+1)}$
+	\[
+		\mathbf A^+ \coloneqq \mathbf A^*(\mathbf A \mathbf A^*)^{-1} \text.
+	\]
+As $\mathbf A \mathbf A^+ = (\mathbf A \mathbf A^*)(\mathbf A \mathbf A^*)^{-1} = \mathbf I$ indicates, $\mathbf A^+$ is a right-inverse, such that
+	\[
+		\mathbf x_{i+1} \coloneqq \mathbf x_i - \mathbf J^+(\mathbf x_i) \mathbf H(\mathbf x_i)
+	\]
+can be considered Newtons Method for $N\times (N+1)$ systems.
+The pseudoinverse allows to solve these underdetermined systems in a least squares sense (for details see \cite{allgower1990numerical}), that is,
+	\[
+		\mathbf x = \mathbf A^+ \mathbf b \quad \Leftrightarrow \quad \mathbf ||\mathbf x|| = \min \{ ||\mathbf x||\ |\ \mathbf A \mathbf x = \mathbf b\} \text.
+	\]
+In a practical setting, one can resort to simply solving
+	\[
+		\mathbf J(\mathbf x_i) \mathbf x = \mathbf H(\mathbf x_i)
+	\]
+in this manner, instead of costly inverting the Jacobian.
+
+\paragraph{Broyden Updates} The formulation in terms of the Moore-Penrose pseudoinverse allows to employ the \emph{Broyden} update methods.
+These make it possible to avoid having to calculate the entire Jacobian and solving the possibly huge systems, at the cost of using approximations the Jacobian.
+These updates have not been employed in the implementation of the methods for this project and are out of the scope of this document.
+However, it should be noted, that the vast majority of processing time in the implementation is used for calculating the tangent of the Jacobian, which is required in every predictor and corrector step.
+Broyden updates allow to update the tangent as well, making them a priotity goal for a possible extension of the implementation.
 
 
 

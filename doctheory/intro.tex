@@ -5,3 +5,23 @@
 % (outlook on results)
 
 %conventions: lower-scalar, lower,bold-vector, upper,bold-matrix
+
+Finding periodic orbits in dynamic systems has applications in engineering. %cite
+This project's goal is the implementation and evaluation of methods for this task.
+This document aims at explaining the methods, techniques and ideas used in a concise and connected manner.
+
+The general problem can be described as follows.
+Given a system of differential equations $\frac{d \mathbf x}{dt} = \mathbf f(\mathbf x)$, find solutions $\mathbf y$ such that $\mathbf y(t+T) = \mathbf y(t)$ for all $t \in \R$.
+Finding closed-form representations of these solutions is impossible in general.
+We thus resort to numerical methods for the task.
+
+The tool used for the task of judging whether a given solution is a correct periodic solution is \emph{Galerkin}'s method.
+This is a form of collocation method, allowing to convert a continuous operator equation to a system of equations.
+Solving this possibly non-linear system yields a periodic solution.
+
+Given a periodic solution for a system smoothly depending on a parameter, if the parameter varies only slightly, so will the solution.
+This can be used to track solutions over a broad range of the parameter.
+Projecting the found periodic orbits to a simpler object (for example a set of scalars) allows to plot them against the parameter in a bifurcation diagram.
+This allows to evaluate the global behavior of the system.
+Being able to dynamically create bifurcation diagrams for a given system is a goal of this project.
+
