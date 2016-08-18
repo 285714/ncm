@@ -1,12 +1,11 @@
 \select@language {USenglish}
 \contentsline {section}{\numberline {1}Introduction}{3}{section.1}
-\contentsline {section}{\numberline {2}Modeling Generic Periodic Solutions}{4}{section.2}
-\contentsline {section}{\numberline {3}An Optimality Criterion for Periodic Solutions, Galerkin's Method}{5}{section.3}
-\contentsline {paragraph}{Model}{5}{section*.2}
-\contentsline {paragraph}{Optimality Criterion}{5}{section*.3}
-\contentsline {paragraph}{System of Equations}{6}{section*.4}
-\contentsline {section}{\numberline {4}Finding Periodic Solutions}{9}{section.4}
-\contentsline {section}{\numberline {5}Tracing Periodic Solutions, Predictor-Corrector Continuation}{11}{section.5}
-\contentsline {section}{\numberline {6}Case Study: Lorenz System}{13}{section.6}
-\contentsline {section}{\numberline {7}Case Study: R\IeC {\"o}ssler System}{14}{section.7}
-\contentsline {section}{\numberline {8}Outlook}{16}{section.8}
+\contentsline {section}{\numberline {2}An Optimality Criterion using Galerkin's Method}{4}{section.2}
+\contentsline {paragraph}{Model}{4}{section*.2}
+\contentsline {paragraph}{Optimality Criterion}{4}{section*.3}
+\contentsline {paragraph}{System of Equations}{4}{section*.4}
+\contentsline {section}{\numberline {3}Finding Periodic Solutions}{7}{section.3}
+\contentsline {section}{\numberline {4}Tracing Periodic Solutions, Predictor-Corrector Continuation}{8}{section.4}
+\contentsline {section}{\numberline {5}Case Study: Lorenz System}{10}{section.5}
+\contentsline {section}{\numberline {6}Case Study: R\IeC {\"o}ssler System}{11}{section.6}
+\contentsline {section}{\numberline {7}Outlook}{14}{section.7}

@@ -22,20 +22,20 @@ This project uses a single continuation method: The predictor-corrector method.
 As the name suggests, it continues the solution curves, by predicting the next point on the curve through linearization at the current point, and afterwards correcting it, to compensate for the non-linear influences.
 
 For a matrix $A \in \R^{N \times (N+1)}$ with full rank, let $\tang(A) \in \R^{N+1}$ denote its \emph{tangent}, that is the unique vector with
-	\begin{itemize}
-		\item $\displaystyle A \cdot \tang(A) = 0$
-		\item $\displaystyle ||\tang(A)|| = 1$
-		\item $\displaystyle \det \begin{pmatrix}
+	\begin{gather*}
+		\displaystyle A \cdot \tang(A) = 0\\
+		\displaystyle ||\tang(A)|| = 1\\
+		\displaystyle \det \begin{pmatrix}
 			A\\
 			\tang(A)^T
-		\end{pmatrix} > 0$
-	\end{itemize}
+		\end{pmatrix} > 0
+	\end{gather*}
 For a given function $H: \R^{N+1} \to \R^N$ for $N \in \N$, let $J: \R^{N+1} \to \R^{N \times (N+1)}$ denote its Jacobian.
 The tangent can be used to define an initial value problem specific to $H$, the Davidenko equation (\cite{davidenko1953new}): %TODO spacing?!
-	\begin{itemize}
-		\item $\displaystyle \dot c = \tang(J(c))$ %TODO scrap dot notation for consistency?
-		\item $\displaystyle c(0) = c_0 \in \R^{N+1}$
-	\end{itemize}
+	\begin{gather*}
+		\displaystyle \dot c = \tang(J(c))\\ %TODO scrap dot notation for consistency?
+		\displaystyle c(0) = c_0 \in \R^{N+1}
+	\end{gather*}
 Solutions $c: \R \to \R^{N+1}$ to this problem satisfy $H(c(t)) = \text{const}$ for all $t \in \R$, as can be seen on
 	\[
 		\frac{d}{dt} H(c(t)) = J(c(t)) \cdot \dot c(t) = J(c(t)) \cdot t(J(c(t))) = 0 \text.
@@ -49,8 +49,8 @@ It introduces errors, such that the constancy is no longer guaranteed.
 However, since $H$ and $J$ are known, the point can be \emph{corrected} towards the constant solution curve.
 
 The correction part of the method uses a variant of Newton's method, working in multiple dimensions and with non-square Jacobians.
-Finding zeros using Newton's method in multiple dimensions works similar to the single dimensional case: A function is linearized, and the zero of the linear problem is considered a good approximation of a zeros of the more complex problem.
-In non-degenerate cases, iterating this procedure quickly converges to a root, the fixed points of this iteration.
+Finding zeros using Newton's method in multiple dimensions works similar to the single dimensional case: A function is linearized, and the zero of the linear problem is considered a good approximation of a zero of the more complex problem.
+In non-degenerate cases, iterating this procedure quickly converges to a zero, the fixed points of this iteration.
 
 First we consider function $H: \R^N \to \R^N$ with square Jacobian $J: \R^N \to \R^{N \times N}$.
 In point $x_i \in \R^N$ the next point $x_{i+1} \in \R^N$ is defined as the root of the linearization in $x_i$, $x \mapsto H(x_i) + J(x_i) \cdot (x - x_i) \stackrel!= 0$, which becomes

@@ -1,9 +1,9 @@
-\section{An Optimality Criterion for Periodic Solutions, Galerkin's Method}
+\section{An Optimality Criterion using Galerkin's Method}
 
 %stationary? ordinary?
 Given a system of $n \in \N$ real valued, possibly non-linear, stationary, ordinary, coupled, first-order differential equations $\mathbf{x}$
 	\begin{equation} \label{eq:SDE}
-		\mathbf{x}^\prime = \mathbf{f}(t, \mathbf{x}) \text{, }
+		\frac{d\mathbf{x}}{dt} = \mathbf{f}(t, \mathbf{x}) \text{, }
 	\end{equation}
 we are interested in numerically computed, periodic solutions.
 That is, solutions $\mathbf{y}: \R \to \R^n$ which obey $\mathbf{y}(t) = \mathbf{y}(t+T)$ for all $t \in \R$ and some period $T \in \R$.
@@ -14,43 +14,42 @@ The periodicity constraint suggests using a multidimensional trigonometric polyn
 	\[
 		\mathbf{y} \coloneqq \sum_{k = -m}^m \mathbf{y}_k \exp\left(i \omega k t\right) \text{,}
 	\]
-where $\mathbf{y}_k \in \C$, $\mathbf{y}_{-k} = \Re(\mathbf{y}_k) - i \Im(\mathbf{y}_k)$ for $k \in \N$, $-m \le k \le m$, $\omega = \frac{2\pi}T$.
+where $\mathbf{y}_k \in \C$, $\omega = \frac{2\pi}T$. %$\mathbf{y}_{-k} = \Re(\mathbf{y}_k) - i \Im(\mathbf{y}_k)$ for $k \in \N$, $-m \le k \le m$,
 Solution candidates of this form satisfy $\mathbf{y}(t) = \mathbf{y}(t+T)$ by definition.
-A function of this form is defined solely by its $m+1$ unique coefficients $\mathbf{y}_k$ for $0 \le k \le m$.
+%A function of this form is defined solely by its $m+1$ unique coefficients $\mathbf{y}_k$ for $0 \le k \le m$.
 
 \paragraph{Optimality Criterion} Finding good solutions, that is, functions $\mathbf{y}$ which at least approximate $\mathbf{y}^\prime = \mathbf{f}(t, \mathbf{y})$, requires a measure of fit of the solution.
 In this case, Galerkin's method takes this role.
 A useful property of the trigonometric polynomial is, that it can be trivially differentiated
 	\[
-		\mathbf{y}^\prime = \sum_{k = -m}^m i \omega k \mathbf{y}_k \exp\left(i \omega k t\right) \text.
+		\frac{d\mathbf{y}}{dt} = \sum_{k = -m}^m i \omega k \mathbf{y}_k \exp\left(i \omega k t\right) \text.
 	\]
 Employing this property in the definition of the differential equation system yields
 	\begin{align*}
-			& \mathbf{y}^\prime = \mathbf{f}(t,\mathbf{y})\\
-		\Leftrightarrow\ & \mathbf{f}(t,\mathbf{y}) - \mathbf{y}^\prime = 0\\
+			& \frac{d\mathbf{y}}{dt} = \mathbf{f}(t,\mathbf{y})\\
+		\Leftrightarrow\ & \mathbf{f}(t,\mathbf{y}) - \frac{d\mathbf{y}}{dt} = 0\\
 		\Leftrightarrow\ & \mathbf{f}(t,\mathbf{y}) - \sum_{k = -m}^m i \omega k \mathbf{y}_k \exp\left(i \omega k t\right) = 0 \text.
 	\end{align*}
 
-The difference between these two functions is called the \emph{residual} $\mathbf{r}(t) \coloneqq \mathbf{f}(t,\mathbf{y}) - \mathbf{y}^\prime$.
+The difference between these two functions is called the \emph{residual} $\mathbf{r}(t) \coloneqq \mathbf{f}(t,\mathbf{y}) - \frac{d\mathbf{y}}{dt}$.
 A candidate $\mathbf y$ is a solution iff $\mathbf r = 0$.
 %Checking for $\mathbf{r}(t) = 0$ would require comparing the two functions at infinitely many points. %TODO fix... not changed by galerkin
-In general the solution of the system of differential equations will not be representable by a trigonometric polynomial.
-Galerkin's method relaxes the equality requirement such that only projections on a set of so called \emph{trial vectors}, needs to be zero.
+In general the solution of the system of differential equations will generally not be representable by a trigonometric polynomial.
+The residual can thus not genuinely equal zero.
+Galerkin's method relaxes the equality requirement such that only projections onto a set of so called \emph{trial vectors}, need to vanish.
 This is equivalent to requiring a projection of $\mathbf{r}(t)$ onto the subspace spanned by the trial vectors to be zero.
 Choosing the complex oscillations as a basis for the subspace as well is a solid choice.
 Basically the residual is approximated by a trigonometric polynomial and a solution is required to only minimize this representation.
 There are other factors supporting this choice: The residual is periodic as well, because of orthogonality many terms can cancel each other out, it allows us to employ the FFT for many operations, and the resulting system of equations is almost balanced.
 
-
-\paragraph{System of Equations} Because we are only interested in real systems, this yields $m+1$ equations, one for each trial vector $\mathbf{v}_k = \exp\left( i \omega k t \right)$ for $0 \le k \le m$
-% = 0
+\paragraph{System of Equations} This yields $2m+1$ equations, one for each trial vector $\mathbf{v}_k = \exp\left( i \omega k t \right)$ for $-m \le k \le m$
 	\begin{align*}
 		& \langle \mathbf{r} , \mathbf{v}_k \rangle \\
 		=\ & \langle \mathbf{f}(t,\mathbf{y}), \mathbf{v}_k \rangle - \langle \mathbf{y}^\prime, \mathbf{v}_k \rangle \\
 		=\ & \langle \mathbf{f}(t,\mathbf{y}), \mathbf{v}_k \rangle - i \omega k \mathbf{y}_k \text.
 	\end{align*}
 The last step exploits that there is always exactly one component of the candidate function which is not orthogonal to the trial vectors.
-However, there are $m+2$ variables: $m+1$ unique coefficients and $\omega$.
+However, there are $2m+2$ variables: $2m+1$ unique coefficients and $\omega$.
 This represents the situation, that at this point there is still one degree of freedom: Each phase shifted version of a solution is still a solution.
 We thus introduce another generic equation called the \emph{anchor} equation, which basically chooses one of these solutions.
 In this case $\langle \mathbf{y}(0), (\delta_{1i})_{i \in \N_n} \rangle = 0$ is used:
@@ -70,64 +69,65 @@ Define the \emph{DFT matrix} $\mathbf F \in \R^{N \times N}$ and the coefficient
 		\mathbf{F} &\coloneqq N^{-1} \left( \exp\left(-i \frac{2\pi}{N} j k \right) \right)_{0 \le j,k \le N-1} \\
 		\mathbf{Y} &\coloneqq \left(\mathbf{y}_k\right)_{0 \le k \le N-1} \text.
 	\end{align*}
-$\mathbf Y$ is a vector of vectors, while somewhat unusual, allows for more concise notation than notation as a matrix.
+$\mathbf Y$ is a vector of vectors, while somewhat unusual, this allows for more concise notation than notation as a matrix.
 Using these constructs allows us to reformulate
 	\[
 			\mathbf{y} = \mathbf{F^{-1}} \mathbf{Y} \text.
 	\]
-Considering only the equations from projection onto a trial vector and considering $\omega$ to be known, and let $\mathbf K \in \R^{N \times N}$ be the diagonal matrix with entries going from $0$ to $m$ to $-m$, the system of equations becomes %TODO define
+Let $\mathbf K = \diag\left( [0:m]\, ||\, [-m:1] \right)$, where $||$ represents concatenation and the $[a:b]$ notation is shorthand for an integer vector going from $a \in \N$ to $b \in \N$.
+Considering only the equations from projection onto a trial vector and considering $\omega$ to be known the system of equations becomes %TODO define
 	\[
-		\mathbf{F} \mathbf{\tilde f}(\mathbf F^{-1} \mathbf{Y}) - i \omega \mathbf K \mathbf Y = 0\text,
+		\mathbf{F} \mathbf{f}\{\mathbf F^{-1} \mathbf{Y}\} - i \omega \mathbf K \mathbf Y = 0\text,
 	\]
-where $\mathbf{\tilde f}: (\R^n)^N \mapsto (\R^n)^N$ simply row wise applies $\mathbf{f}$, the function defining the system of differential equations, see \autoref{eq:SDE}.
+%where $\mathbf{\tilde f}(\mathbf Y) = \mathbf f\{\mathbf Y\}$ simply row wise applies $\mathbf{f}$, the function defining the system of differential equations (see \autoref{eq:SDE}).
+where $\mathbf{f}$ defines the system of differential equations (see \autoref{eq:SDE})
 
 Introducing these new constructs might at first glance appear unnecessarily complicated, because the system of equations was already known, and could be used in the state it was in.
-However, an implementation in the basic form would have required different treatment for each dynamic system, while this reworked form is only trivially dependent of the system and the degree of the trigonometric polynomial.
-That is, the auxiliary vectors and matrices are trivially constructed, as is $\mathbf{\tilde f}$ from $\mathbf f$.
+However, an implementation in the basic form would have required different treatment for each dynamic system, while in this form, it is only trivially dependent of $\mathbf f$ and the degree of the trigonometric polynomial.
+%That is, the auxiliary vectors and matrices are trivially constructed, as is $\mathbf{\tilde f}$ from $\mathbf f$.
 While knowing the system of equations is important, the core task of finding a good solution requires the Jacobian of the system.
-The by far largest advantage is that from this form, the system can be derived in a general way.
+The large advantage is, that from this form the system can be derived in a general way.
 
 Let $D$ denote a differential operator.
 The only variable in the system is $\mathbf Y$, thus
 	\begin{align}
-			& D \left( \mathbf{F} \mathbf{\tilde f}(\mathbf{F}^{-1} \mathbf{Y}) - i \omega \mathbf K \mathbf Y \right) \nonumber \\
-		%=\ & \mathbf{F} \frac{d}{d\mathbf Y}\mathbf{\tilde f}(\mathbf{F}^{-1} \mathbf{Y}) - i \omega \mathbf K \\ 
-		=\ & \left(\mathbf{F} \mathbf J_{\mathbf{\tilde f}} \left( \mathbf{F}^{-1} \mathbf{Y} \right) \mathbf{F}^{-1} - i \omega \mathbf K \right) \cdot D \mathbf Y \label{eq:vecsys}\text,
+		& D \left( \mathbf{F} \mathbf{f}\{\mathbf{F}^{-1} \mathbf{Y}\} - i \omega \mathbf K \mathbf Y \right) \nonumber \\
+		=\ & \mathbf{F} \frac{d \mathbf{f}\{\mathbf Y\}}{d\mathbf Y} \left( \mathbf{F}^{-1} \mathbf{Y} \right) \mathbf{F}^{-1} \cdot D \mathbf Y - i \omega \mathbf K \cdot D \mathbf Y \label{eq:vecsys} \text,
 	\end{align}
-	
-	%TODO careful: dY/dY != I
-
-where $\mathbf J_{\mathbf{\tilde f}} \coloneqq \frac{d \mathbf{\tilde f}(\mathbf Y)}{d\mathbf Y}$ is the Jacobian of $\mathbf{\tilde f}$, a vector-by-vector derivative, which yields a matrix.
+%TODO careful: dY/dY != I
+% where $\mathbf J_{\mathbf{\tilde f}} \coloneqq \frac{d \mathbf{f}\{\mathbf Y\}}{d\mathbf Y}$ is the Jacobian of $\mathbf{\tilde f}$, a vector-by-vector derivative, which yields a matrix.
+where $\frac{d \mathbf{f} \{ \mathbf Y \}}{d \mathbf Y}$ is a vector-by-vector derivative, which yields a matrix.
 However, because both vector's elements are vectors themselves, the entries of the matrix are again vector-by-vector derivatives.
 This results in an $N \times N$ matrix of matrices with
 	\[
-			\left(\mathbf J_{\mathbf{\tilde f}}\right)_i^j = \frac{d}{d\mathbf x_j} \mathbf f (\mathbf x_i) = \delta_{ij} \mathbf J_\mathbf f(\mathbf x_i) \text, %TODO fix x
+			\left( \frac{d \mathbf{f}\{\mathbf Y\}}{d\mathbf Y} \right)_i^j = \frac{d}{d\mathbf Y_j} \mathbf f (\mathbf Y_i) = \delta_{ij} \frac{d \mathbf f(\mathbf x)}{d \mathbf x}(\mathbf Y_i) \text, %TODO fix x
 	\]
-where $\mathbf J _ \mathbf f \coloneqq \frac{d \mathbf f(\mathbf x)}{d\mathbf x}$ is the Jacobian of $\mathbf f$.
-The matrix $\mathbf J_{\mathbf{\tilde f}}$ is diagonal, thus
-	\[
-		\mathbf J _ \mathbf{\tilde f} (\mathbf Y) = \diag\left( \left(\mathbf J _ \mathbf f \left(\mathbf Y_i\right) \right)_{i \in \N_N} \right)
-	\]
-Because different cells of $\mathbf J_{\mathbf f}$ are independent, the expression for the Jacobian of the whole system can be considered separately for each partial derivative in $\mathbf J _\mathbf f$.
+where $\frac{d \mathbf f(\mathbf x)}{d\mathbf x}$ is the Jacobian of $\mathbf f$.
+% The matrix $\mathbf J_{\mathbf{\tilde f}}$ is diagonal, thus
+% 	\[
+% 		\mathbf J _ \mathbf{\tilde f} (\mathbf Y) = \diag\left( \left(\mathbf J _ \mathbf f \left(\mathbf Y_i\right) \right)_{i \in \N_N} \right)
+% 	\]
+At no point different cells of $\frac{d \mathbf f(\mathbf x)}{d\mathbf x}$ interact.
+Hence, the expression for the Jacobian of the whole system can be considered separately for each partial derivative in the Jacobian of $\mathbf f$.
 For $k,l \in \N_n$ define the $N \times N$ diagonal matrix which extracts a single partial derivative
 	\[
 		\mathbf A_{kl}(\mathbf Y) = \diag\left( \left(\frac{\partial f_k}{\partial x_l} \left(\mathbf Y_i\right)\right)_{i \in \N_N} \right) \text.
 	\]
 For each $k$ and $l$ \autoref{eq:vecsys} then becomes
 	\begin{equation}
-		\left( \mathbf{F} \mathbf A_{kl}(\mathbf{F}^{-1} \mathbf{Y}) \mathbf{F}^{-1} - i \omega \mathbf K \right) \cdot D \mathbf Y
+		\left( \mathbf{F} \mathbf A_{kl}(\mathbf{F}^{-1} \mathbf{Y}) \mathbf{F}^{-1} - i \delta_{kl} \omega \mathbf K \right) \cdot D \mathbf Y
 	\label{eq:syssingle}
 	\end{equation}
 This expression is again free of nested vectors.
 
 %Because of the diagonal structure of the matrix, the term $\frac{d\mathbf{\tilde f}}{d\mathbf x}(\mathbf{F}^{-1} \mathbf{Y}) \mathbf{F}^{-1}$ is essentially a multiplication of each row of $\mathbf F^{-1}$ with a constant.
 Because $\mathbf A_{kl}(\mathbf{F}^{-1} \mathbf{Y})$ is diagonal, $\mathbf A_{kl}(\mathbf{F}^{-1} \mathbf{Y}) \mathbf{F}^{-1}$ is the rows of $\mathbf F^{-1}$ each multiplied by a constant.
-This can also be seen as an element wise multiplication of the columns of $\mathbf F^{-1}$ by a column vector defined by the diagonal of $\mathbf A_{kl}(\mathbf{F}^{-1} \mathbf{Y})$:
+This can also be seen as an element wise multiplication of the columns $\mathbf c_k$ of $\mathbf F^{-1}$ by a column vector $\mathbf d$ defined by the diagonal of $\mathbf A_{kl}(\mathbf{F}^{-1} \mathbf{Y})$
 	\begin{align*}
 		&\mathbf c_k \coloneqq \left(\exp\left(i\frac{2\pi}{N} j k\right)\right)_{0 \le j \le N-1}\\
 		&\mathbf d \coloneqq \frac{\partial f_k}{\partial x_l} \{\mathbf Y\} \text.
-	\end{align*}	
-A column of $\mathbf{F} \mathbf J_{\mathbf{\tilde f}} \left( \mathbf{F}^{-1} \mathbf{Y} \right) \mathbf{F}^{-1}$ is then the transform of the product of two signals $\mathcal F(\mathbf d \cdot \mathbf c_k)$.
+	\end{align*}
+A column of $\mathbf{F} \mathbf A_{kl}(\mathbf{F}^{-1} \mathbf{Y}) \mathbf{F}^{-1}$ is then the transform of the product of two signals $\mathcal F(\mathbf d \cdot \mathbf c_k)$.
 Because of the structure of $\mathbf c_k$, this corresponds to a simple periodic shift of the Fourier coefficients of the discrete signal $\mathbf d$ by $k$ steps.
 Using this for every column of the complete term yields
 	\[
@@ -135,3 +135,13 @@ Using this for every column of the complete term yields
 	\]
 that is, a simple circulant matrix.
 
+Rebuilding the complete derivative from these matrices is a matter of subtracting the remaining diagonal term and merging the results.
+% The general form of \autoref{eq:syssingle} is $\mathbf G = \mathbf M \cdot D \mathbf Y$.
+The differential operator $D$ has been left undefined and \autoref{eq:syssingle} most of the term is independent of the choice of $D$.
+This is important, because in an optimization setting real and imaginary parts of the Fourier coefficients need to be treated separately.
+% That is, derivatives of $\frac{d \Re \mathbf G}{d\Re \mathbf Y}$, $\frac{d \Im \mathbf G}{d\Re \mathbf Y}$, $\frac{d \Re \mathbf G}{d\Im \mathbf Y}$, $\frac{d \Im \mathbf G}{d\Im \mathbf Y}$ will be required.
+However, all these cases can be reduced to $D = \frac{d}{d \mathbf Y}$
+\begin{align*}
+	\frac{d \Re}{d\Re \mathbf Y} = \Re \frac{d}{d \mathbf Y} &&& \frac{d \Re}{d\Im \mathbf Y} = -\Im \frac{d}{d \mathbf Y}\\
+	\frac{d \Im}{d\Re \mathbf Y} = \Im \frac{d}{d \mathbf Y} &&& \frac{d \Im}{d\Im \mathbf Y} = \Re \frac{d}{d \mathbf Y} \text.
+\end{align*}
