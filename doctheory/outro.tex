@@ -1,1 +1,29 @@
-\section{Outlook}
+\section{Results \& Outlook}
+
+The project's goals of interactively creating bifurcation diagrams using Galerkin's method and continuation methods could be met.
+There are some further points of interest.
+On a practical level, one of the things an implementation of the sort of this project might benefit from are Broyden updates.
+In its basic form, the method allows to update the Jacobian of the system of equations obtained from the Galerkin operator.
+Though calculating the Jacobian is a time-consuming task, this is of minor interest, as the effort is negligible compared to the effort for inverting the Jacobian, which is needed for each computation of the tangent.
+
+One of the main sources of complications are orbits which change their direction too fast.
+As is the case in the Rössler system for high values of $\gamma$ and in the Lorenz System for low values of $\rho$. %pics
+In these regions the optimization procedure converges slowly and the predictor-corrector method's step-size adaption suggests very small steps (as seen from the bifurcation view).
+There is a variety of possible reasons
+\begin{description}
+	\item[Numerical] Certain values, for example in the Jacobian, are not representable sufficiently precise.
+	\item[Modeling] A trigonometric polynomial of finite degree can not be used to model infinitely sharp turns.
+		The numerical cause is likely to be a consequence of this choice for a model.
+\end{description}
+No attempts were made to investigate the definite cause of this behavior, however, choosing a model which is more adapted to these challenges might allow for more accurate results in these areas.
+Furthermore, solution branches could be traced further, as these effects are a cause of stopping the tracing of solutions in the Rössler, as well as in the Lorenz system. %ref
+While in the case of the Rössler system this is less of a problem, as the solutions for high $\gamma$ did not appear to reveal anything of immediate interest, in the Lorenz system the behavior prohibited tracing the solutions in the $\rho \in (0,2)$ area.
+It is this area, where there is a huge amount of interaction between the branches of solutions.
+
+Modeling the trajectories as linear combinations of non-equidistant B-splines instead of complex oscillations might yield interesting results. %cite
+\begin{itemize}
+	\item The periodicity requirement can be enforced by choosing the basis vectors appropriately.
+	\item Through adaption of the knots, the degree of smoothness can be varied to the point being $C^0$ only.
+		This can be done by changing \emph{multiplicities} of knots, that is, by having several knots be equal.
+		An interesting point is that this change in continuity can occur dynamically through optimizing the knot vector.
+\end{itemize}

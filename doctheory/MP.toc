@@ -14,4 +14,4 @@
 \contentsline {paragraph}{Broyden Updates}{9}{section*.10}
 \contentsline {section}{\numberline {5}Case Study: Lorenz System}{10}{section.5}
 \contentsline {section}{\numberline {6}Case Study: R\IeC {\"o}ssler System}{11}{section.6}
-\contentsline {section}{\numberline {7}Outlook}{14}{section.7}
+\contentsline {section}{\numberline {7}Results \& Outlook}{14}{section.7}
