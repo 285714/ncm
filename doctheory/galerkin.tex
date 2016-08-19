@@ -14,11 +14,11 @@ The periodicity constraint suggests using a multidimensional trigonometric polyn
 	\[
 		\mathbf{y} \coloneqq \sum_{k = -m}^m \mathbf{y}_k \exp\left(i \omega k t\right) \text{,}
 	\]
-where $\mathbf{y}_k \in \C$, $\omega = \frac{2\pi}T$. %$\mathbf{y}_{-k} = \Re(\mathbf{y}_k) - i \Im(\mathbf{y}_k)$ for $k \in \N$, $-m \le k \le m$,
+where $\mathbf{y}_k \in \C^n$, $\omega = \frac{2\pi}T$. %$\mathbf{y}_{-k} = \Re(\mathbf{y}_k) - i \Im(\mathbf{y}_k)$ for $k \in \N$, $-m \le k \le m$,
 Solution candidates of this form satisfy $\mathbf{y}(t) = \mathbf{y}(t+T)$ by definition.
 %A function of this form is defined solely by its $m+1$ unique coefficients $\mathbf{y}_k$ for $0 \le k \le m$.
 
-\paragraph{Optimality Criterion} Finding good solutions, that is, functions $\mathbf{y}$ which at least approximate $\mathbf{y}^\prime = \mathbf{f}(t, \mathbf{y})$, requires a way of measuring the quality of a solution candidate.
+\paragraph{Optimality Criterion} Finding good solutions, that is, functions $\mathbf{y}$ which at least approximate $\mathbf{y}^\prime = \mathbf{f}(t, \mathbf{y})$, requires a way of judging whether a solution candidate is indeed a correct solution.
 In this case, Galerkin's method takes this role.
 A useful property of the trigonometric polynomial is, that it can be trivially differentiated
 	\begin{equation}
@@ -66,17 +66,17 @@ Consequently, solution candidates are represented by linear combinations of disc
 		\mathbf{\mathbf{y}} = \left( \sum_{k=0}^{N-1} \mathbf{y}_k \exp\left(i \frac{2\pi}{N} j k\right) \right)_{0 \le j \le N-1} \text.
 	\]
 This is no real limitation at that point, as solution candidates are band limited by construction.
-Define the \emph{DFT matrix} $\mathbf F \in \R^{N \times N}$ and the coefficient vector $\mathbf Y \in \left(\C^n\right)^N$
+Define the \emph{DFT matrix} $\mathbf F \in \R^{N \times N}$, the coefficient vector $\mathbf Y \in \left(\C^n\right)^N$ and an diagonal matrix $\mathbf K \in \R^{N\times N}$
 	\begin{align*}
 		\mathbf{F} &\coloneqq N^{-1} \left( \exp\left(-i \frac{2\pi}{N} j k \right) \right)_{0 \le j,k \le N-1} \\
-		\mathbf{Y} &\coloneqq \left(\mathbf{y}_k\right)_{0 \le k \le N-1} \text.
+		\mathbf{Y} &\coloneqq \left(\mathbf{y}_k\right)_{0 \le k \le N-1} \\
+		\mathbf K &\coloneqq \diag\left( [0:m]\, ||\, [-m:-1] \right) \text.
 	\end{align*}
 $\mathbf Y$ is a vector of vectors, while somewhat unusual, this allows for more concise notation later on, than notation as a matrix.
 Using these constructs allows us to reformulate
 	\[
 			\mathbf{y} = \mathbf{F^{-1}} \mathbf{Y} \text.
 	\]
-Let $\mathbf K = \diag\left( [0:m]\, ||\, [-m:1] \right)$, where $||$ represents concatenation and the $[a:b]$ notation is shorthand for an integer vector going from $a \in \N$ to $b \in \N$.
 Considering only the equations from projections onto trial vectors, and considering $\omega$ to be known the system of equations becomes %TODO define
 	\[
 		\mathbf{F} \mathbf{f}\{\mathbf F^{-1} \mathbf{Y}\} - i \omega \mathbf K \mathbf Y = 0\text,
@@ -95,11 +95,11 @@ However, an implementation in the basic form would have required different treat
 While knowing the system of equations is important, the core task of finding a good solution requires the Jacobian of the system.
 The large advantage is, that from this form the system can be derived in a general way.
 
-\paragraph{Deriving the System} Let $D$ denote a differential operator.
+\paragraph{Deriving the System} %Let $D$ denote a differential operator.
 The only variable in the system is $\mathbf Y$, thus
 	\begin{align}
-		& D \left( \mathbf{F} \mathbf{f}\{\mathbf{F}^{-1} \mathbf{Y}\} - i \omega \mathbf K \mathbf Y \right) \nonumber \\
-		=\ & \mathbf{F} \frac{d \mathbf{f}\{\mathbf Y\}}{d\mathbf Y} \left( \mathbf{F}^{-1} \mathbf{Y} \right) \mathbf{F}^{-1} \cdot D \mathbf Y - i \omega \mathbf K \cdot D \mathbf Y \label{eq:vecsys} \text,
+		& \frac{d}{d\mathbf Y} \left( \mathbf{F} \mathbf{f}\{\mathbf{F}^{-1} \mathbf{Y}\} - i \omega \mathbf K \mathbf Y \right) \nonumber \\
+		=\ & \mathbf{F} \frac{d \mathbf{f}\{\mathbf Y\}}{d\mathbf Y} \left( \mathbf{F}^{-1} \mathbf{Y} \right) \mathbf{F}^{-1} - i \omega \mathbf K (\delta_{ij} \mathbf I_n)_{i,j \in \N_N} \label{eq:vecsys} \text,
 	\end{align}
 %TODO careful: dY/dY != I
 % where $\mathbf J_{\mathbf{\tilde f}} \coloneqq \frac{d \mathbf{f}\{\mathbf Y\}}{d\mathbf Y}$ is the Jacobian of $\mathbf{\tilde f}$, a vector-by-vector derivative, which yields a matrix.
@@ -122,7 +122,7 @@ For $k,l \in \N_n$ define the $N \times N$ diagonal matrix which extracts a sing
 	\]
 For each $k$ and $l$ \autoref{eq:vecsys} then becomes
 	\begin{equation}
-		\left( \mathbf{F} \mathbf A_{kl}(\mathbf{F}^{-1} \mathbf{Y}) \mathbf{F}^{-1} - i \delta_{kl} \omega \mathbf K \right) \cdot D \mathbf Y
+		\mathbf{F} \mathbf A_{kl}(\mathbf{F}^{-1} \mathbf{Y}) \mathbf{F}^{-1} - i \delta_{kl} \omega \mathbf K
 	\label{eq:syssingle}
 	\end{equation}
 This expression is again free of nested vectors.
@@ -134,7 +134,7 @@ This can also be seen as an element wise multiplication of the columns $\mathbf 
 		&\mathbf c_k \coloneqq \left(\exp\left(i\frac{2\pi}{N} j k\right)\right)_{0 \le j \le N-1}\\
 		&\mathbf d \coloneqq \frac{\partial f_k}{\partial x_l} \{\mathbf Y\} \text.
 	\end{align*}
-A column of $\mathbf{F} \mathbf A_{kl}(\mathbf{F}^{-1} \mathbf{Y}) \mathbf{F}^{-1}$ is then the transform of the product of two signals $\mathcal F(\mathbf d \cdot \mathbf c_k)$.
+A column of $\mathbf{F} \mathbf A_{kl}(\mathbf{F}^{-1} \mathbf{Y}) \mathbf{F}^{-1}$ is then the DFT of the product of two signals $\mathcal F(\mathbf d \cdot \mathbf c_k)$.
 Because of the structure of $\mathbf c_k$, this corresponds to a simple periodic shift of the Fourier coefficients of the discrete signal $\mathbf d$ by $k$ steps.
 Using this for every column of the complete term yields
 	\[
@@ -144,10 +144,12 @@ that is, a simple circulant matrix.
 
 Rebuilding the complete derivative from these matrices is a matter of subtracting the remaining diagonal term and merging the results.
 % The general form of \autoref{eq:syssingle} is $\mathbf G = \mathbf M \cdot D \mathbf Y$.
-The differential operator $D$ has been left undefined and \autoref{eq:syssingle} most of the term is independent of the choice of $D$.
-This is important, because in an optimization setting real and imaginary parts of the Fourier coefficients need to be treated separately.
+%The differential operator $D$ has been left undefined and \autoref{eq:syssingle} most of the term is independent of the choice of $D$.
+%This is important, because in an optimization setting real and imaginary parts of the Fourier coefficients need to be treated separately.
 % That is, derivatives of $\frac{d \Re \mathbf G}{d\Re \mathbf Y}$, $\frac{d \Im \mathbf G}{d\Re \mathbf Y}$, $\frac{d \Re \mathbf G}{d\Im \mathbf Y}$, $\frac{d \Im \mathbf G}{d\Im \mathbf Y}$ will be required.
-However, all these cases can be reduced to $D = \frac{d}{d \mathbf Y}$
+Since a central part of this project requires numerical optimization of the coefficients, their real and imaginary parts need to be treated separately.
+This means especially separately deriving the real and imaginary parts of system of equations by their real and imaginary parts.
+However, all these cases can be reduced to $\frac{d}{d \mathbf Y}$
 \begin{align*}
 	\frac{d \Re}{d\Re \mathbf Y} = \Re \frac{d}{d \mathbf Y} &&& \frac{d \Re}{d\Im \mathbf Y} = -\Im \frac{d}{d \mathbf Y}\\
 	\frac{d \Im}{d\Re \mathbf Y} = \Im \frac{d}{d \mathbf Y} &&& \frac{d \Im}{d\Im \mathbf Y} = \Re \frac{d}{d \mathbf Y} \text.

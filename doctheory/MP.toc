@@ -1,5 +1,6 @@
 \select@language {USenglish}
 \contentsline {section}{\numberline {1}Introduction}{3}{section.1}
+\contentsline {subsection}{\numberline {1.1}Notation}{3}{subsection.1.1}
 \contentsline {section}{\numberline {2}Periodic Orbits as Solutions of System of Equations, the Galerkin Operator}{4}{section.2}
 \contentsline {paragraph}{Model}{4}{section*.2}
 \contentsline {paragraph}{Optimality Criterion}{4}{section*.3}
@@ -12,6 +13,6 @@
 \contentsline {paragraph}{Davidenko Equation}{8}{section*.8}
 \contentsline {paragraph}{Newton's Method}{9}{section*.9}
 \contentsline {paragraph}{Broyden Updates}{9}{section*.10}
-\contentsline {section}{\numberline {5}Case Study: Lorenz System}{10}{section.5}
-\contentsline {section}{\numberline {6}Case Study: R\IeC {\"o}ssler System}{11}{section.6}
-\contentsline {section}{\numberline {7}Results \& Outlook}{14}{section.7}
+\contentsline {section}{\numberline {5}Case Study: R\IeC {\"o}ssler System}{10}{section.5}
+\contentsline {section}{\numberline {6}Case Study: Lorenz System}{14}{section.6}
+\contentsline {section}{\numberline {7}Results \& Outlook}{17}{section.7}

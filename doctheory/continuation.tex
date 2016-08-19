@@ -15,7 +15,7 @@ Iterative application of this, in the context of systems having one constraint l
 Continuation methods provide means to trace these curves, and thus to derive infinitely many other solutions from a single given solution.
 A very central use-case of such a method is being able to numerically solve a system without requiring an otherwise needed good starting value.
 This works by continuously blending two systems with equal numbers of unknowns and equations using a homotopy, which adds one degree of freedom.
-This way, a known solution from a system can be traced to one of the harder system.
+This way, a known solution from a trivial system can be traced to one of the harder system.
 However, in the context of this work, where the underdetermination occurs naturally, we are not interested in single solutions, but rather in obtaining the whole continua of solutions.
 
 This project uses a single continuation method: The predictor-corrector method.
@@ -80,7 +80,7 @@ In a practical setting, one can resort to simply solving
 in this manner, instead of costly inverting the Jacobian.
 
 \paragraph{Broyden Updates} The formulation in terms of the Moore-Penrose pseudoinverse allows to employ the \emph{Broyden} update methods.
-These make it possible to avoid having to calculate the entire Jacobian and solving the possibly huge systems, at the cost of using approximations the Jacobian.
+These make it possible to avoid having to calculate the entire Jacobian and solving the possibly huge systems, at the cost of using approximations of the Jacobian.
 These updates have not been employed in the implementation of the methods for this project and are out of the scope of this document.
 However, it should be noted, that the vast majority of processing time in the implementation is used for calculating the tangent of the Jacobian, which is required in every predictor and corrector step.
 Broyden updates allow to update the tangent as well, making them a priotity goal for a possible extension of the implementation.

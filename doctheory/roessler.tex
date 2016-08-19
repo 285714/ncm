@@ -15,12 +15,12 @@ The system has several periodic solutions for each value of $c$ with different
 periodicities, though only one is stable at a time. We are interested in the origin and
 branching of those solutions and, thus, drawing a bifurcation diagram using the map
 \[
-	f \mapsto \{ \|f(t)\|_2  \ | \ t \in [0, 2\pi), \ f(t)_1 = 0 \} \ .
+	\mathbf y \mapsto \{ \|\mathbf y(t)\|  \ | \ t \in [0, 2\pi), \ \mathbf y_1(t) = 0 \} \ .
 \]
 Here, $f$ denotes a single periodic solution. Note, that we use only the approximation
 given by Galerkin's method.
 
-Now, the exploration of the bifurcation with the given tools follows rougly this steps:
+The exploration of the bifurcations with the given tools follows roughly these steps:
 \begin{enumerate}
 	\item As a starting point, search for a value of $c$ such that the system has a
 		stable, periodic solution and use the method described in
@@ -33,7 +33,7 @@ Now, the exploration of the bifurcation with the given tools follows rougly this
 		parameters $\kappa=0.4$, $\delta=3.0$, and $\alpha=10.0$ are a decent choice for
 		the whole diagram as a good tradeoff between performance and accuracy.
 	\item It is possible to detect a pitchfork bifurcation by doubling up the periodicity
-		artifically. Using the described predictor-corrector method, the value
+		artificially. Using the described predictor-corrector method, the value
 		of $c$ will eventually converge to the bifurcation point, i.e., a point with a
 		singular tangent. Since the method is now stuck, reaching the doubly-periodic
 		solution can be done by solving a slightly perturbed problem for a short time.
@@ -55,23 +55,40 @@ Now, the exploration of the bifurcation with the given tools follows rougly this
 	and the two-periodic solutions can be traced out after removing the inaccurate values
 	from before (c). Eventually, we reach (d), a widely traced out bifurcation diagram.
 	Note the solutions with periodicity three and descendants, that do not originate in
-	the peridocity-one branch.}
+	the periodicity-one branch.}
+	\label{fig:reosslerseq}
 \end{figure}
 
-\begin{figure}[!ht]
-	\centering
-	\includegraphics[width=1\textwidth]{img/roessler2a.pdf}
-	\caption{The bifurcation diagram of the Rössler system for varying $c$. The
-		even-periodic solutions are colored red, the odd-periodic ones green.}
+See figure \ref{fig:reosslerseq} for a visualization of this process, and figures \ref{fig:roesslerfull}, \ref{fig:roesslercut} for a depiction of the results.
+
+%\begin{figure}[!ht]
+	%\centering
+	%\includegraphics[width=1\textwidth]{img/roessler2a.pdf}
+	%\caption{The bifurcation diagram of the Rössler system for varying $c$. The
+		%even-periodic solutions are colored red, the odd-periodic ones green.}
+%\end{figure}
+%
+%
+%\begin{figure}[!ht]
+	%\centering
+	%\includegraphics[width=1\textwidth]{img/roessler2b.pdf}
+	%\caption{All found solutions for $c=\dots$ plotted into one diagram.
+	%Observe how the odd-periodic and even-periodic solutions dodge since they do not
+	%originate from each other.}
+%\end{figure}
+
+\newgeometry{top=0cm}
+
+\begin{figure}
+\centering\makebox[0pt]{\rotatebox{90}{\includegraphics{img/roessleroverview.png}}}
+\caption{An overview of the Rössler bifurcation diagram.}
+\label{fig:roesslerfull}
 \end{figure}
 
-\begin{figure}[!ht]
-	\centering
-	\includegraphics[width=1\textwidth]{img/roessler2b.pdf}
-	\caption{All found solutions for $c=\dots$ plotted into one diagram.
-	Observe how the odd-periodic and even-periodic solutions dodge since they do not
-	originate from each other.}
+\begin{figure}
+\centering\makebox[0pt]{\rotatebox{0}{\includegraphics{img/roesslercut20.png}}}
+\caption{The periodic orbits for $c=20$, together with an underlying trajectory obained through forward intergration (grey) in phase-space. The colors of the periodic solutions match the bifurcation diagram.}
+\label{fig:roesslercut}
 \end{figure}
 
-
-
+\restoregeometry

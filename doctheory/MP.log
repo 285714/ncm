@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (MiKTeX 2.9) (preloaded format=pdflatex 2016.3.24)  19 AUG 2016 11:39
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (MiKTeX 2.9) (preloaded format=pdflatex 2016.3.24)  19 AUG 2016 15:36
 entering extended mode
 **./MP.tex
 (MP.tex
@@ -640,6 +640,17 @@ Package: rerunfilecheck 2011/04/15 v1.7 Rerun checks for auxiliary files (HO)
 Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 282.
 )
 \Hy@SectionHShift=\skip58
+)
+(D:\MiKTeX\tex\latex\rotating\rotating.sty
+Package: rotating 2009/03/28 v2.16a rotated objects in LaTeX
+ (D:\MiKTeX\tex\latex\base\ifthen.sty
+Package: ifthen 2014/09/29 v1.1c Standard LaTeX ifthen package (DPC)
+)
+\c@r@tfl@t=\count134
+\rotFPtop=\skip59
+\rotFPbot=\skip60
+\rot@float@box=\box30
+\rot@mess@toks=\toks30
 ) (MP.aux)
 \openout1 = `MP.aux'.
 
@@ -698,32 +709,33 @@ File: t1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 
 (D:\MiKTeX\tex\context\base\supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count134
+\scratchcounter=\count135
 \scratchdimen=\dimen148
-\scratchbox=\box30
-\nofMPsegments=\count135
-\nofMParguments=\count136
-\everyMPshowfont=\toks30
-\MPscratchCnt=\count137
+\scratchbox=\box31
+\nofMPsegments=\count136
+\nofMParguments=\count137
+\everyMPshowfont=\toks31
+\MPscratchCnt=\count138
 \MPscratchDim=\dimen149
-\MPnumerator=\count138
-\makeMPintoPDFobject=\count139
-\everyMPtoPDFconversion=\toks31
+\MPnumerator=\count139
+\makeMPintoPDFobject=\count140
+\everyMPtoPDFconversion=\toks32
 )
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: subfig package v1.3 is loaded.
 Package caption Info: hyperref package is loaded.
 Package caption Info: listings package is loaded.
+Package caption Info: rotating package is loaded.
 Package caption Info: End \AtBeginDocument code.
-\c@lstlisting=\count140
-\AtBeginShipoutBox=\box31
+\c@lstlisting=\count141
+\AtBeginShipoutBox=\box32
 Package hyperref Info: Link coloring OFF on input line 115.
  (D:\MiKTeX\tex\latex\hyperref\nameref.sty
 Package: nameref 2012/10/27 v2.43 Cross-referencing by name of section
  (D:\MiKTeX\tex\generic\oberdiek\gettitlestring.sty
 Package: gettitlestring 2010/12/03 v1.4 Cleanup title references (HO)
 )
-\c@section@level=\count141
+\c@section@level=\count142
 )
 LaTeX Info: Redefining \ref on input line 115.
 LaTeX Info: Redefining \pageref on input line 115.
@@ -766,7 +778,14 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 [1
 
-{C:/Users/matsbo/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}] (MP.toc)
+{C:/Users/matsbo/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}] (MP.toc
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <10> on input line 3.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <7> on input line 3.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <5> on input line 3.
+)
 \tf@toc=\write4
 \openout4 = `MP.toc'.
 
@@ -777,24 +796,17 @@ Overfull \hbox (2.68132pt too wide) in paragraph at lines 9--12
 \T1/lmr/m/n/10 Finding pe-ri-odic or-bits in dy-namic sys-tems has ap-pli-ca-tions in en-gi-neer-ing. This project's
  []
 
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 14.
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 14.
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 14.
+LaTeX Font Info:    Try loading font information for OMS+lmr on input line 33.
+(D:\MiKTeX\tex\latex\lm\omslmr.fd
+File: omslmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
+)
+LaTeX Font Info:    Font shape `OMS/lmr/m/n' in size <10> not available
+(Font)              Font shape `OMS/lmsy/m/n' tried instead on input line 33.
 ) (galerkin.tex [3
 
 ] [4
 
-] [5]) (initial.tex [6]
-LaTeX Font Info:    Try loading font information for OMS+lmr on input line 12.
- (D:\MiKTeX\tex\latex\lm\omslmr.fd
-File: omslmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
-)
-LaTeX Font Info:    Font shape `OMS/lmr/m/n' in size <10> not available
-(Font)              Font shape `OMS/lmsy/m/n' tried instead on input line 12.
-) (continuation.tex [7
+] [5]) (initial.tex [6]) (continuation.tex [7
 
 ]
 Overfull \hbox (14.36975pt too wide) in paragraph at lines 1--1
@@ -803,46 +815,32 @@ Overfull \hbox (14.36975pt too wide) in paragraph at lines 1--1
 
 [8
 
-]) (lorenz.tex [9]) (roessler.tex [10
-
-] <img/roessler1a.pdf, id=131, 596.2275pt x 574.54652pt>
+]) (roessler.tex [9] <img/roessler1a.pdf, id=133, 596.2275pt x 574.54652pt>
 File: img/roessler1a.pdf Graphic file (type pdf)
-
-<use img/roessler1a.pdf>
+ <use img/roessler1a.pdf>
 Package pdftex.def Info: img/roessler1a.pdf used on input line 49.
 (pdftex.def)             Requested size: 152.27682pt x 146.73975pt.
- <img/roessler1b.pdf, id=132, 596.2275pt x 574.54652pt>
+
+<img/roessler1b.pdf, id=134, 596.2275pt x 574.54652pt>
 File: img/roessler1b.pdf Graphic file (type pdf)
  <use img/roessler1b.pdf>
 Package pdftex.def Info: img/roessler1b.pdf used on input line 50.
 (pdftex.def)             Requested size: 152.27682pt x 146.73975pt.
 
-<img/roessler1c.pdf, id=133, 596.2275pt x 574.54652pt>
+<img/roessler1c.pdf, id=135, 596.2275pt x 574.54652pt>
 File: img/roessler1c.pdf Graphic file (type pdf)
  <use img/roessler1c.pdf>
 Package pdftex.def Info: img/roessler1c.pdf used on input line 51.
 (pdftex.def)             Requested size: 152.27682pt x 146.73975pt.
 
-<img/roessler1d.pdf, id=134, 597.1309pt x 573.64313pt>
+<img/roessler1d.pdf, id=136, 597.1309pt x 573.64313pt>
 File: img/roessler1d.pdf Graphic file (type pdf)
  <use img/roessler1d.pdf>
 Package pdftex.def Info: img/roessler1d.pdf used on input line 52.
 (pdftex.def)             Requested size: 152.27682pt x 146.28143pt.
+ [10
 
-<img/roessler2a.pdf, id=135, 722.7pt x 542.025pt>
-File: img/roessler2a.pdf Graphic file (type pdf)
- <use img/roessler2a.pdf>
-Package pdftex.def Info: img/roessler2a.pdf used on input line 63.
-(pdftex.def)             Requested size: 380.69788pt x 285.52678pt.
-
-<img/roessler2b.pdf, id=136, 1541.76pt x 828.09375pt>
-File: img/roessler2b.pdf Graphic file (type pdf)
- <use img/roessler2b.pdf>
-Package pdftex.def Info: img/roessler2b.pdf used on input line 70.
-(pdftex.def)             Requested size: 380.69788pt x 204.47052pt.
-) (outro.tex [11
-
-] [12 <./img/roessler1a.pdf> <./img/roessler1b.pdf
+] [11 <./img/roessler1a.pdf> <./img/roessler1b.pdf
 
 pdfTeX warning: pdflatex.exe (file ./img/roessler1b.pdf): PDF inclusion: multiple pdfs with page group included in a sin
 gle page
@@ -854,16 +852,114 @@ gle page
 
 pdfTeX warning: pdflatex.exe (file ./img/roessler1d.pdf): PDF inclusion: multiple pdfs with page group included in a sin
 gle page
->] [13 <./img/roessler2a.pdf> <./img/roessler2b.pdf
-
-pdfTeX warning: pdflatex.exe (file ./img/roessler2b.pdf): PDF inclusion: multiple pdfs with page group included in a sin
-gle page
 >]
-Overfull \hbox (2.03802pt too wide) in paragraph at lines 3--8
+*geometry* verbose mode - [ newgeometry ] result:
+* driver: pdftex
+* paper: a4paper
+* layout: <same size as paper>
+* layoutoffset:(h,v)=(0.0pt,0.0pt)
+* modes: 
+* h-part:(L,W,R)=(89.62709pt, 418.25368pt, 89.6271pt)
+* v-part:(T,H,B)=(0.0pt, 743.6402pt, 101.40665pt)
+* \paperwidth=597.50787pt
+* \paperheight=845.04684pt
+* \textwidth=418.25368pt
+* \textheight=743.6402pt
+* \oddsidemargin=17.3571pt
+* \evensidemargin=17.3571pt
+* \topmargin=-109.26999pt
+* \headheight=12.0pt
+* \headsep=25.0pt
+* \topskip=10.0pt
+* \footskip=30.0pt
+* \marginparwidth=57.0pt
+* \marginparsep=11.0pt
+* \columnsep=10.0pt
+* \skip\footins=9.0pt plus 4.0pt minus 2.0pt
+* \hoffset=0.0pt
+* \voffset=0.0pt
+* \mag=1000
+* \@twocolumnfalse
+* \@twosidefalse
+* \@mparswitchfalse
+* \@reversemarginfalse
+* (1in=72.27pt=25.4mm, 1cm=28.453pt)
+
+ <img/roessleroverview.png, id=209, 714.7503pt x 505.89pt>
+File: img/roessleroverview.png Graphic file (type png)
+ <use img/roessleroverview.png>
+Package pdftex.def Info: img/roessleroverview.png used on input line 83.
+(pdftex.def)             Requested size: 714.74857pt x 505.88875pt.
+
+
+LaTeX Warning: Float too large for page by 1.50833pt on input line 86.
+
+<img/roesslercut20.png, id=211, 578.16pt x 505.89pt>
+File: img/roesslercut20.png Graphic file (type png)
+ <use img/roesslercut20.png>
+Package pdftex.def Info: img/roesslercut20.png used on input line 89.
+(pdftex.def)             Requested size: 578.15858pt x 505.88875pt.
+ [12 <./img/roessleroverview.png>]
+[13 <./img/roesslercut20.png>]) (lorenz.tex [14
+
+
+
+]
+*geometry* verbose mode - [ newgeometry ] result:
+* driver: pdftex
+* paper: a4paper
+* layout: <same size as paper>
+* layoutoffset:(h,v)=(0.0pt,0.0pt)
+* modes: 
+* h-part:(L,W,R)=(89.62709pt, 418.25368pt, 89.6271pt)
+* v-part:(T,H,B)=(0.0pt, 743.6402pt, 101.40665pt)
+* \paperwidth=597.50787pt
+* \paperheight=845.04684pt
+* \textwidth=418.25368pt
+* \textheight=743.6402pt
+* \oddsidemargin=17.3571pt
+* \evensidemargin=17.3571pt
+* \topmargin=-109.26999pt
+* \headheight=12.0pt
+* \headsep=25.0pt
+* \topskip=10.0pt
+* \footskip=30.0pt
+* \marginparwidth=57.0pt
+* \marginparsep=11.0pt
+* \columnsep=10.0pt
+* \skip\footins=9.0pt plus 4.0pt minus 2.0pt
+* \hoffset=0.0pt
+* \voffset=0.0pt
+* \mag=1000
+* \@twocolumnfalse
+* \@twosidefalse
+* \@mparswitchfalse
+* \@reversemarginfalse
+* (1in=72.27pt=25.4mm, 1cm=28.453pt)
+
+ <img/lorenzoverview.png, id=232, 714.7503pt x 505.89pt>
+File: img/lorenzoverview.png Graphic file (type png)
+
+<use img/lorenzoverview.png>
+Package pdftex.def Info: img/lorenzoverview.png used on input line 30.
+(pdftex.def)             Requested size: 714.74857pt x 505.88875pt.
+
+
+LaTeX Warning: Float too large for page by 1.50833pt on input line 35.
+
+<img/lorenzcut80.png, id=233, 578.16pt x 505.89pt>
+File: img/lorenzcut80.png Graphic file (type png)
+ <use img/lorenzcut80.png>
+Package pdftex.def Info: img/lorenzcut80.png used on input line 39.
+(pdftex.def)             Requested size: 578.15858pt x 505.88875pt.
+ [15 <./img/lorenzoverview.png>] [16 <./img/lorenzcut80.png>]) (outro.tex
+Overfull \hbox (2.03802pt too wide) in paragraph at lines 4--6
 \T1/lmr/m/n/10 The project's goals of in-ter-ac-tively cre-at-ing bi-fur-ca-tion di-a-grams us-ing Galerkin's method
  []
 
-) (MP.bbl [14
+) (MP.bbl [17
+
+
 
 ])
 
@@ -871,7 +967,7 @@ Package caption Warning: Unused \captionsetup[lstlisting] on input line 78.
 See the caption package documentation for explanation.
 
 Package atveryend Info: Empty hook `BeforeClearDocument' on input line 163.
-[15
+[18
 
 ]
 Package atveryend Info: Empty hook `AfterLastShipout' on input line 163.
@@ -879,29 +975,29 @@ Package atveryend Info: Empty hook `AfterLastShipout' on input line 163.
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 163.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 163.
 Package rerunfilecheck Info: File `MP.out' has not changed.
-(rerunfilecheck)             Checksum: EB4F71746A015199B18F88C4A3FD41E7;498.
+(rerunfilecheck)             Checksum: 34340943200D6A475958BC0C84F4FEF4;556.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 163.
  ) 
 Here is how much of TeX's memory you used:
- 10396 strings out of 493634
- 150166 string characters out of 3151057
- 258400 words of memory out of 3000000
- 13521 multiletter control sequences out of 15000+200000
- 74718 words of font info for 61 fonts, out of 3000000 for 9000
+ 10527 strings out of 493634
+ 151934 string characters out of 3151057
+ 261517 words of memory out of 3000000
+ 13636 multiletter control sequences out of 15000+200000
+ 77716 words of font info for 62 fonts, out of 3000000 for 9000
  1025 hyphenation exceptions out of 8191
- 44i,15n,49p,577b,439s stack positions out of 5000i,500n,10000p,200000b,50000s
-{D:/MiKTeX/fonts/enc/dvips/lm/lm-ec.enc}{D:/MiKTeX/fonts/enc/dvips/lm/lm-mathit.enc}{D:/MiKTeX/fonts/enc/dvips/lm/lm-m
-athsy.enc}{D:/MiKTeX/fonts/enc/dvips/lm/lm-rm.enc}{D:/MiKTeX/fonts/enc/dvips/lm/lm-mathex.enc}<D:/MiKTeX/fonts/type1/pub
+ 44i,15n,49p,578b,439s stack positions out of 5000i,500n,10000p,200000b,50000s
+{D:/MiKTeX/fonts/enc/dvips/lm/lm-ec.enc}{D:/MiKTeX/fonts/enc/dvips/lm/lm-rm.enc}{D:/MiKTeX/fonts/enc/dvips/lm/lm-mathe
+x.enc}{D:/MiKTeX/fonts/enc/dvips/lm/lm-mathsy.enc}{D:/MiKTeX/fonts/enc/dvips/lm/lm-mathit.enc}<D:/MiKTeX/fonts/type1/pub
 lic/lm/lmbx10.pfb><D:/MiKTeX/fonts/type1/public/lm/lmbx12.pfb><D:/MiKTeX/fonts/type1/public/lm/lmbx7.pfb><D:/MiKTeX/font
 s/type1/public/lm/lmex10.pfb><D:/MiKTeX/fonts/type1/public/lm/lmmi10.pfb><D:/MiKTeX/fonts/type1/public/lm/lmmi5.pfb><D:/
 MiKTeX/fonts/type1/public/lm/lmmi7.pfb><D:/MiKTeX/fonts/type1/public/lm/lmr10.pfb><D:/MiKTeX/fonts/type1/public/lm/lmr12
-.pfb><D:/MiKTeX/fonts/type1/public/lm/lmr17.pfb><D:/MiKTeX/fonts/type1/public/lm/lmr7.pfb><D:/MiKTeX/fonts/type1/public/
-lm/lmr8.pfb><D:/MiKTeX/fonts/type1/public/lm/lmri10.pfb><D:/MiKTeX/fonts/type1/public/lm/lmsy10.pfb><D:/MiKTeX/fonts/typ
-e1/public/lm/lmsy7.pfb><D:/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb><D:/MiKTeX/fonts/type1/public/amsfonts/
-symbols/msbm7.pfb>
-Output written on MP.pdf (15 pages, 473602 bytes).
+.pfb><D:/MiKTeX/fonts/type1/public/lm/lmr17.pfb><D:/MiKTeX/fonts/type1/public/lm/lmr5.pfb><D:/MiKTeX/fonts/type1/public/
+lm/lmr7.pfb><D:/MiKTeX/fonts/type1/public/lm/lmr8.pfb><D:/MiKTeX/fonts/type1/public/lm/lmri10.pfb><D:/MiKTeX/fonts/type1
+/public/lm/lmsy10.pfb><D:/MiKTeX/fonts/type1/public/lm/lmsy5.pfb><D:/MiKTeX/fonts/type1/public/lm/lmsy7.pfb><D:/MiKTeX/f
+onts/type1/public/amsfonts/symbols/msbm10.pfb><D:/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm7.pfb>
+Output written on MP.pdf (18 pages, 1765154 bytes).
 PDF statistics:
- 319 PDF objects out of 1000 (max. 8388607)
- 53 named destinations out of 1000 (max. 500000)
- 87 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 335 PDF objects out of 1000 (max. 8388607)
+ 59 named destinations out of 1000 (max. 500000)
+ 105 words of extra memory for PDF output out of 10000 (max. 10000000)
 

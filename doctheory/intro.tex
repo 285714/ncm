@@ -25,3 +25,34 @@ Projecting the found periodic orbits to a simpler object (for example a set of s
 This allows to evaluate the global behavior of the system.
 Being able to dynamically create bifurcation diagrams for a given system is a goal of this project.
 
+
+\subsection{Notation}
+
+Throughout this text, the following conventions are used
+\begin{itemize}
+	\item Scalar values are represented by lowercase letters ($a$, $\tilde b$), vectors by lowercase, bold letters ($\mathbf v$), matrices and other higher dimensional constructs by capital, bold letters ($\mathbf M$).
+	\item Subsets of the natural numbers up to an upper limit are denoted using subscript notation 
+		\[
+			\N_n \coloneqq \{ x \ |\ x \in \N, x \le n\} \text.
+		\]
+	\item Sequences of natural numbers are notated in square brackets
+		\[
+			\text{for } a,b \in \N,\ a \le b,\ [a:b] \coloneqq (a+i-1)_{i \in \N_{b-a+1}} \text.
+		\]
+	\item Indexing of vectors is done using subscript notation, matrices are indexed using subscript for the row and superscript for the column.
+	\item Vectors and matrices are build using subscript notation
+		\[
+			\mathbf M = (f(i,j))_{i,j \in \N_n} \equiv \mathbf M_i^j = f(i,j) \text{ for } i,j \in \N_n \text.
+		\]
+	\item Function application using curly brackets denotes element wise application of a function.
+		That is, for sets $U$,$V$, $\mathbf u \in U^n$ for an $n \in \N$ and a function $f: U \to V$, 
+		\[
+			f\{\mathbf u\} = \begin{pmatrix}
+				f(\mathbf u_1) \\ \vdots \\ f(\mathbf u_n)
+			\end{pmatrix} \text.
+		\]
+	\item The $\cdot||\cdot$ operator denotes concatenation.
+	\item The $((\cdot))_N$ operator takes its operand modulo $N$.
+	\item Symbols $\Re$, $\Im$ denote the real and imaginary part of its argument.
+	\item The symbol $\delta$ denotes the Kronecker delta.
+\end{itemize}

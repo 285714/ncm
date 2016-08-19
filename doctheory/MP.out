@@ -1,7 +1,8 @@
 \BOOKMARK [1][-]{section.1}{Introduction}{}% 1
-\BOOKMARK [1][-]{section.2}{Periodic Orbits as Solutions of System of Equations, the Galerkin Operator}{}% 2
-\BOOKMARK [1][-]{section.3}{Finding Periodic Solutions}{}% 3
-\BOOKMARK [1][-]{section.4}{Tracing Periodic Solutions, Predictor-Corrector Continuation}{}% 4
-\BOOKMARK [1][-]{section.5}{Case Study: Lorenz System}{}% 5
-\BOOKMARK [1][-]{section.6}{Case Study: R\366ssler System}{}% 6
-\BOOKMARK [1][-]{section.7}{Results \046 Outlook}{}% 7
+\BOOKMARK [2][-]{subsection.1.1}{Notation}{section.1}% 2
+\BOOKMARK [1][-]{section.2}{Periodic Orbits as Solutions of System of Equations, the Galerkin Operator}{}% 3
+\BOOKMARK [1][-]{section.3}{Finding Periodic Solutions}{}% 4
+\BOOKMARK [1][-]{section.4}{Tracing Periodic Solutions, Predictor-Corrector Continuation}{}% 5
+\BOOKMARK [1][-]{section.5}{Case Study: R\366ssler System}{}% 6
+\BOOKMARK [1][-]{section.6}{Case Study: Lorenz System}{}% 7
+\BOOKMARK [1][-]{section.7}{Results \046 Outlook}{}% 8
