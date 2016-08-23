@@ -45,9 +45,9 @@ There are other factors supporting this choice: The residual is periodic as well
 
 \paragraph{System of Equations} This yields $N = 2m+1$ equations, one for each trial vector $\mathbf{v}_k = \exp\left( i \omega k t \right)$ for $-m \le k \le m$
 	\begin{align}
-		& \langle \mathbf{r} , \mathbf{v}_k \rangle \nonumber \\
-		=\ & \langle \mathbf{f}(t,\mathbf{y}), \mathbf{v}_k \rangle - \left\langle \frac{d\mathbf{y}}{dt}, \mathbf{v}_k \right\rangle \nonumber \\
-		=\ & \langle \mathbf{f}(t,\mathbf{y}), \mathbf{v}_k \rangle - i \omega k \mathbf{y}_k \label{eq:innerprod} \text.
+		0 &= \langle \mathbf{r} , \mathbf{v}_k \rangle \nonumber \\
+		&= \langle \mathbf{f}(t,\mathbf{y}), \mathbf{v}_k \rangle - \left\langle \frac{d\mathbf{y}}{dt}, \mathbf{v}_k \right\rangle \nonumber \\
+		&= \langle \mathbf{f}(t,\mathbf{y}), \mathbf{v}_k \rangle - i \omega k \mathbf{y}_k\label{eq:innerprod} \text.
 	\end{align}
 The last step exploits that the complex exponential functions are orthonormal.
 %The last step exploits that there is always exactly one component in the candidate function' derivative which is not orthogonal to the trial vectors.
@@ -93,7 +93,7 @@ Introducing these new constructs might at first glance appear unnecessarily comp
 However, an implementation in the basic form would have required different treatment for each dynamic system, while in this form, it is only trivially dependent of $\mathbf f$ and the degree of the trigonometric polynomial.
 %That is, the auxiliary vectors and matrices are trivially constructed, as is $\mathbf{\tilde f}$ from $\mathbf f$.
 While knowing the system of equations is important, the core task of finding a good solution requires the Jacobian of the system.
-The large advantage is, that from this form the system can be derived in a general way.
+The great advantage is, that from this form the system can be derived in a general way.
 
 \paragraph{Deriving the System} %Let $D$ denote a differential operator.
 The only variable in the system is $\mathbf Y$, thus
@@ -118,7 +118,7 @@ At no point different cells of $\frac{d \mathbf f(\mathbf x)}{d\mathbf x}$ inter
 Hence, the expression for the Jacobian of the whole system can be considered separately for each partial derivative in the Jacobian of $\mathbf f$.
 For $k,l \in \N_n$ define the $N \times N$ diagonal matrix which extracts a single partial derivative
 	\[
-		\mathbf A_{kl}(\mathbf Y) = \diag\left( \left(\frac{\partial f_k}{\partial x_l} \left(\mathbf Y_i\right)\right)_{i \in \N_N} \right) \text.
+		\mathbf A_{kl}(\mathbf Y) = \diag\left( \frac{\partial f_k}{\partial x_l} \left\{\mathbf Y_i\right\} \right) \text.
 	\]
 For each $k$ and $l$ \autoref{eq:vecsys} then becomes
 	\begin{equation}
@@ -128,7 +128,7 @@ For each $k$ and $l$ \autoref{eq:vecsys} then becomes
 This expression is again free of nested vectors.
 
 %Because of the diagonal structure of the matrix, the term $\frac{d\mathbf{\tilde f}}{d\mathbf x}(\mathbf{F}^{-1} \mathbf{Y}) \mathbf{F}^{-1}$ is essentially a multiplication of each row of $\mathbf F^{-1}$ with a constant.
-Because $\mathbf A_{kl}(\mathbf{F}^{-1} \mathbf{Y})$ is diagonal, $\mathbf A_{kl}(\mathbf{F}^{-1} \mathbf{Y}) \mathbf{F}^{-1}$ is the rows of $\mathbf F^{-1}$ each multiplied by a constant.
+Because $\mathbf A_{kl}(\mathbf{F}^{-1} \mathbf{Y})$ is diagonal, $\mathbf A_{kl}(\mathbf{F}^{-1} \mathbf{Y}) \mathbf{F}^{-1}$ is the rows of $\mathbf F^{-1}$ each multiplied by a scalar.
 This can also be seen as an element wise multiplication of the columns $\mathbf c_k$ of $\mathbf F^{-1}$ by a column vector $\mathbf d$ defined by the diagonal of $\mathbf A_{kl}(\mathbf{F}^{-1} \mathbf{Y})$
 	\begin{align*}
 		&\mathbf c_k \coloneqq \left(\exp\left(i\frac{2\pi}{N} j k\right)\right)_{0 \le j \le N-1}\\
@@ -148,7 +148,7 @@ Rebuilding the complete derivative from these matrices is a matter of subtractin
 %This is important, because in an optimization setting real and imaginary parts of the Fourier coefficients need to be treated separately.
 % That is, derivatives of $\frac{d \Re \mathbf G}{d\Re \mathbf Y}$, $\frac{d \Im \mathbf G}{d\Re \mathbf Y}$, $\frac{d \Re \mathbf G}{d\Im \mathbf Y}$, $\frac{d \Im \mathbf G}{d\Im \mathbf Y}$ will be required.
 Since a central part of this project requires numerical optimization of the coefficients, their real and imaginary parts need to be treated separately.
-This means especially separately deriving the real and imaginary parts of system of equations by their real and imaginary parts.
+This especially means separately deriving the real and imaginary parts of system of equations by their real and imaginary parts.
 However, all these cases can be reduced to $\frac{d}{d \mathbf Y}$
 \begin{align*}
 	\frac{d \Re}{d\Re \mathbf Y} = \Re \frac{d}{d \mathbf Y} &&& \frac{d \Re}{d\Im \mathbf Y} = -\Im \frac{d}{d \mathbf Y}\\

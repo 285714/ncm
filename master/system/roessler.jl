@@ -151,7 +151,11 @@ end
 
 
 
-function roesslerProjectionInternal(ftmp,ρ,N)
+function roesslerProjectionInternal(V)
+	W,ω,ρ = unwrap(V)
+	m = size(W,1)-1
+	ftmp,N = interps(W), 2m
+
 	const p = 0.08872374069251765
 	T = linspace(-pi+p,pi+p,N)
 

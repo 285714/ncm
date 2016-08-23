@@ -18,8 +18,15 @@ This particular choice was made empirically, as most other choices result in cha
 
 The system features stable periodic solutions for $\rho \in \{99.65, 100.5, 160, 350\}$.
 These values are used as starting points for the creation of the bifurcation diagram.
-The general process of finding a stable solution, tracing it to a bifurcation point or until otherwise satisfied, doubling the period and finding period doubling bifurcations is the same as for the Rössler system.
-Moreover, this is possible using the same parameters.
+The general process of
+\begin{itemize}
+	\item finding a stable solution
+	\item tracing it to a bifurcation point or until otherwise satisfied
+	\item doubling the period to find period doubling bifurcations
+	\item switching to the double period branch using perturbation
+\end{itemize}
+is the same as for the Rössler system.
+%Moreover, this is possible using the same parameters. %distracting?
 
 See figures \ref{fig:lorenzfull}, \ref{fig:lorenzcut} for visual results.
 The tracing of the solutions for $\rho \to 0$ had to be suspended, because it became too slow to be practical.
@@ -39,7 +46,7 @@ See the discussion in \autoref{sec:outro} for details.
 \begin{figure}
 \centering\makebox[0pt]{\rotatebox{90}{\includegraphics{img/lorenzcut80.png}}}
 \caption{
-	The periodic orbits for $\rho=80$, together with an underlying trajectory obained through forward intergration (grey) in phase-space. 
+	The periodic orbits for $\rho=80$, together with an underlying trajectory obained through forward intergration (grey) in phase-space.
 	The colors of the periodic solutions match the bifurcation diagram.
 }
 \label{fig:lorenzcut}

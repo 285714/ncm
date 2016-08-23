@@ -6,7 +6,7 @@
 
 %conventions: lower-scalar, lower,bold-vector, upper,bold-matrix
 
-Finding periodic orbits in dynamic systems has applications in engineering. %cite
+Finding periodic orbits in dynamic systems has various applications mainly in engineering. %cite
 This project's goal is the implementation and evaluation of methods for this task.
 This document aims at explaining the methods, techniques and ideas used in a concise and connected manner.
 
@@ -29,9 +29,9 @@ Being able to dynamically create bifurcation diagrams for a given system is a go
 \subsection{Notation}
 
 Throughout this text, the following conventions are used
-\begin{itemize}
+\begin{compactitem}
 	\item Scalar values are represented by lowercase letters ($a$, $\tilde b$), vectors by lowercase, bold letters ($\mathbf v$), matrices and other higher dimensional constructs by capital, bold letters ($\mathbf M$).
-	\item Subsets of the natural numbers up to an upper limit are denoted using subscript notation 
+	\item Subsets of the natural numbers up to an upper limit are denoted using subscript notation
 		\[
 			\N_n \coloneqq \{ x \ |\ x \in \N, x \le n\} \text.
 		\]
@@ -45,7 +45,7 @@ Throughout this text, the following conventions are used
 			\mathbf M = (f(i,j))_{i,j \in \N_n} \equiv \mathbf M_i^j = f(i,j) \text{ for } i,j \in \N_n \text.
 		\]
 	\item Function application using curly brackets denotes element wise application of a function.
-		That is, for sets $U$,$V$, $\mathbf u \in U^n$ for an $n \in \N$ and a function $f: U \to V$, 
+		That is, for sets $U$,$V$, $\mathbf u \in U^n$ for an $n \in \N$ and a function $f: U \to V$,
 		\[
 			f\{\mathbf u\} = \begin{pmatrix}
 				f(\mathbf u_1) \\ \vdots \\ f(\mathbf u_n)
@@ -55,4 +55,4 @@ Throughout this text, the following conventions are used
 	\item The $((\cdot))_N$ operator takes its operand modulo $N$.
 	\item Symbols $\Re$, $\Im$ denote the real and imaginary part of its argument.
 	\item The symbol $\delta$ denotes the Kronecker delta.
-\end{itemize}
+\end{compactitem}
